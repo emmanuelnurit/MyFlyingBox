@@ -1,0 +1,1188 @@
+<script>
+// Translations and URLs (Smarty processed)
+var MFB_URLS = {
+    testApi: '{url path="/admin/module/myflyingbox/test-api"}',
+    refreshServices: '{url path="/admin/module/myflyingbox/refresh-services"}',
+    toggleService: '{url path="/admin/module/myflyingbox/service/toggle"}',
+    updateServiceDelay: '{url path="/admin/module/myflyingbox/service/delay"}',
+    saveDimension: '{url path="/admin/module/myflyingbox/dimension/save"}',
+    deleteDimension: '{url path="/admin/module/myflyingbox/dimension/delete"}',
+    diagnostic: '{url path="/admin/module/myflyingbox/diagnostic"}'
+};
+
+var MFB_TRANSLATIONS = {
+    editDimension: '{intl l="Edit Dimension" d="myflyingbox"|escape:"javascript"}',
+    addDimension: '{intl l="Add Dimension" d="myflyingbox"|escape:"javascript"}',
+    weightFrom: '{intl l="Weight From (kg)" d="myflyingbox"|escape:"javascript"}',
+    weightTo: '{intl l="Weight To (kg)" d="myflyingbox"|escape:"javascript"}',
+    length: '{intl l="Length (cm)" d="myflyingbox"|escape:"javascript"}',
+    width: '{intl l="Width (cm)" d="myflyingbox"|escape:"javascript"}',
+    height: '{intl l="Height (cm)" d="myflyingbox"|escape:"javascript"}',
+    cancel: '{intl l="Cancel" d="myflyingbox"|escape:"javascript"}',
+    save: '{intl l="Save" d="myflyingbox"|escape:"javascript"}',
+    ok: '{intl l="OK" d="myflyingbox"|escape:"javascript"}',
+    confirm: '{intl l="Confirm" d="myflyingbox"|escape:"javascript"}',
+    error: '{intl l="Error" d="myflyingbox"|escape:"javascript"}',
+    warning: '{intl l="Warning" d="myflyingbox"|escape:"javascript"}',
+    confirmDelete: '{intl l="Are you sure you want to delete this dimension?" d="myflyingbox"|escape:"javascript"}',
+    confirmDeleteTitle: '{intl l="Delete Dimension" d="myflyingbox"|escape:"javascript"}',
+    testing: '{intl l="Testing connection..." d="myflyingbox"|escape:"javascript"}',
+    refreshing: '{intl l="Refreshing services..." d="myflyingbox"|escape:"javascript"}',
+    serverUrl: '{intl l="Server" d="myflyingbox"|escape:"javascript"}',
+    environment: '{intl l="Environment" d="myflyingbox"|escape:"javascript"}',
+    stagingEnv: '{intl l="Staging (test)" d="myflyingbox"|escape:"javascript"}',
+    productionEnv: '{intl l="Production" d="myflyingbox"|escape:"javascript"}',
+    servicesShown: '{intl l="services shown" d="myflyingbox"|escape:"javascript"}',
+    deselect: '{intl l="Deselect" d="myflyingbox"|escape:"javascript"}',
+    activeServices: '{intl l="active service(s)" d="myflyingbox"|escape:"javascript"}',
+    noActiveServices: '{intl l="No active services" d="myflyingbox"|escape:"javascript"}',
+    selected: '{intl l="Selected:" d="myflyingbox"|escape:"javascript"}',
+    noCarrierAlert: '{intl l="No carrier service selected!" d="myflyingbox"|escape:"javascript"}',
+    noCarrierAlertDesc: '{intl l="Click on Details to select the shipping services you want to offer to your customers." d="myflyingbox"|escape:"javascript"}',
+    connected: '{intl l="Connected" d="myflyingbox"|escape:"javascript"}',
+    connectionFailed: '{intl l="Failed" d="myflyingbox"|escape:"javascript"}',
+    testConnection: '{intl l="Test Connection" d="myflyingbox"|escape:"javascript"}',
+    webhookUrlCopied: '{intl l="Webhook URL copied to clipboard" d="myflyingbox"|escape:"javascript"}',
+    webhookCopyFailed: '{intl l="Failed to copy URL" d="myflyingbox"|escape:"javascript"}',
+    webhookSecretGenerated: '{intl l="New secret generated" d="myflyingbox"|escape:"javascript"}',
+    clickToConfigure: '{intl l="Click to configure" d="myflyingbox"|escape:"javascript"}',
+    testingWebhook: '{intl l="Testing..." d="myflyingbox"|escape:"javascript"}',
+    webhookValidated: '{intl l="Webhook configuration validated successfully" d="myflyingbox"|escape:"javascript"}',
+    webhookSecretNotConfigured: '{intl l="Webhook secret not configured or too short" d="myflyingbox"|escape:"javascript"}',
+    webhooksDisabled: '{intl l="Webhooks are disabled" d="myflyingbox"|escape:"javascript"}',
+    invalidConfiguration: '{intl l="Invalid configuration" d="myflyingbox"|escape:"javascript"}',
+    configurationCheck: '{intl l="Configuration Check" d="myflyingbox"|escape:"javascript"}',
+    webhooksEnabledCheck: '{intl l="Webhooks are enabled" d="myflyingbox"|escape:"javascript"}',
+    webhooksDisabledCheck: '{intl l="Webhooks are disabled - please enable them" d="myflyingbox"|escape:"javascript"}',
+    secretConfiguredCheck: '{intl l="Secret key is configured" d="myflyingbox"|escape:"javascript"}',
+    secretNotConfiguredCheck: '{intl l="Secret key is missing or too short (min. 10 characters)" d="myflyingbox"|escape:"javascript"}',
+    validateConfiguration: '{intl l="Validate Configuration" d="myflyingbox"|escape:"javascript"}',
+    webhookMfbReminder: '{intl l="Remember: You must also configure this same secret key in your MyFlyingBox dashboard for the webhook to work." d="myflyingbox"|escape:"javascript"}',
+    deliveryDelaySaved: '{intl l="Delivery delay saved" d="myflyingbox"|escape:"javascript"}',
+    savingDeliveryDelay: '{intl l="Saving..." d="myflyingbox"|escape:"javascript"}'
+};
+
+{literal}
+document.addEventListener('DOMContentLoaded', function() {
+    // Services section toggle (collapsed by default)
+    var servicesHeader = document.getElementById('mfb-services-header');
+    var servicesBody = document.getElementById('mfb-services-body');
+    var toggleIcon = document.getElementById('mfb-toggle-icon');
+    var toggleBtn = document.getElementById('mfb-toggle-services');
+    var inlineSummary = document.getElementById('mfb-services-inline-summary');
+    var summaryCount = document.getElementById('mfb-summary-count');
+    var servicesExpanded = false;
+
+    function toggleServicesSection(e) {
+        // Prevent toggle if clicking inside the body
+        if (e && e.target.closest('#mfb-services-body')) return;
+
+        servicesExpanded = !servicesExpanded;
+        if (servicesExpanded) {
+            servicesBody.style.display = 'block';
+            toggleIcon.className = 'fa fa-chevron-up';
+            inlineSummary.style.display = 'none';
+        } else {
+            servicesBody.style.display = 'none';
+            toggleIcon.className = 'fa fa-chevron-down';
+            inlineSummary.style.display = 'flex';
+        }
+    }
+
+    if (servicesHeader && toggleBtn) {
+        servicesHeader.addEventListener('click', toggleServicesSection);
+        // Prevent double toggle when clicking the button
+        toggleBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggleServicesSection(e);
+        });
+    }
+
+    // Function to update inline summary when services change
+    function updateInlineSummary() {
+        if (!inlineSummary) return;
+        var servicesTable = document.getElementById('mfb-services-table');
+        if (!servicesTable) return;
+
+        var checkedBoxes = servicesTable.querySelectorAll('.mfb-service-toggle:checked');
+        var count = checkedBoxes.length;
+        var servicesSummarySpan = document.getElementById('mfb-services-summary');
+        var noServicesAlert = document.getElementById('mfb-no-services-alert');
+
+        // Update count in header
+        if (summaryCount) {
+            summaryCount.textContent = count;
+        }
+
+        // Update summary span color and icon based on count
+        if (servicesSummarySpan) {
+            if (count > 0) {
+                servicesSummarySpan.style.color = '#198754';
+                servicesSummarySpan.innerHTML = '<i class="fa fa-check-circle" style="margin-right: 0.35rem;"></i><span id="mfb-summary-count">' + count + '</span> ' + MFB_TRANSLATIONS.activeServices;
+            } else {
+                servicesSummarySpan.style.color = '#dc3545';
+                servicesSummarySpan.innerHTML = '<i class="fa fa-exclamation-circle" style="margin-right: 0.35rem;"></i><span id="mfb-summary-count">0</span> ' + MFB_TRANSLATIONS.activeServices;
+            }
+        }
+
+        // Show/hide alert
+        if (noServicesAlert) {
+            noServicesAlert.style.display = count === 0 ? 'flex' : 'none';
+        }
+
+        // Rebuild inline badges
+        inlineSummary.innerHTML = '';
+        if (count === 0) {
+            inlineSummary.style.display = 'none';
+        } else {
+            inlineSummary.style.display = 'flex';
+            inlineSummary.style.cssText = 'margin-top: 1.25rem; padding: 1rem 1.25rem; background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); border: 1px solid #28a745; border-radius: 8px; display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center;';
+
+            // Add "Selected:" label
+            var labelSpan = document.createElement('span');
+            labelSpan.style.cssText = 'color: #155724; font-weight: 600; margin-right: 0.5rem;';
+            labelSpan.innerHTML = '<i class="fa fa-check" style="margin-right: 0.35rem;"></i>' + MFB_TRANSLATIONS.selected;
+            inlineSummary.appendChild(labelSpan);
+
+            checkedBoxes.forEach(function(checkbox) {
+                var row = checkbox.closest('tr');
+                var carrierCode = row.dataset.carrier || row.querySelector('td:nth-child(2)').textContent.trim();
+                var serviceCode = row.dataset.code || row.querySelector('td:nth-child(3)').textContent.trim();
+                var serviceId = checkbox.dataset.id;
+
+                var badge = document.createElement('span');
+                badge.className = 'mfb-summary-badge';
+                badge.dataset.id = serviceId;
+                badge.style.cssText = 'display: inline-flex; align-items: center; padding: 0.5rem 1rem; background: #fff; border: 2px solid #28a745; border-radius: 25px; font-size: 0.9rem; color: #155724; font-weight: 500; box-shadow: 0 2px 4px rgba(40,167,69,0.15);';
+                badge.innerHTML = '<i class="fa fa-truck" style="margin-right: 0.5rem; color: #28a745;"></i><strong style="margin-right: 0.35rem;">' + carrierCode.toUpperCase() + '</strong> ' + serviceCode;
+                inlineSummary.appendChild(badge);
+            });
+        }
+    }
+
+    // Test API connection
+    var testApiBtn = document.getElementById('mfb-test-api');
+    var resultDiv = document.getElementById('mfb-api-result');
+
+    // Helper function to create styled alert
+    function createAlert(type, icon, title, message, details) {
+        var borderColor = type === 'success' ? '#198754' : '#dc3545';
+        var bgColor = type === 'success' ? '#d1e7dd' : '#f8d7da';
+        var iconColor = type === 'success' ? '#0f5132' : '#842029';
+        var textColor = type === 'success' ? '#0f5132' : '#842029';
+
+        var html = '<div class="text-center" style="' +
+            'margin: 1.5rem auto; ' +
+            'padding: 1.5rem 2rem; ' +
+            'max-width: 380px; ' +
+            'border-radius: 12px; ' +
+            'border: 1px solid ' + borderColor + '; ' +
+            'background: ' + bgColor + '; ' +
+            'box-shadow: 0 4px 12px rgba(0,0,0,0.1);' +
+        '">' +
+            '<div style="margin-bottom: 1rem;">' +
+                '<i class="fa fa-' + icon + '" style="font-size: 2.5rem; color: ' + iconColor + ';"></i>' +
+            '</div>' +
+            '<div style="font-weight: 600; font-size: 1.15rem; color: ' + textColor + '; margin-bottom: 0.5rem;">' + title + '</div>';
+        if (message) {
+            html += '<div style="color: ' + textColor + '; opacity: 0.9; margin-bottom: 0.5rem; font-size: 0.95rem;">' + message + '</div>';
+        }
+        if (details) {
+            html += '<div style="' +
+                'margin-top: 1rem; ' +
+                'padding-top: 1rem; ' +
+                'border-top: 1px solid ' + borderColor + '40; ' +
+                'font-size: 0.85rem; ' +
+                'color: ' + textColor + '; ' +
+                'opacity: 0.75;' +
+            '">' + details + '</div>';
+        }
+        html += '</div>';
+        return html;
+    }
+
+    // Helper function to create loading state
+    function createLoading(message) {
+        return '<div class="text-center" style="' +
+            'margin: 1.5rem auto; ' +
+            'padding: 1.5rem 2rem; ' +
+            'max-width: 380px; ' +
+            'border-radius: 12px; ' +
+            'border: 1px solid #0d6efd40; ' +
+            'background: #cfe2ff; ' +
+            'box-shadow: 0 4px 12px rgba(0,0,0,0.1);' +
+        '">' +
+            '<div class="spinner-border text-primary mb-3" role="status" style="width: 2.5rem; height: 2.5rem;"></div>' +
+            '<div style="color: #084298; font-weight: 500; font-size: 1rem;">' + message + '</div>' +
+        '</div>';
+    }
+
+    // Helper function to show styled alert modal (replaces alert())
+    function showAlertModal(title, message, type) {
+        type = type || 'danger';
+        var iconMap = { danger: 'times-circle', warning: 'exclamation-triangle', success: 'check-circle', info: 'info-circle' };
+        var colorMap = {
+            danger: { bg: '#f8d7da', border: '#dc3545', icon: '#842029', text: '#842029', btn: 'btn-danger' },
+            warning: { bg: '#fff3cd', border: '#ffc107', icon: '#664d03', text: '#664d03', btn: 'btn-warning' },
+            success: { bg: '#d1e7dd', border: '#198754', icon: '#0f5132', text: '#0f5132', btn: 'btn-success' },
+            info: { bg: '#cff4fc', border: '#0dcaf0', icon: '#055160', text: '#055160', btn: 'btn-info' }
+        };
+        var colors = colorMap[type] || colorMap.danger;
+        var icon = iconMap[type] || 'times-circle';
+
+        var modalId = 'mfb-alert-modal-' + Date.now();
+        var modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.id = modalId;
+        modal.setAttribute('tabindex', '-1');
+        modal.setAttribute('role', 'dialog');
+        modal.innerHTML =
+            '<div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 400px;">' +
+                '<div class="modal-content" style="border-radius: 12px; overflow: hidden; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">' +
+                    '<div class="modal-body text-center" style="padding: 2rem 2rem 1.5rem 2rem; background: ' + colors.bg + ';">' +
+                        '<div style="margin-bottom: 1rem;">' +
+                            '<i class="fa fa-' + icon + '" style="font-size: 3rem; color: ' + colors.icon + ';"></i>' +
+                        '</div>' +
+                        '<h5 style="margin: 0 0 0.75rem 0; font-weight: 600; color: ' + colors.text + ';">' + title + '</h5>' +
+                        '<p style="margin: 0; color: ' + colors.text + '; opacity: 0.9; font-size: 0.95rem;">' + message + '</p>' +
+                    '</div>' +
+                    '<div class="modal-footer" style="padding: 1rem 2rem; background: #fff; border-top: 1px solid ' + colors.border + '40; justify-content: center;">' +
+                        '<button type="button" class="btn ' + colors.btn + '" data-dismiss="modal" style="padding: 0.5rem 2rem; font-weight: 500;">' + MFB_TRANSLATIONS.ok + '</button>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+        document.body.appendChild(modal);
+
+        // Use jQuery/Bootstrap if available, fallback to simple display
+        if (typeof $ !== 'undefined' && $.fn && $.fn.modal) {
+            var $modal = $(modal);
+            $modal.on('hidden.bs.modal', function() { modal.remove(); });
+            $modal.modal('show');
+        } else {
+            // Fallback: simple modal display
+            modal.style.display = 'block';
+            modal.classList.add('show');
+            document.body.classList.add('modal-open');
+            var backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop fade show';
+            document.body.appendChild(backdrop);
+
+            modal.querySelector('[data-dismiss="modal"]').addEventListener('click', function() {
+                modal.remove();
+                backdrop.remove();
+                document.body.classList.remove('modal-open');
+            });
+        }
+    }
+
+    // Helper function to show styled confirm modal (replaces confirm())
+    function showConfirmModal(title, message, onConfirm) {
+        var modalId = 'mfb-confirm-modal-' + Date.now();
+        var modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.id = modalId;
+        modal.setAttribute('tabindex', '-1');
+        modal.setAttribute('role', 'dialog');
+        modal.innerHTML =
+            '<div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 420px;">' +
+                '<div class="modal-content" style="border-radius: 12px; overflow: hidden; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">' +
+                    '<div class="modal-body text-center" style="padding: 2rem 2rem 1.5rem 2rem; background: #fff3cd;">' +
+                        '<div style="margin-bottom: 1rem;">' +
+                            '<i class="fa fa-exclamation-triangle" style="font-size: 3rem; color: #664d03;"></i>' +
+                        '</div>' +
+                        '<h5 style="margin: 0 0 0.75rem 0; font-weight: 600; color: #664d03;">' + title + '</h5>' +
+                        '<p style="margin: 0; color: #664d03; opacity: 0.9; font-size: 0.95rem;">' + message + '</p>' +
+                    '</div>' +
+                    '<div class="modal-footer" style="padding: 1rem 2rem; background: #fff; border-top: 1px solid #ffc10740; justify-content: center; gap: 1rem;">' +
+                        '<button type="button" class="btn btn-secondary" data-dismiss="modal" style="padding: 0.5rem 1.5rem; font-weight: 500;">' + MFB_TRANSLATIONS.cancel + '</button>' +
+                        '<button type="button" class="btn btn-danger" id="mfb-confirm-btn" style="padding: 0.5rem 1.5rem; font-weight: 500;">' + MFB_TRANSLATIONS.confirm + '</button>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+        document.body.appendChild(modal);
+
+        var closeModal = function() {
+            modal.remove();
+            var backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) backdrop.remove();
+            document.body.classList.remove('modal-open');
+        };
+
+        modal.querySelector('#mfb-confirm-btn').addEventListener('click', function() {
+            closeModal();
+            if (onConfirm) onConfirm();
+        });
+
+        // Use jQuery/Bootstrap if available, fallback to simple display
+        if (typeof $ !== 'undefined' && $.fn && $.fn.modal) {
+            var $modal = $(modal);
+            $modal.on('hidden.bs.modal', function() { modal.remove(); });
+            $modal.modal('show');
+        } else {
+            // Fallback: simple modal display
+            modal.style.display = 'block';
+            modal.classList.add('show');
+            document.body.classList.add('modal-open');
+            var backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop fade show';
+            document.body.appendChild(backdrop);
+
+            modal.querySelector('[data-dismiss="modal"]').addEventListener('click', closeModal);
+        }
+    }
+
+    // Get form field elements by ID
+    var apiLoginField = document.getElementById('mfb-api-login');
+    var apiPasswordField = document.getElementById('mfb-api-password');
+    var apiEnvField = document.getElementById('mfb-api-env');
+
+    if (testApiBtn) {
+        testApiBtn.addEventListener('click', function() {
+            var btn = this;
+            btn.disabled = true;
+
+            // Reset button to initial state before testing
+            btn.classList.remove('btn-success', 'btn-outline-danger');
+            btn.classList.add('btn-outline-primary');
+            btn.innerHTML = '<i class="fa fa-spinner fa-spin" style="margin-right: 0.5rem;"></i> ' + MFB_TRANSLATIONS.testing;
+            btn.style.animation = '';
+
+            resultDiv.innerHTML = createLoading(MFB_TRANSLATIONS.testing);
+
+            // Send current form values for testing
+            var formData = {
+                api_login: apiLoginField ? apiLoginField.value : '',
+                api_password: apiPasswordField ? apiPasswordField.value : '',
+                api_env: apiEnvField ? apiEnvField.value : 'staging'
+            };
+            console.log('Sending form data:', formData);
+
+            fetch(MFB_URLS.testApi, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                btn.disabled = false;
+                console.log('API Test Response:', data);
+
+                var envLabel = data.environment === 'production' ? MFB_TRANSLATIONS.productionEnv : MFB_TRANSLATIONS.stagingEnv;
+                var details = MFB_TRANSLATIONS.environment + ': <strong>' + envLabel + '</strong>';
+                if (data.server_url) {
+                    details += ' &bull; ' + MFB_TRANSLATIONS.serverUrl + ': <code>' + data.server_url + '</code>';
+                }
+                // Debug info
+                if (data.debug) {
+                    details += '<br><small class="text-muted">Debug: env=' + data.debug.received_env +
+                        ', login=' + data.debug.received_login +
+                        ', pwd=' + data.debug.received_password + '</small>';
+                }
+
+                if (data.success) {
+                    resultDiv.innerHTML = createAlert('success', 'check-circle', data.message, null, details);
+                    // Visual feedback on button - success state
+                    btn.classList.remove('btn-outline-primary', 'btn-outline-danger');
+                    btn.classList.add('btn-success');
+                    btn.innerHTML = '<i class="fa fa-plug" style="margin-right: 0.5rem; color: #fff;"></i> <i class="fa fa-check" style="margin-right: 0.5rem;"></i> ' + MFB_TRANSLATIONS.connected;
+                    btn.style.transition = 'all 0.3s ease';
+                    // Add pulse animation
+                    btn.style.animation = 'mfb-pulse-success 0.6s ease-out';
+
+                    // Animate the services badge too
+                    var servicesBadge = document.getElementById('mfb-services-badge');
+                    if (servicesBadge) {
+                        servicesBadge.classList.remove('bg-secondary', 'bg-danger');
+                        servicesBadge.classList.add('bg-success', 'badge-glow');
+                        servicesBadge.style.transform = 'scale(1.2)';
+                        setTimeout(function() {
+                            servicesBadge.style.transform = 'scale(1)';
+                        }, 400);
+                        // Remove glow class after animation
+                        setTimeout(function() {
+                            servicesBadge.classList.remove('badge-glow');
+                        }, 1000);
+                    }
+                } else {
+                    resultDiv.innerHTML = createAlert('danger', 'times-circle', data.message, data.error_detail || null, details);
+                    // Visual feedback on button - error state
+                    btn.classList.remove('btn-outline-primary', 'btn-success');
+                    btn.classList.add('btn-outline-danger');
+                    btn.innerHTML = '<i class="fa fa-plug" style="margin-right: 0.5rem;"></i> <i class="fa fa-times" style="margin-right: 0.5rem;"></i> ' + MFB_TRANSLATIONS.connectionFailed;
+                    btn.style.transition = 'all 0.3s ease';
+                    btn.style.animation = 'mfb-shake 0.5s ease-out';
+                }
+            })
+            .catch(function(error) {
+                btn.disabled = false;
+                resultDiv.innerHTML = createAlert('danger', 'exclamation-triangle', 'Connection Error', error.message, null);
+                // Visual feedback on button - error state
+                btn.classList.remove('btn-outline-primary', 'btn-success');
+                btn.classList.add('btn-outline-danger');
+                btn.innerHTML = '<i class="fa fa-plug" style="margin-right: 0.5rem;"></i> <i class="fa fa-times" style="margin-right: 0.5rem;"></i> ' + MFB_TRANSLATIONS.connectionFailed;
+                btn.style.animation = 'mfb-shake 0.5s ease-out';
+            });
+        });
+    }
+
+    // Refresh services
+    var refreshBtn = document.getElementById('mfb-refresh-services');
+
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+            var btn = this;
+            btn.disabled = true;
+            resultDiv.innerHTML = createLoading(MFB_TRANSLATIONS.refreshing);
+
+            fetch(MFB_URLS.refreshServices, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                btn.disabled = false;
+                if (data.success) {
+                    resultDiv.innerHTML = createAlert('success', 'check-circle', data.message, null, null);
+
+                    // Update badge with accurate counts
+                    var servicesBadge = document.getElementById('mfb-services-badge');
+                    if (servicesBadge && data.active_count !== undefined && data.total_count !== undefined) {
+                        servicesBadge.textContent = data.active_count + '/' + data.total_count;
+                    }
+
+                    setTimeout(function() { location.reload(); }, 1500);
+                } else {
+                    resultDiv.innerHTML = createAlert('danger', 'times-circle', data.message, null, null);
+                }
+            })
+            .catch(function(error) {
+                btn.disabled = false;
+                resultDiv.innerHTML = createAlert('danger', 'exclamation-triangle', 'Error', error.message, null);
+            });
+        });
+    }
+
+    // Diagnostic
+    var diagnosticBtn = document.getElementById('mfb-diagnostic');
+    var diagnosticResultDiv = document.getElementById('mfb-diagnostic-result');
+
+    if (diagnosticBtn) {
+        diagnosticBtn.addEventListener('click', function() {
+            var btn = this;
+            btn.disabled = true;
+            diagnosticResultDiv.innerHTML = createLoading('Running diagnostic...');
+
+            fetch(MFB_URLS.diagnostic, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                btn.disabled = false;
+                console.log('Diagnostic Response:', data);
+
+                if (!data.success) {
+                    diagnosticResultDiv.innerHTML = createAlert('danger', 'times-circle', 'Diagnostic Error', data.message, null);
+                    return;
+                }
+
+                // Build diagnostic report
+                var html = '<div style="margin: 1rem 0; padding: 1.5rem; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6;">';
+                html += '<h6 style="margin: 0 0 1rem 0; font-weight: 600;"><i class="fa fa-stethoscope" style="margin-right: 0.5rem;"></i>Diagnostic Report</h6>';
+
+                // Module Status
+                var moduleOk = data.module.found && data.module.active;
+                html += '<div style="margin-bottom: 0.75rem;">';
+                html += '<strong>Module:</strong> ';
+                if (moduleOk) {
+                    html += '<span class="badge bg-success"><i class="fa fa-check"></i> Active (ID: ' + data.module.id + ')</span>';
+                } else if (data.module.found) {
+                    html += '<span class="badge bg-warning"><i class="fa fa-exclamation-triangle"></i> Found but inactive</span>';
+                } else {
+                    html += '<span class="badge bg-danger"><i class="fa fa-times"></i> Not found in database</span>';
+                }
+                html += '</div>';
+
+                // Configuration checks
+                html += '<div style="margin-bottom: 0.75rem;"><strong>Configuration:</strong></div>';
+                html += '<table class="table table-sm table-bordered" style="font-size: 0.875rem; margin-bottom: 0.75rem;">';
+                html += '<tbody>';
+                for (var key in data.configuration) {
+                    var cfg = data.configuration[key];
+                    var icon = cfg.is_set ? '<i class="fa fa-check text-success"></i>' : '<i class="fa fa-times text-danger"></i>';
+                    var val = cfg.value || '(empty)';
+                    html += '<tr><td>' + key + '</td><td><code>' + cfg.key + '</code></td><td>' + icon + '</td><td>' + val + '</td></tr>';
+                }
+                html += '</tbody></table>';
+
+                // Services
+                html += '<div style="margin-bottom: 0.75rem;">';
+                html += '<strong>Services:</strong> ' + data.services.total + ' total, ' + data.services.active + ' active';
+                html += '</div>';
+
+                // isValidDelivery result
+                var wouldPass = data.isValidDelivery.would_pass;
+                html += '<div style="margin-bottom: 0.5rem;">';
+                html += '<strong>isValidDelivery() would:</strong> ';
+                if (wouldPass) {
+                    html += '<span class="badge bg-success"><i class="fa fa-check"></i> PASS</span>';
+                } else {
+                    html += '<span class="badge bg-danger"><i class="fa fa-times"></i> FAIL</span>';
+                    html += '<ul style="margin: 0.5rem 0 0 0; padding-left: 1.5rem; font-size: 0.875rem;">';
+                    if (!data.isValidDelivery.checks.api_credentials_ok) {
+                        html += '<li class="text-danger">API credentials missing</li>';
+                    }
+                    if (!data.isValidDelivery.checks.shipper_address_ok) {
+                        html += '<li class="text-danger">Shipper city/postal code missing</li>';
+                    }
+                    html += '</ul>';
+                }
+                html += '</div>';
+
+                html += '</div>';
+                diagnosticResultDiv.innerHTML = html;
+            })
+            .catch(function(error) {
+                btn.disabled = false;
+                diagnosticResultDiv.innerHTML = createAlert('danger', 'exclamation-triangle', 'Error', error.message, null);
+            });
+        });
+    }
+
+    // Toggle service active status
+    document.querySelectorAll('.mfb-service-toggle').forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+            var serviceId = this.dataset.id;
+            var active = this.checked ? 1 : 0;
+            var row = this.closest('tr');
+            var self = this;
+
+            fetch(MFB_URLS.toggleService, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ id: serviceId, active: active })
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    if (active) {
+                        row.classList.remove('mfb-service-inactive');
+                    } else {
+                        row.classList.add('mfb-service-inactive');
+                    }
+                    updateSelectedServicesBlock();
+                    updateInlineSummary();
+                } else {
+                    showAlertModal(MFB_TRANSLATIONS.error, data.message, 'danger');
+                    self.checked = !self.checked;
+                }
+            })
+            .catch(function(error) {
+                showAlertModal(MFB_TRANSLATIONS.error, error.message, 'danger');
+                self.checked = !self.checked;
+            });
+        });
+    });
+
+    // Update delivery delay on blur (when user leaves the input)
+    document.querySelectorAll('.mfb-delivery-delay').forEach(function(input) {
+        var originalValue = input.value;
+
+        input.addEventListener('blur', function() {
+            var serviceId = this.dataset.id;
+            var deliveryDelay = this.value.trim();
+            var self = this;
+
+            // Only save if the value has changed
+            if (deliveryDelay === originalValue) {
+                return;
+            }
+
+            // Visual feedback
+            self.style.borderColor = '#fbbf24';
+            self.style.backgroundColor = '#fef3c7';
+
+            fetch(MFB_URLS.updateServiceDelay, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ id: serviceId, delivery_delay: deliveryDelay })
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    originalValue = deliveryDelay;
+                    self.style.borderColor = '#22c55e';
+                    self.style.backgroundColor = '#dcfce7';
+                    setTimeout(function() {
+                        self.style.borderColor = '';
+                        self.style.backgroundColor = '';
+                    }, 1500);
+                } else {
+                    self.style.borderColor = '#ef4444';
+                    self.style.backgroundColor = '#fee2e2';
+                    showAlertModal(MFB_TRANSLATIONS.error, data.message, 'danger');
+                }
+            })
+            .catch(function(error) {
+                self.style.borderColor = '#ef4444';
+                self.style.backgroundColor = '#fee2e2';
+                showAlertModal(MFB_TRANSLATIONS.error, error.message, 'danger');
+            });
+        });
+
+        // Also save on Enter key press
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                this.blur();
+            }
+        });
+    });
+
+    // Service search and bulk selection
+    var serviceSearch = document.getElementById('mfb-service-search');
+    var selectAllBtn = document.getElementById('mfb-select-all');
+    var deselectAllBtn = document.getElementById('mfb-deselect-all');
+    var filterCountDiv = document.getElementById('mfb-filter-count');
+    var servicesTable = document.getElementById('mfb-services-table');
+
+    // Simplified function - just updates the inline summary
+    function updateSelectedServicesBlock() {
+        updateInlineSummary();
+    }
+
+    function updateFilterCount() {
+        if (!servicesTable || !filterCountDiv) return;
+        var rows = servicesTable.querySelectorAll('tbody tr');
+        var visibleCount = 0;
+        var totalCount = rows.length;
+        rows.forEach(function(row) {
+            if (row.style.display !== 'none') visibleCount++;
+        });
+        if (visibleCount < totalCount) {
+            filterCountDiv.textContent = visibleCount + ' / ' + totalCount + ' ' + MFB_TRANSLATIONS.servicesShown;
+        } else {
+            filterCountDiv.textContent = '';
+        }
+    }
+
+    if (serviceSearch && servicesTable) {
+        serviceSearch.addEventListener('input', function() {
+            var searchTerm = this.value.toLowerCase().trim();
+            var rows = servicesTable.querySelectorAll('tbody tr');
+
+            rows.forEach(function(row) {
+                var text = row.textContent.toLowerCase();
+                if (searchTerm === '' || text.indexOf(searchTerm) > -1) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            updateFilterCount();
+        });
+    }
+
+    if (selectAllBtn) {
+        selectAllBtn.addEventListener('click', function() {
+            var checkboxes = servicesTable.querySelectorAll('tbody tr:not([style*="display: none"]) .mfb-service-toggle:not(:checked)');
+            checkboxes.forEach(function(checkbox) {
+                checkbox.checked = true;
+                checkbox.dispatchEvent(new Event('change'));
+            });
+        });
+    }
+
+    if (deselectAllBtn) {
+        deselectAllBtn.addEventListener('click', function() {
+            var checkboxes = servicesTable.querySelectorAll('tbody tr:not([style*="display: none"]) .mfb-service-toggle:checked');
+            checkboxes.forEach(function(checkbox) {
+                checkbox.checked = false;
+                checkbox.dispatchEvent(new Event('change'));
+            });
+        });
+    }
+
+    // Dimension management
+    var addDimensionBtn = document.getElementById('mfb-add-dimension');
+
+    function createDimensionModal(data) {
+        data = data || {};
+        var modalId = 'mfb-dimension-modal-' + Date.now();
+        var modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.id = modalId;
+        modal.setAttribute('tabindex', '-1');
+        modal.setAttribute('role', 'dialog');
+        modal.innerHTML =
+            '<div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 500px;">' +
+                '<div class="modal-content" style="border-radius: 12px; overflow: hidden; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">' +
+                    '<div class="modal-header" style="padding: 1.5rem 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">' +
+                        '<h5 class="modal-title" style="margin: 0; font-weight: 600; font-size: 1.2rem; color: #fff;">' + (data.id ? MFB_TRANSLATIONS.editDimension : MFB_TRANSLATIONS.addDimension) + '</h5>' +
+                        '<button type="button" class="close" data-dismiss="modal" aria-label="Close" style="padding: 0; margin: 0; background: none; border: none; font-size: 1.75rem; line-height: 1; color: #fff; opacity: 0.8;">' +
+                            '<span aria-hidden="true">&times;</span>' +
+                        '</button>' +
+                    '</div>' +
+                    '<div class="modal-body" style="padding: 2rem 2rem 1.5rem 2rem;">' +
+                        '<input type="hidden" id="dim-id" value="' + (data.id || '') + '">' +
+                        '<div class="row" style="margin-bottom: 1.5rem;">' +
+                            '<div class="col-6" style="padding-right: 1rem;">' +
+                                '<label class="form-label" style="display: block; margin-bottom: 0.6rem; font-weight: 600; color: #495057; font-size: 0.9rem;">' + MFB_TRANSLATIONS.weightFrom + '</label>' +
+                                '<input type="number" step="0.001" min="0" class="form-control" id="dim-weight-from" value="' + (data.weightFrom || '0') + '" style="padding: 0.75rem 1rem; border-radius: 6px; border: 1px solid #ced4da; font-size: 1rem;">' +
+                            '</div>' +
+                            '<div class="col-6" style="padding-left: 1rem;">' +
+                                '<label class="form-label" style="display: block; margin-bottom: 0.6rem; font-weight: 600; color: #495057; font-size: 0.9rem;">' + MFB_TRANSLATIONS.weightTo + '</label>' +
+                                '<input type="number" step="0.001" min="0" class="form-control" id="dim-weight-to" value="' + (data.weightTo || '') + '" style="padding: 0.75rem 1rem; border-radius: 6px; border: 1px solid #ced4da; font-size: 1rem;">' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="row" style="margin-bottom: 0.5rem;">' +
+                            '<div class="col-4" style="padding-right: 0.75rem;">' +
+                                '<label class="form-label" style="display: block; margin-bottom: 0.6rem; font-weight: 600; color: #495057; font-size: 0.9rem;">' + MFB_TRANSLATIONS.length + '</label>' +
+                                '<input type="number" min="1" class="form-control" id="dim-length" value="' + (data.length || '') + '" style="padding: 0.75rem 1rem; border-radius: 6px; border: 1px solid #ced4da; font-size: 1rem;">' +
+                            '</div>' +
+                            '<div class="col-4" style="padding-left: 0.375rem; padding-right: 0.375rem;">' +
+                                '<label class="form-label" style="display: block; margin-bottom: 0.6rem; font-weight: 600; color: #495057; font-size: 0.9rem;">' + MFB_TRANSLATIONS.width + '</label>' +
+                                '<input type="number" min="1" class="form-control" id="dim-width" value="' + (data.width || '') + '" style="padding: 0.75rem 1rem; border-radius: 6px; border: 1px solid #ced4da; font-size: 1rem;">' +
+                            '</div>' +
+                            '<div class="col-4" style="padding-left: 0.75rem;">' +
+                                '<label class="form-label" style="display: block; margin-bottom: 0.6rem; font-weight: 600; color: #495057; font-size: 0.9rem;">' + MFB_TRANSLATIONS.height + '</label>' +
+                                '<input type="number" min="1" class="form-control" id="dim-height" value="' + (data.height || '') + '" style="padding: 0.75rem 1rem; border-radius: 6px; border: 1px solid #ced4da; font-size: 1rem;">' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="modal-footer" style="padding: 1.25rem 2rem; background: #f8f9fa; border-top: 1px solid #dee2e6;">' +
+                        '<button type="button" class="btn btn-secondary" data-dismiss="modal" style="padding: 0.6rem 1.5rem; font-weight: 500;">' + MFB_TRANSLATIONS.cancel + '</button>' +
+                        '<button type="button" class="btn btn-primary" id="dim-save" style="padding: 0.6rem 1.5rem; font-weight: 500; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">' + MFB_TRANSLATIONS.save + '</button>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+        document.body.appendChild(modal);
+
+        var closeModal = function() {
+            modal.remove();
+            var backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) backdrop.remove();
+            document.body.classList.remove('modal-open');
+        };
+
+        modal.querySelector('#dim-save').addEventListener('click', function() {
+            var dimData = {
+                id: modal.querySelector('#dim-id').value || null,
+                weight_from: parseFloat(modal.querySelector('#dim-weight-from').value),
+                weight_to: parseFloat(modal.querySelector('#dim-weight-to').value),
+                length: parseInt(modal.querySelector('#dim-length').value),
+                width: parseInt(modal.querySelector('#dim-width').value),
+                height: parseInt(modal.querySelector('#dim-height').value)
+            };
+
+            fetch(MFB_URLS.saveDimension, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(dimData)
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(result) {
+                if (result.success) {
+                    closeModal();
+                    location.reload();
+                } else {
+                    showAlertModal(MFB_TRANSLATIONS.error, result.message, 'danger');
+                }
+            })
+            .catch(function(error) {
+                showAlertModal(MFB_TRANSLATIONS.error, error.message, 'danger');
+            });
+        });
+
+        // Use jQuery/Bootstrap if available, fallback to simple display
+        if (typeof $ !== 'undefined' && $.fn && $.fn.modal) {
+            var $modal = $(modal);
+            $modal.on('hidden.bs.modal', function() { modal.remove(); });
+            $modal.modal('show');
+        } else {
+            // Fallback: simple modal display
+            modal.style.display = 'block';
+            modal.classList.add('show');
+            document.body.classList.add('modal-open');
+            var backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop fade show';
+            document.body.appendChild(backdrop);
+
+            modal.querySelector('[data-dismiss="modal"]').addEventListener('click', closeModal);
+        }
+    }
+
+    if (addDimensionBtn) {
+        addDimensionBtn.addEventListener('click', function() {
+            createDimensionModal();
+        });
+    }
+
+    // Edit dimension
+    document.querySelectorAll('.mfb-edit-dimension').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var row = this.closest('tr');
+            var cells = row.querySelectorAll('td');
+            createDimensionModal({
+                id: row.dataset.id,
+                weightFrom: cells[0].textContent.trim(),
+                weightTo: cells[1].textContent.trim(),
+                length: cells[2].textContent.trim(),
+                width: cells[3].textContent.trim(),
+                height: cells[4].textContent.trim()
+            });
+        });
+    });
+
+    // Delete dimension
+    document.querySelectorAll('.mfb-delete-dimension').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var row = this.closest('tr');
+            var id = row.dataset.id;
+
+            showConfirmModal(MFB_TRANSLATIONS.confirmDeleteTitle, MFB_TRANSLATIONS.confirmDelete, function() {
+                fetch(MFB_URLS.deleteDimension, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ id: id })
+                })
+                .then(function(response) { return response.json(); })
+                .then(function(result) {
+                    if (result.success) {
+                        row.remove();
+                    } else {
+                        showAlertModal(MFB_TRANSLATIONS.error, result.message, 'danger');
+                    }
+                })
+                .catch(function(error) {
+                    showAlertModal(MFB_TRANSLATIONS.error, error.message, 'danger');
+                });
+            });
+        });
+    });
+
+    // Webhook: Copy URL to clipboard
+    var copyWebhookUrlBtn = document.getElementById('mfb-copy-webhook-url');
+    var webhookUrlInput = document.getElementById('mfb-webhook-url');
+
+    if (copyWebhookUrlBtn && webhookUrlInput) {
+        copyWebhookUrlBtn.addEventListener('click', function() {
+            var url = webhookUrlInput.value;
+            var btn = this;
+
+            // Use modern clipboard API if available, fallback to execCommand
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url)
+                    .then(function() {
+                        // Visual feedback
+                        btn.innerHTML = '<i class="fa fa-check"></i>';
+                        btn.classList.remove('btn-outline-secondary');
+                        btn.classList.add('btn-success');
+                        setTimeout(function() {
+                            btn.innerHTML = '<i class="fa fa-copy"></i>';
+                            btn.classList.remove('btn-success');
+                            btn.classList.add('btn-outline-secondary');
+                        }, 2000);
+                    })
+                    .catch(function() {
+                        fallbackCopyText(url, btn);
+                    });
+            } else {
+                fallbackCopyText(url, btn);
+            }
+        });
+    }
+
+    function fallbackCopyText(text, btn) {
+        // Create temporary textarea
+        var textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+
+        try {
+            document.execCommand('copy');
+            btn.innerHTML = '<i class="fa fa-check"></i>';
+            btn.classList.remove('btn-outline-secondary');
+            btn.classList.add('btn-success');
+            setTimeout(function() {
+                btn.innerHTML = '<i class="fa fa-copy"></i>';
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-secondary');
+            }, 2000);
+        } catch (err) {
+            showAlertModal(MFB_TRANSLATIONS.error, MFB_TRANSLATIONS.webhookCopyFailed, 'warning');
+        }
+
+        document.body.removeChild(textarea);
+    }
+
+    // Webhook: Generate new secret
+    var generateSecretBtn = document.getElementById('mfb-generate-secret');
+    var webhookSecretInput = document.getElementById('mfb-webhook-secret');
+
+    if (generateSecretBtn && webhookSecretInput) {
+        generateSecretBtn.addEventListener('click', function() {
+            // Generate a cryptographically secure random string
+            var secret = generateSecureSecret(32);
+            webhookSecretInput.value = secret;
+
+            // Visual feedback
+            var btn = this;
+            var originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa fa-check"></i> ' + MFB_TRANSLATIONS.webhookSecretGenerated;
+            btn.classList.remove('btn-outline-secondary');
+            btn.classList.add('btn-success');
+
+            setTimeout(function() {
+                btn.innerHTML = originalHtml;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-secondary');
+            }, 2000);
+        });
+    }
+
+    function generateSecureSecret(length) {
+        var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        var secret = 'whsec_';
+
+        // Use crypto API if available for better randomness
+        if (window.crypto && window.crypto.getRandomValues) {
+            var array = new Uint8Array(length);
+            window.crypto.getRandomValues(array);
+            for (var i = 0; i < length; i++) {
+                secret += chars[array[i] % chars.length];
+            }
+        } else {
+            // Fallback to Math.random (less secure but functional)
+            for (var i = 0; i < length; i++) {
+                secret += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+        }
+
+        return secret;
+    }
+
+    // ========================================
+    // Webhook Accordion Management
+    // ========================================
+    var webhookCard = document.getElementById('webhook-config-card');
+    var webhookCollapse = document.getElementById('webhookConfigCollapse');
+    var webhookStatusIcon = document.getElementById('webhook-status-icon');
+    var webhookStatusText = document.getElementById('webhook-status-text');
+    var webhookEnabledSelect = document.getElementById('mfb-webhook-enabled');
+    var testWebhookBtn = document.getElementById('mfb-test-webhook');
+    var webhookTestResult = document.getElementById('webhook-test-result');
+
+    // Check if webhook is configured
+    function checkWebhookConfigured() {
+        var secret = webhookSecretInput ? webhookSecretInput.value : '';
+        var enabled = webhookEnabledSelect ? webhookEnabledSelect.value === '1' : false;
+        return secret.length >= 10 && enabled;
+    }
+
+    // Update webhook status display
+    function updateWebhookStatus(configured) {
+        if (!webhookCard) return;
+
+        if (configured) {
+            webhookCard.classList.add('configured');
+            if (webhookStatusIcon) {
+                webhookStatusIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
+            }
+            if (webhookStatusText) {
+                webhookStatusText.innerHTML = '<span class="text-success"><i class="fa fa-check-circle"></i> ' + MFB_TRANSLATIONS.connected + '</span>';
+            }
+        } else {
+            webhookCard.classList.remove('configured');
+            if (webhookStatusIcon) {
+                webhookStatusIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 16.98h-5.99c-1.1 0-1.95.94-2.48 1.9A4 4 0 0 1 2 17c.01-.7.2-1.4.57-2"/><path d="m6 17 3.13-5.78c.53-.97.1-2.18-.5-3.1a4 4 0 1 1 6.89-4.06"/><path d="m12 6 3.13 5.73C15.66 12.7 16.9 13 18 13a4 4 0 0 1 0 8"/></svg>';
+            }
+            if (webhookStatusText) {
+                webhookStatusText.innerHTML = '<span class="text-warning"><i class="fa fa-exclamation-circle"></i> ' + MFB_TRANSLATIONS.clickToConfigure + '</span>';
+            }
+        }
+    }
+
+    // Validate webhook configuration (local check only)
+    if (testWebhookBtn) {
+        testWebhookBtn.addEventListener('click', function() {
+            var btn = this;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> ' + MFB_TRANSLATIONS.testingWebhook;
+            if (webhookTestResult) webhookTestResult.innerHTML = '';
+
+            // Local validation of webhook configuration
+            setTimeout(function() {
+                var secret = webhookSecretInput ? webhookSecretInput.value : '';
+                var enabled = webhookEnabledSelect ? webhookEnabledSelect.value === '1' : false;
+                var secretOk = secret.length >= 10;
+                var isConfigured = secretOk && enabled;
+
+                if (webhookTestResult) {
+                    var html = '<div style="text-align: left; padding: 1rem; background: #f8fafc; border-radius: 8px; margin-top: 0.5rem;">';
+                    html += '<p style="font-weight: 600; margin-bottom: 0.75rem; color: #1e3a5f;">' + MFB_TRANSLATIONS.configurationCheck + '</p>';
+                    html += '<ul style="list-style: none; padding: 0; margin: 0;">';
+
+                    // Check 1: Webhooks enabled
+                    if (enabled) {
+                        html += '<li style="margin-bottom: 0.5rem;"><i class="fa fa-check-circle text-success" style="margin-right: 0.5rem;"></i>' + MFB_TRANSLATIONS.webhooksEnabledCheck + '</li>';
+                    } else {
+                        html += '<li style="margin-bottom: 0.5rem;"><i class="fa fa-times-circle text-danger" style="margin-right: 0.5rem;"></i>' + MFB_TRANSLATIONS.webhooksDisabledCheck + '</li>';
+                    }
+
+                    // Check 2: Secret configured
+                    if (secretOk) {
+                        html += '<li style="margin-bottom: 0.5rem;"><i class="fa fa-check-circle text-success" style="margin-right: 0.5rem;"></i>' + MFB_TRANSLATIONS.secretConfiguredCheck + '</li>';
+                    } else {
+                        html += '<li style="margin-bottom: 0.5rem;"><i class="fa fa-times-circle text-danger" style="margin-right: 0.5rem;"></i>' + MFB_TRANSLATIONS.secretNotConfiguredCheck + '</li>';
+                    }
+
+                    html += '</ul>';
+
+                    if (isConfigured) {
+                        html += '<div class="alert alert-warning" style="margin-top: 1rem; margin-bottom: 0; padding: 0.75rem 1rem; font-size: 0.9rem;">';
+                        html += '<i class="fa fa-exclamation-triangle" style="margin-right: 0.5rem;"></i>';
+                        html += MFB_TRANSLATIONS.webhookMfbReminder;
+                        html += '</div>';
+                    }
+
+                    html += '</div>';
+                    webhookTestResult.innerHTML = html;
+                }
+
+                updateWebhookStatus(isConfigured);
+
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa fa-plug" style="margin-right: 0.5rem;"></i> ' + MFB_TRANSLATIONS.validateConfiguration;
+            }, 600);
+        });
+    }
+
+    // Update status when inputs change
+    if (webhookSecretInput) {
+        webhookSecretInput.addEventListener('input', function() {
+            updateWebhookStatus(checkWebhookConfigured());
+        });
+    }
+
+    if (webhookEnabledSelect) {
+        webhookEnabledSelect.addEventListener('change', function() {
+            updateWebhookStatus(checkWebhookConfigured());
+        });
+    }
+
+    // Also update when secret is generated
+    if (generateSecretBtn) {
+        var originalGenerateHandler = generateSecretBtn.onclick;
+        generateSecretBtn.addEventListener('click', function() {
+            setTimeout(function() {
+                updateWebhookStatus(checkWebhookConfigured());
+            }, 100);
+        });
+    }
+});
+{/literal}
+</script>
+
+<style>
+/* Animation pulse pour succès */
+@keyframes mfb-pulse-success {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.7);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 10px rgba(25, 135, 84, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(25, 135, 84, 0);
+    }
+}
+
+/* Animation shake pour erreur */
+@keyframes mfb-shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+/* Style du bouton connecté */
+#mfb-test-api.btn-success {
+    background: linear-gradient(135deg, #198754 0%, #20c997 100%) !important;
+    border-color: #198754 !important;
+    color: #fff !important;
+    box-shadow: 0 4px 15px rgba(25, 135, 84, 0.4);
+}
+
+#mfb-test-api.btn-success:hover {
+    background: linear-gradient(135deg, #157347 0%, #1aa179 100%) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(25, 135, 84, 0.5);
+}
+
+/* Style du bouton en erreur */
+#mfb-test-api.btn-outline-danger {
+    border-width: 2px;
+}
+
+#mfb-test-api.btn-outline-danger:hover {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+/* Transition smooth pour le bouton */
+#mfb-test-api {
+    transition: all 0.3s ease;
+}
+
+/* Style du badge des services */
+#mfb-services-badge {
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+#mfb-services-badge.bg-success {
+    background: linear-gradient(135deg, #198754 0%, #20c997 100%) !important;
+    box-shadow: 0 2px 8px rgba(25, 135, 84, 0.4);
+}
+
+/* Animation glow pour le badge */
+@keyframes mfb-badge-glow {
+    0% {
+        box-shadow: 0 0 5px rgba(25, 135, 84, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(25, 135, 84, 0.8), 0 0 30px rgba(25, 135, 84, 0.4);
+    }
+    100% {
+        box-shadow: 0 0 5px rgba(25, 135, 84, 0.5);
+    }
+}
+
+#mfb-services-badge.badge-glow {
+    animation: mfb-badge-glow 1s ease-in-out;
+}
+</style>

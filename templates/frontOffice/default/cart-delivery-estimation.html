@@ -1,0 +1,166 @@
+{* MyFlyingBox - Cart Delivery Estimation *}
+{* Hook: cart.bottom - Affiche une estimation des frais de port dans le panier *}
+
+{if $carriers_count > 0}
+<div class="mfb-cart-estimation" id="mfb-cart-estimation">
+    <div class="mfb-estimation-card">
+        <div class="mfb-estimation-icon">
+            <i class="fa fa-truck"></i>
+        </div>
+        <div class="mfb-estimation-content">
+            <h4 class="mfb-estimation-title">{intl l="Estimation des frais de port" d="myflyingbox"}</h4>
+            <p class="mfb-estimation-price">
+                {intl l="À partir de" d="myflyingbox"} <strong>{$min_price}</strong>
+            </p>
+            <p class="mfb-estimation-info">
+                {if $carriers_count == 1}
+                    {intl l="1 transporteur disponible" d="myflyingbox"}
+                {else}
+                    {intl l="%count transporteurs disponibles" count=$carriers_count d="myflyingbox"}
+                {/if}
+                {if $has_relay}
+                    <span class="mfb-relay-badge-small">
+                        <i class="fa fa-map-marker"></i>
+                        {intl l="Point Relais" d="myflyingbox"}
+                    </span>
+                {/if}
+            </p>
+        </div>
+        <div class="mfb-estimation-action">
+            <a href="{url path="/order/delivery"}" class="btn btn-outline-primary btn-sm">
+                {intl l="Choisir la livraison" d="myflyingbox"}
+                <i class="fa fa-chevron-right"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Cart Delivery Estimation Styles */
+.mfb-cart-estimation {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.mfb-estimation-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 20px;
+    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+    border: 1px solid #bbdefb;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.mfb-estimation-icon {
+    flex-shrink: 0;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+}
+
+.mfb-estimation-icon i {
+    font-size: 1.5rem;
+    color: #2196F3;
+}
+
+.mfb-estimation-content {
+    flex: 1;
+}
+
+.mfb-estimation-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 5px 0;
+    color: #333;
+}
+
+.mfb-estimation-price {
+    font-size: 1.1rem;
+    margin: 0 0 5px 0;
+    color: #1565C0;
+}
+
+.mfb-estimation-price strong {
+    font-size: 1.25rem;
+    color: #2e7d32;
+}
+
+.mfb-estimation-info {
+    font-size: 0.85rem;
+    margin: 0;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.mfb-relay-badge-small {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    background: #ff9800;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.mfb-relay-badge-small i {
+    font-size: 0.7rem;
+}
+
+.mfb-estimation-action {
+    flex-shrink: 0;
+}
+
+.mfb-estimation-action .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.mfb-estimation-action .btn i {
+    font-size: 0.8rem;
+    transition: transform 0.2s ease;
+}
+
+.mfb-estimation-action .btn:hover i {
+    transform: translateX(3px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .mfb-estimation-card {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .mfb-estimation-content {
+        width: 100%;
+    }
+
+    .mfb-estimation-info {
+        justify-content: center;
+    }
+
+    .mfb-estimation-action {
+        width: 100%;
+    }
+
+    .mfb-estimation-action .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+{/if}
