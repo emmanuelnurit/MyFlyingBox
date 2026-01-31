@@ -356,4 +356,10 @@ return [
     'Livraison à domicile' => 'Livraison à domicile',
     'Vous recevrez un email avec le numéro de suivi dès que votre colis sera expédié.' => 'Vous recevrez un email avec le numéro de suivi dès que votre colis sera expédié.',
     'Suivre mes commandes' => 'Suivre mes commandes',
+
+    // Email message titles and subjects (for Thelia message system)
+    'MyFlyingBox - Shipment sent notification' => 'MyFlyingBox - Notification d\'expédition',
+    'MyFlyingBox - Delivery confirmation' => 'MyFlyingBox - Confirmation de livraison',
+    'Your order {$order_ref} has been shipped' => 'Votre commande {$order_ref} a été expédiée',
+    'Your order {$order_ref} has been delivered' => 'Votre commande {$order_ref} a été livrée',
 ];

@@ -1,0 +1,26 @@
+{default_translation_domain domain="myflyingbox.email.default"}
+{default_locale locale={$locale}}
+
+{intl l="Your order has been shipped!"}
+==================================
+
+{intl l="Dear"} {$customer_firstname} {$customer_lastname},
+
+{intl l="Great news! Your order %order_ref has been shipped." order_ref=$order_ref}
+
+{intl l="Carrier"}: {$carrier_name}
+{if $tracking_number}{intl l="Tracking number"}: {$tracking_number}{/if}
+
+{if $tracking_url}
+{intl l="Track my shipment"}: {$tracking_url}
+{/if}
+
+{if $delivery_address}
+{intl l="Delivery address"}:
+{$delivery_address}
+{/if}
+
+{intl l="Thank you for your trust."}
+
+{intl l="Best regards,"}
+{$store_name}

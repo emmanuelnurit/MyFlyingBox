@@ -11,6 +11,9 @@ use Thelia\Core\Translation\Translator;
 use Thelia\Install\Database;
 use Thelia\Model\Country;
 use Thelia\Model\HookQuery;
+use Thelia\Model\LangQuery;
+use Thelia\Model\Message;
+use Thelia\Model\MessageQuery;
 use Thelia\Model\ModuleHook;
 use Thelia\Model\ModuleHookQuery;
 use Thelia\Model\ModuleQuery;
@@ -70,8 +73,56 @@ class MyFlyingBox extends AbstractDeliveryModuleWithState
         // Webhook configuration (disabled by default for security)
         $this->initConfigValue(self::CONFIG_WEBHOOK_ENABLED, '0');
 
+        // Register email messages for shipping notifications
+        $this->registerEmailMessages();
+
         // Register module.configuration hook to enable "Configure" button
         $this->registerConfigurationHook();
+    }
+
+    /**
+     * Register email messages for shipping notifications
+     * These messages will appear in /admin/configuration/messages
+     */
+    protected function registerEmailMessages(): void
+    {
+        $messages = [
+            'myflyingbox_shipped' => [
+                'html_template' => 'mfb-shipped.html',
+                'text_template' => 'mfb-shipped.txt',
+                'title_key' => 'MyFlyingBox - Shipment sent notification',
+                'subject_key' => 'Your order {$order_ref} has been shipped',
+            ],
+            'myflyingbox_delivered' => [
+                'html_template' => 'mfb-delivered.html',
+                'text_template' => 'mfb-delivered.txt',
+                'title_key' => 'MyFlyingBox - Delivery confirmation',
+                'subject_key' => 'Your order {$order_ref} has been delivered',
+            ],
+        ];
+
+        $languages = LangQuery::create()->find();
+
+        foreach ($messages as $messageName => $config) {
+            if (null !== MessageQuery::create()->findOneByName($messageName)) {
+                continue; // Message already exists
+            }
+
+            $message = new Message();
+            $message->setName($messageName)
+                ->setHtmlTemplateFileName($config['html_template'])
+                ->setTextTemplateFileName($config['text_template'])
+                ->setSecured(0);
+
+            foreach ($languages as $language) {
+                $locale = $language->getLocale();
+                $message->setLocale($locale);
+                $message->setTitle($this->trans($config['title_key'], [], $locale));
+                $message->setSubject($this->trans($config['subject_key'], [], $locale));
+            }
+
+            $message->save();
+        }
     }
 
     /**

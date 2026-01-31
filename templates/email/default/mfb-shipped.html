@@ -1,0 +1,64 @@
+{default_translation_domain domain="myflyingbox.email.default"}
+{default_locale locale={$locale}}
+
+<table width="100%" cellpadding="0" cellspacing="0" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+    <tr>
+        <td style="padding: 30px 20px; background: #f8fafc;">
+            <h1 style="color: #1e3a5f; margin: 0 0 20px 0; font-size: 24px;">
+                {intl l="Your order has been shipped!"}
+            </h1>
+
+            <p style="color: #334155; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                {intl l="Dear"} {$customer_firstname} {$customer_lastname},
+            </p>
+
+            <p style="color: #334155; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                {intl l="Great news! Your order %order_ref has been shipped." order_ref=$order_ref}
+            </p>
+
+            <table width="100%" cellpadding="15" cellspacing="0" style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; margin: 20px 0;">
+                <tr>
+                    <td>
+                        <p style="margin: 0 0 10px 0; color: #64748b; font-size: 14px;">{intl l="Carrier"}</p>
+                        <p style="margin: 0; color: #1e3a5f; font-size: 16px; font-weight: bold;">{$carrier_name}</p>
+                    </td>
+                </tr>
+                {if $tracking_number}
+                <tr>
+                    <td style="border-top: 1px solid #e2e8f0;">
+                        <p style="margin: 0 0 10px 0; color: #64748b; font-size: 14px;">{intl l="Tracking number"}</p>
+                        <p style="margin: 0; color: #1e3a5f; font-size: 16px; font-weight: bold;">{$tracking_number}</p>
+                    </td>
+                </tr>
+                {/if}
+                {if $tracking_url}
+                <tr>
+                    <td style="border-top: 1px solid #e2e8f0; text-align: center; padding: 20px;">
+                        <a href="{$tracking_url}" style="display: inline-block; background: #4a6fa5; color: #fff; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-weight: bold; font-size: 14px;">
+                            {intl l="Track my shipment"}
+                        </a>
+                    </td>
+                </tr>
+                {/if}
+            </table>
+
+            {if $delivery_address}
+            <p style="color: #334155; font-size: 16px; line-height: 1.6; margin: 20px 0 10px 0;">
+                <strong>{intl l="Delivery address"}:</strong>
+            </p>
+            <p style="color: #64748b; font-size: 14px; line-height: 1.6; margin: 0 0 20px 0;">
+                {$delivery_address|nl2br}
+            </p>
+            {/if}
+
+            <p style="color: #334155; font-size: 16px; line-height: 1.6; margin: 20px 0;">
+                {intl l="Thank you for your trust."}
+            </p>
+
+            <p style="color: #334155; font-size: 16px; line-height: 1.6; margin: 0;">
+                {intl l="Best regards,"}<br/>
+                <strong>{$store_name}</strong>
+            </p>
+        </td>
+    </tr>
+</table>
