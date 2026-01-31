@@ -78,12 +78,16 @@ class TrackingService
                     $parcelTracking[] = $parcelData;
                 }
 
+                // Get shipment-level events (events without parcel_id)
+                $shipmentEvents = $this->getShipmentLevelEvents($shipment->getId());
+
                 $trackingInfo[] = [
                     'shipment_id' => $shipment->getId(),
                     'status' => $shipment->getStatus(),
                     'is_return' => $shipment->getIsReturn(),
                     'service_name' => $this->getServiceName($shipment->getServiceId()),
                     'parcels' => $parcelTracking,
+                    'events' => $shipmentEvents,
                 ];
             }
 
@@ -125,6 +129,36 @@ class TrackingService
 
         } catch (\Exception $e) {
             $this->logger->debug('Could not get local tracking events: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Get shipment-level events (events without parcel_id)
+     */
+    private function getShipmentLevelEvents(int $shipmentId): array
+    {
+        try {
+            $dbEvents = MyFlyingBoxShipmentEventQuery::create()
+                ->filterByShipmentId($shipmentId)
+                ->filterByParcelId(null)
+                ->orderByEventDate(Criteria::DESC)
+                ->find();
+
+            $events = [];
+            foreach ($dbEvents as $event) {
+                $events[] = [
+                    'date' => $event->getEventDate()?->format('d/m/Y H:i'),
+                    'status' => $event->getEventCode(),
+                    'message' => $event->getEventLabel(),
+                    'location' => $event->getLocation(),
+                ];
+            }
+
+            return $events;
+
+        } catch (\Exception $e) {
+            $this->logger->debug('Could not get shipment level events: ' . $e->getMessage());
             return [];
         }
     }

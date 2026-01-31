@@ -888,24 +888,12 @@
         </div>
     </div>
 
-    {* Save Button *}
-    <div class="row mt-3">
-        <div class="col-12 text-right">
-            <button type="submit" class="btn btn-primary">
-                <i class="fa fa-save" style="margin-right: 0.5rem;"></i> {intl l="Save Configuration" d="myflyingbox"}
-            </button>
-        </div>
-    </div>
-</form>
-{/form}
-
 {* API Configuration - Full Width *}
 <div class="card mt-4" id="mfb-api-card">
     <div class="card-header">
         <h4 class="mb-0"><i class="fa fa-key"></i> {intl l="API Configuration" d="myflyingbox"}</h4>
     </div>
     <div class="card-body">
-        {form name="myflyingbox.configuration"}
         <div class="row align-items-end">
             <div class="col-md-3 mb-2">
                 {form_field form=$form field="api_login"}
@@ -940,10 +928,22 @@
                     <button type="button" id="mfb-diagnostic" class="btn btn-outline-info">
                         <i class="fa fa-stethoscope" style="margin-right: 0.35rem;"></i> {intl l="Diagnostic" d="myflyingbox"}
                     </button>
+                    <a href="https://dashboard.myflyingbox.com/" target="_blank" rel="noopener" class="btn btn-outline-primary" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 32" width="60" height="20">
+                            <rect x="30" y="8" width="14" height="12" rx="2" fill="#2563eb" stroke="#1e40af" stroke-width="1.2"/>
+                            <path d="M30 11 L37 8 L44 11" fill="none" stroke="#1e40af" stroke-width="1.2" stroke-linecap="round"/>
+                            <path d="M29 14 Q22 11 14 12 Q18 14 22 16 Q26 15 29 15" fill="#3b82f6"/>
+                            <path d="M45 14 Q52 11 60 12 Q56 14 52 16 Q48 15 45 15" fill="#3b82f6"/>
+                            <line x1="10" y1="14" x2="5" y2="14" stroke="#93c5fd" stroke-width="1.5" stroke-linecap="round"/>
+                            <line x1="11" y1="17" x2="7" y2="18" stroke="#93c5fd" stroke-width="1" stroke-linecap="round"/>
+                            <text x="66" y="18" font-family="Arial,sans-serif" font-size="9" font-weight="bold" fill="#1e40af">MFB</text>
+                        </svg>
+                        {intl l="Dashboard" d="myflyingbox"}
+                        <i class="fa fa-external-link" style="font-size: 0.8rem;"></i>
+                    </a>
                 </div>
             </div>
         </div>
-        {/form}
         <div id="mfb-api-result" style="margin-top: 0.75rem;"></div>
         <div id="mfb-diagnostic-result"></div>
     </div>
@@ -1115,6 +1115,17 @@
         </div>
     </div>
 </div>
+
+{* Save Button *}
+<div class="row mt-4">
+    <div class="col-12 text-right">
+        <button type="submit" class="btn btn-primary btn-lg">
+            <i class="fa fa-save" style="margin-right: 0.5rem;"></i> {intl l="Save Configuration" d="myflyingbox"}
+        </button>
+    </div>
+</div>
+</form>
+{/form}
 
 {* Include JavaScript *}
 {include file="module-config-js.html"}

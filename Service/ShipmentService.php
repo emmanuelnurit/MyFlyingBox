@@ -12,6 +12,7 @@ use MyFlyingBox\Model\MyFlyingBoxService;
 use MyFlyingBox\Model\MyFlyingBoxServiceQuery;
 use MyFlyingBox\Model\MyFlyingBoxShipment;
 use MyFlyingBox\Model\MyFlyingBoxShipmentQuery;
+use MyFlyingBox\Model\MyFlyingBoxShipmentEvent;
 use MyFlyingBox\MyFlyingBox;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Psr\Log\LoggerInterface;
@@ -92,13 +93,13 @@ class ShipmentService
 
             // Set shipper info from config
             $shipment->setShipperName(MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_NAME, ''));
-            $shipment->setShipperCompany(MyFlyingBox::getConfigValue('myflyingbox_shipper_company', ''));
-            $shipment->setShipperStreet(MyFlyingBox::getConfigValue('myflyingbox_shipper_street', ''));
+            $shipment->setShipperCompany(MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_COMPANY, ''));
+            $shipment->setShipperStreet(MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_STREET, ''));
             $shipment->setShipperCity(MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_CITY, ''));
             $shipment->setShipperPostalCode(MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_POSTAL_CODE, ''));
             $shipment->setShipperCountry(MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_COUNTRY, 'FR'));
-            $shipment->setShipperPhone(MyFlyingBox::getConfigValue('myflyingbox_shipper_phone', ''));
-            $shipment->setShipperEmail(MyFlyingBox::getConfigValue('myflyingbox_shipper_email', ''));
+            $shipment->setShipperPhone(MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_PHONE, ''));
+            $shipment->setShipperEmail(MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_EMAIL, ''));
 
             // Set recipient info from order
             $this->setRecipientFromAddress($shipment, $deliveryAddress, $order, $relay);
@@ -107,6 +108,14 @@ class ShipmentService
 
             // Create default parcel from order
             $this->createDefaultParcel($shipment, $order);
+
+            // Create creation event in history
+            $this->createShipmentEvent(
+                $shipment->getId(),
+                'CREATED',
+                'Expédition créée pour la commande #' . $order->getRef(),
+                new \DateTime()
+            );
 
             $this->logger->info('Shipment created', [
                 'shipment_id' => $shipment->getId(),
@@ -212,13 +221,15 @@ class ShipmentService
     }
 
     /**
-     * Book a shipment with the carrier via API
+     * Book a shipment with the carrier via API (with detailed error reporting)
+     *
+     * @return array{success: bool, error: string|null}
      */
-    public function bookShipment(MyFlyingBoxShipment $shipment, ?\DateTime $collectionDate = null): bool
+    public function bookShipmentWithDetails(MyFlyingBoxShipment $shipment, ?\DateTime $collectionDate = null): array
     {
         if (!$this->apiService->isConfigured()) {
             $this->logger->error('API not configured');
-            return false;
+            return ['success' => false, 'error' => 'API credentials not configured. Please configure API login and password.'];
         }
 
         try {
@@ -229,7 +240,7 @@ class ShipmentService
 
             if ($parcels->count() === 0) {
                 $this->logger->error('No parcels for shipment ' . $shipment->getId());
-                return false;
+                return ['success' => false, 'error' => 'No parcels defined for this shipment.'];
             }
 
             // Get order for fallback data
@@ -266,22 +277,10 @@ class ShipmentService
                 $shipment->getShipperCountry() ?: 'FR'
             );
 
-            $this->logger->info('Phone numbers formatted for API', [
-                'shipper_phone_original' => $shipment->getShipperPhone(),
-                'shipper_phone_formatted' => $shipperPhone,
-                'recipient_phone_original' => $shipment->getRecipientPhone(),
-                'recipient_phone_formatted' => $recipientPhone,
-            ]);
-
             // Validate shipper email
             $shipperEmail = $shipment->getShipperEmail();
             if (empty($shipperEmail) || !filter_var($shipperEmail, FILTER_VALIDATE_EMAIL)) {
-                // Fallback to recipient email or a placeholder
                 $shipperEmail = $recipientEmail ?: 'noreply@example.com';
-                $this->logger->warning('Shipper email missing or invalid, using fallback', [
-                    'original' => $shipment->getShipperEmail(),
-                    'fallback' => $shipperEmail,
-                ]);
             }
 
             // Build API request
@@ -317,32 +316,14 @@ class ShipmentService
             }
 
             // Always request a fresh quote when booking
-            // (offers expire after 30 minutes and we need to ensure service type matches)
-            $offerId = $this->getOfferIdFromQuote($shipment, $parcels);
+            $offerResult = $this->getOfferIdFromQuoteWithDetails($shipment, $parcels);
 
-            $this->logger->info('Booking shipment - addresses', [
-                'shipment_id' => $shipment->getId(),
-                'shipper' => [
-                    'city' => $shipment->getShipperCity(),
-                    'postal_code' => $shipment->getShipperPostalCode(),
-                    'country' => $shipment->getShipperCountry(),
-                ],
-                'recipient' => [
-                    'city' => $shipment->getRecipientCity(),
-                    'postal_code' => $shipment->getRecipientPostalCode(),
-                    'country' => $shipment->getRecipientCountry(),
-                    'street' => $shipment->getRecipientStreet(),
-                ],
-                'has_relay_code' => $hasRelayCode,
-                'offer_id' => $offerId,
-            ]);
-
-            if (empty($offerId)) {
+            if (empty($offerResult['offer_id'])) {
                 $this->logger->error('No offer ID available for shipment ' . $shipment->getId());
-                return false;
+                return ['success' => false, 'error' => $offerResult['error'] ?? 'No shipping offer available for this route.'];
             }
 
-            $orderParams['offer_id'] = $offerId;
+            $orderParams['offer_id'] = $offerResult['offer_id'];
 
             // Add collection date
             if ($collectionDate) {
@@ -372,17 +353,9 @@ class ShipmentService
             // API v2 returns data in 'data' or 'order' key
             $orderData = $response['data'] ?? $response['order'] ?? null;
 
-            $this->logger->info('Order API response', [
-                'response_keys' => array_keys($response),
-                'order_data_keys' => $orderData ? array_keys($orderData) : null,
-                'order_id' => $orderData['id'] ?? 'not found',
-            ]);
-
             if (empty($orderData['id'])) {
-                $this->logger->error('Invalid API response for order booking', [
-                    'response' => $response,
-                ]);
-                return false;
+                $this->logger->error('Invalid API response for order booking', ['response' => $response]);
+                return ['success' => false, 'error' => 'Invalid API response: no order ID returned.'];
             }
 
             // Update shipment
@@ -396,20 +369,37 @@ class ShipmentService
                 $this->updateParcelsFromResponse($shipment, $orderData['parcels']);
             }
 
+            // Create booking event in history
+            $this->createShipmentEvent(
+                $shipment->getId(),
+                'BOOKED',
+                'Expédition réservée auprès du transporteur',
+                new \DateTime()
+            );
+
             $this->logger->info('Shipment booked', [
                 'shipment_id' => $shipment->getId(),
                 'api_order_uuid' => $orderData['id'],
             ]);
 
-            return true;
+            return ['success' => true, 'error' => null];
 
         } catch (\Exception $e) {
             $this->logger->error('Failed to book shipment: ' . $e->getMessage(), [
                 'shipment_id' => $shipment->getId(),
                 'exception' => $e,
             ]);
-            return false;
+            return ['success' => false, 'error' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Book a shipment with the carrier via API
+     */
+    public function bookShipment(MyFlyingBoxShipment $shipment, ?\DateTime $collectionDate = null): bool
+    {
+        $result = $this->bookShipmentWithDetails($shipment, $collectionDate);
+        return $result['success'];
     }
 
     /**
@@ -534,40 +524,27 @@ class ShipmentService
                 $this->updateParcelsFromResponse($shipment, $orderData['parcels']);
             }
 
-            // Second try: If still no labels, call the dedicated labels endpoint
+            // Second try: If still no labels, use the direct labels URL
+            // The API returns a raw PDF, so we construct the URL directly
             $parcelsWithoutLabels = MyFlyingBoxParcelQuery::create()
                 ->filterByShipmentId($shipment->getId())
                 ->filterByLabelUrl(null)
                 ->count();
 
             if ($parcelsWithoutLabels > 0) {
-                $this->logger->info('Labels still missing, trying dedicated endpoint', [
+                $this->logger->info('Labels still missing, using direct label URL', [
                     'shipment_id' => $shipment->getId(),
                     'parcels_without_labels' => $parcelsWithoutLabels,
                 ]);
 
-                try {
-                    $labelsResponse = $this->apiService->getLabel($orderUuid, 'pdf');
-                    $labelsData = $labelsResponse['data'] ?? $labelsResponse['labels'] ?? $labelsResponse;
+                // The API returns a raw PDF file, so we use the direct URL
+                $labelUrl = $this->apiService->getLabelUrl($orderUuid, 'pdf');
+                $this->updateAllParcelsWithLabel($shipment, $labelUrl);
 
-                    $this->logger->info('Labels endpoint response', [
-                        'shipment_id' => $shipment->getId(),
-                        'response_keys' => is_array($labelsData) ? array_keys($labelsData) : 'not_array',
-                    ]);
-
-                    // If we got a direct URL or array of URLs
-                    if (is_string($labelsData)) {
-                        // Single label URL for all parcels
-                        $this->updateAllParcelsWithLabel($shipment, $labelsData);
-                    } elseif (isset($labelsData['url'])) {
-                        $this->updateAllParcelsWithLabel($shipment, $labelsData['url']);
-                    } elseif (isset($labelsData['labels'])) {
-                        // Array of labels per parcel
-                        $this->updateParcelsFromLabelsArray($shipment, $labelsData['labels']);
-                    }
-                } catch (\Exception $e) {
-                    $this->logger->warning('Dedicated labels endpoint failed: ' . $e->getMessage());
-                }
+                $this->logger->info('Set label URL for all parcels', [
+                    'shipment_id' => $shipment->getId(),
+                    'label_url' => $labelUrl,
+                ]);
             }
 
         } catch (\Exception $e) {
@@ -760,8 +737,25 @@ class ShipmentService
      */
     public function updateStatus(MyFlyingBoxShipment $shipment, string $status): void
     {
+        $oldStatus = $shipment->getStatus();
         $shipment->setStatus($status);
         $shipment->save();
+
+        // Create status change event in history
+        $statusLabels = [
+            self::STATUS_PENDING => 'En attente',
+            self::STATUS_BOOKED => 'Réservée',
+            self::STATUS_SHIPPED => 'Expédiée',
+            self::STATUS_DELIVERED => 'Livrée',
+            self::STATUS_CANCELLED => 'Annulée',
+        ];
+        $label = $statusLabels[$status] ?? $status;
+        $this->createShipmentEvent(
+            $shipment->getId(),
+            'STATUS_CHANGE',
+            'Statut modifié : ' . $label,
+            new \DateTime()
+        );
     }
 
     /**
@@ -853,6 +847,14 @@ class ShipmentService
         $shipment->setStatus(self::STATUS_CANCELLED);
         $shipment->save();
 
+        // Create cancellation event in history
+        $this->createShipmentEvent(
+            $shipment->getId(),
+            'CANCELLED',
+            'Expédition annulée',
+            new \DateTime()
+        );
+
         $this->logger->info('Shipment cancelled successfully', [
             'shipment_id' => $shipment->getId(),
             'was_booked' => !empty($apiOrderUuid),
@@ -879,16 +881,66 @@ class ShipmentService
 
     /**
      * Get an offer ID by requesting a fresh quote from API
+     *
+     * @return array{offer_id: string|null, error: string|null}
      */
-    private function getOfferIdFromQuote(MyFlyingBoxShipment $shipment, $parcels): ?string
+    private function getOfferIdFromQuoteWithDetails(MyFlyingBoxShipment $shipment, $parcels): array
     {
         try {
+            // Get shipper data from shipment, with fallback to module config
+            $shipperCity = $shipment->getShipperCity();
+            $shipperPostalCode = $shipment->getShipperPostalCode();
+            $shipperCountry = $shipment->getShipperCountry();
+
+            // Fallback to module configuration if shipment data is empty
+            if (empty($shipperCity)) {
+                $shipperCity = MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_CITY, '');
+                if (!empty($shipperCity)) {
+                    $shipment->setShipperCity($shipperCity);
+                }
+            }
+            if (empty($shipperPostalCode)) {
+                $shipperPostalCode = MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_POSTAL_CODE, '');
+                if (!empty($shipperPostalCode)) {
+                    $shipment->setShipperPostalCode($shipperPostalCode);
+                }
+            }
+            if (empty($shipperCountry)) {
+                $shipperCountry = MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_COUNTRY, 'FR');
+                $shipment->setShipperCountry($shipperCountry);
+            }
+
+            // Also fill other shipper fields from config if empty
+            if (empty($shipment->getShipperName())) {
+                $shipment->setShipperName(MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_NAME, ''));
+            }
+            if (empty($shipment->getShipperStreet())) {
+                $shipment->setShipperStreet(MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_STREET, ''));
+            }
+            if (empty($shipment->getShipperPhone())) {
+                $shipment->setShipperPhone(MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_PHONE, ''));
+            }
+            if (empty($shipment->getShipperEmail())) {
+                $shipment->setShipperEmail(MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_EMAIL, ''));
+            }
+
+            // Save updated shipment if any changes
+            $shipment->save();
+
+            // Validate addresses before API call
+            if (empty($shipperCity) || empty($shipperPostalCode)) {
+                return ['offer_id' => null, 'error' => "Shipper address incomplete: city ('{$shipperCity}') and postal code ('{$shipperPostalCode}') are required. Please configure shipper address in module settings."];
+            }
+            if (empty($shipment->getRecipientCity()) || empty($shipment->getRecipientPostalCode())) {
+                return ['offer_id' => null, 'error' => 'Recipient address incomplete: city and postal code are required.'];
+            }
+
             // Build quote request
             $quoteParams = [
                 'shipper' => [
-                    'city' => $shipment->getShipperCity(),
-                    'postal_code' => $shipment->getShipperPostalCode(),
-                    'country' => $shipment->getShipperCountry() ?: 'FR',
+                    'city' => $shipperCity,
+                    'postal_code' => $shipperPostalCode,
+                    'country' => $shipperCountry ?: 'FR',
                 ],
                 'recipient' => [
                     'city' => $shipment->getRecipientCity(),
@@ -928,7 +980,15 @@ class ShipmentService
                     'response_keys' => array_keys($response),
                     'quote_data' => $quoteData,
                 ]);
-                return null;
+                $serviceName = '';
+                if ($shipment->getServiceId()) {
+                    $service = MyFlyingBoxServiceQuery::create()->findPk($shipment->getServiceId());
+                    $serviceName = $service ? " ({$service->getName()})" : '';
+                }
+                return [
+                    'offer_id' => null,
+                    'error' => "No shipping offers available for route {$shipment->getShipperCity()} ({$shipment->getShipperCountry()}) → {$shipment->getRecipientCity()} ({$shipment->getRecipientCountry()}){$serviceName}. Check if the service supports this route.",
+                ];
             }
 
             // Get the first offer (or match by service code)
@@ -1008,7 +1068,7 @@ class ShipmentService
                     'shipment_id' => $shipment->getId(),
                 ]);
 
-                return $selectedOffer['id'];
+                return ['offer_id' => $selectedOffer['id'], 'error' => null];
             }
 
             $this->logger->error('No valid offer found after filtering', [
@@ -1016,12 +1076,29 @@ class ShipmentService
                 'has_relay_code' => $hasRelayCode,
             ]);
 
-            return null;
+            $serviceName = '';
+            if ($shipment->getServiceId()) {
+                $service = MyFlyingBoxServiceQuery::create()->findPk($shipment->getServiceId());
+                $serviceName = $service ? " for service '{$service->getName()}'" : '';
+            }
+            return [
+                'offer_id' => null,
+                'error' => "No valid offer found{$serviceName}. " . count($offers) . " offers received but all were filtered out (relay/return services excluded).",
+            ];
 
         } catch (\Exception $e) {
             $this->logger->error('Failed to get offer from quote: ' . $e->getMessage());
-            return null;
+            return ['offer_id' => null, 'error' => 'Quote API error: ' . $e->getMessage()];
         }
+    }
+
+    /**
+     * Get an offer ID by requesting a fresh quote from API (legacy - returns only ID)
+     */
+    private function getOfferIdFromQuote(MyFlyingBoxShipment $shipment, $parcels): ?string
+    {
+        $result = $this->getOfferIdFromQuoteWithDetails($shipment, $parcels);
+        return $result['offer_id'];
     }
 
     /**
@@ -1075,5 +1152,41 @@ class ShipmentService
 
         // Otherwise assume it needs the country prefix
         return '+' . $prefix . $digits;
+    }
+
+    /**
+     * Create a shipment event in history
+     */
+    public function createShipmentEvent(
+        int $shipmentId,
+        string $eventCode,
+        string $eventLabel,
+        ?\DateTime $eventDate = null,
+        ?int $parcelId = null,
+        ?string $location = null
+    ): MyFlyingBoxShipmentEvent {
+        $event = new MyFlyingBoxShipmentEvent();
+        $event->setShipmentId($shipmentId);
+        $event->setEventCode($eventCode);
+        $event->setEventLabel($eventLabel);
+        $event->setEventDate($eventDate ?? new \DateTime());
+
+        if ($parcelId !== null) {
+            $event->setParcelId($parcelId);
+        }
+
+        if ($location !== null) {
+            $event->setLocation($location);
+        }
+
+        $event->save();
+
+        $this->logger->info('Created shipment event', [
+            'shipment_id' => $shipmentId,
+            'event_code' => $eventCode,
+            'event_label' => $eventLabel,
+        ]);
+
+        return $event;
     }
 }

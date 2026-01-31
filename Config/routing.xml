@@ -53,6 +53,10 @@
         <default key="_controller">MyFlyingBox\Controller\ShipmentController::labelsAction</default>
     </route>
 
+    <route id="myflyingbox.admin.shipment.download-label" path="/admin/module/myflyingbox/shipment/download-label" methods="GET">
+        <default key="_controller">MyFlyingBox\Controller\ShipmentController::downloadLabelAction</default>
+    </route>
+
     <route id="myflyingbox.admin.shipment.status" path="/admin/module/myflyingbox/shipment/status" methods="POST">
         <default key="_controller">MyFlyingBox\Controller\ShipmentController::updateStatusAction</default>
     </route>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" width="120" height="40">
+  <!-- Box -->
+  <rect x="45" y="12" width="16" height="14" rx="2" fill="#2563eb" stroke="#1e40af" stroke-width="1.5"/>
+  <path d="M45 16 L53 12 L61 16" fill="none" stroke="#1e40af" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="53" y1="12" x2="53" y2="18" stroke="#1e40af" stroke-width="1.5"/>
+
+  <!-- Left Wing -->
+  <path d="M44 19 Q35 15 25 17 Q30 19 35 22 Q40 21 44 20" fill="#3b82f6"/>
+  <path d="M44 21 Q38 23 32 26 Q38 24 44 22" fill="#60a5fa"/>
+
+  <!-- Right Wing -->
+  <path d="M62 19 Q71 15 81 17 Q76 19 71 22 Q66 21 62 20" fill="#3b82f6"/>
+  <path d="M62 21 Q68 23 74 26 Q68 24 62 22" fill="#60a5fa"/>
+
+  <!-- Motion lines -->
+  <line x1="20" y1="20" x2="12" y2="20" stroke="#93c5fd" stroke-width="2" stroke-linecap="round"/>
+  <line x1="22" y1="24" x2="16" y2="26" stroke="#93c5fd" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="22" y1="16" x2="16" y2="14" stroke="#93c5fd" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Text "MFB" -->
+  <text x="88" y="24" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1e40af">MFB</text>
+</svg>

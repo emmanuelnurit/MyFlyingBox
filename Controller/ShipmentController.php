@@ -76,9 +76,9 @@ class ShipmentController extends BaseAdminController
                 $date = new \DateTime($collectionDate);
             }
 
-            $success = $shipmentService->bookShipment($shipment, $date);
+            $result = $shipmentService->bookShipmentWithDetails($shipment, $date);
 
-            if ($success) {
+            if ($result['success']) {
                 return new JsonResponse([
                     'success' => true,
                     'message' => 'Shipment booked successfully',
@@ -87,7 +87,7 @@ class ShipmentController extends BaseAdminController
             } else {
                 return new JsonResponse([
                     'success' => false,
-                    'message' => 'Failed to book shipment',
+                    'message' => $result['error'] ?? 'Failed to book shipment',
                 ]);
             }
 
@@ -132,6 +132,50 @@ class ShipmentController extends BaseAdminController
                 'success' => false,
                 'message' => 'Error: ' . $e->getMessage(),
             ]);
+        }
+    }
+
+    /**
+     * Download shipping label PDF (proxy to API with authentication)
+     */
+    public function downloadLabelAction(Request $request, \MyFlyingBox\Service\LceApiService $apiService): Response
+    {
+        // Check authentication - return the actual auth response (redirect to login if needed)
+        if (null !== $authResponse = $this->checkAuth(AdminResources::ORDER, [], AccessManager::VIEW)) {
+            return $authResponse;
+        }
+
+        try {
+            $shipmentId = $request->get('shipment_id');
+
+            if (!$shipmentId) {
+                return new Response('Shipment ID is required', 400, ['Content-Type' => 'text/plain']);
+            }
+
+            $shipment = MyFlyingBoxShipmentQuery::create()->findPk($shipmentId);
+
+            if (!$shipment) {
+                return new Response('Shipment not found', 404, ['Content-Type' => 'text/plain']);
+            }
+
+            $orderUuid = $shipment->getApiOrderUuid();
+            if (empty($orderUuid)) {
+                return new Response('Shipment not booked yet. Please book the shipment first.', 400, ['Content-Type' => 'text/plain']);
+            }
+
+            // Download the PDF from the API
+            $pdfContent = $apiService->downloadLabel($orderUuid, 'pdf');
+
+            // Return the PDF as a download
+            $response = new Response($pdfContent);
+            $response->headers->set('Content-Type', 'application/pdf');
+            $response->headers->set('Content-Disposition', 'attachment; filename="label-' . $shipmentId . '.pdf"');
+            $response->headers->set('Content-Length', strlen($pdfContent));
+
+            return $response;
+
+        } catch (\Exception $e) {
+            return new Response('Error downloading label: ' . $e->getMessage(), 500, ['Content-Type' => 'text/plain']);
         }
     }
 
@@ -338,13 +382,18 @@ class ShipmentController extends BaseAdminController
 
             return new JsonResponse([
                 'success' => true,
-                'tracking' => $tracking
+                'tracking' => $tracking,
+                'debug' => [
+                    'order_id' => $orderId,
+                    'shipments_count' => count($tracking),
+                ]
             ]);
 
         } catch (\Exception $e) {
             return new JsonResponse([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ], 500);
         }
     }

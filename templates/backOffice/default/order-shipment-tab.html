@@ -161,19 +161,17 @@
             </div>
         </div>
 
-        {* Tracking Timeline *}
-        {if $shipment->getStatus() != 'pending' && $shipment->getStatus() != 'cancelled'}
+        {* Tracking Timeline - Show for all shipments *}
         <div class="panel panel-default">
             <div class="panel-heading">
-                <h4 class="panel-title"><i class="fa fa-history"></i> {intl l="Tracking History" d="myflyingbox"}</h4>
+                <h4 class="panel-title"><i class="fa fa-history"></i> {intl l="Shipment History" d="myflyingbox"}</h4>
             </div>
             <div class="panel-body" id="mfb-tracking-timeline">
                 <p class="text-center text-muted">
-                    <i class="fa fa-spinner fa-spin"></i> {intl l="Loading tracking information..." d="myflyingbox"}
+                    <i class="fa fa-spinner fa-spin"></i> {intl l="Loading history..." d="myflyingbox"}
                 </p>
             </div>
         </div>
-        {/if}
 
         {* Return Shipments Section *}
         {if $return_shipments && $return_shipments->count() > 0}

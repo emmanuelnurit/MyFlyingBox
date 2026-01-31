@@ -367,10 +367,100 @@ class LceApiService
 
     /**
      * Get shipping label PDF URL
+     * Note: The API returns a raw PDF file, not JSON
+     * This method returns the direct URL to download the labels
+     */
+    public function getLabelUrl(string $orderUuid, string $format = 'pdf'): string
+    {
+        return $this->getApiUrl() . '/orders/' . urlencode($orderUuid) . '/labels?format=' . $format;
+    }
+
+    /**
+     * Download the shipping label PDF content
+     * Returns the raw PDF binary content
+     *
+     * @throws \RuntimeException If download fails
+     */
+    public function downloadLabel(string $orderUuid, string $format = 'pdf'): string
+    {
+        if (!$this->isConfigured()) {
+            throw new \RuntimeException('LCE API credentials not configured');
+        }
+
+        $credentials = $this->getCredentials();
+        $url = $this->getLabelUrl($orderUuid, $format);
+
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
+            CURLOPT_USERPWD => $credentials['login'] . ':' . $credentials['password'],
+            CURLOPT_HTTPHEADER => [
+                'Accept: application/pdf',
+                'User-Agent: Thelia-MyFlyingBox/1.0',
+            ],
+            CURLOPT_TIMEOUT => 60,
+            CURLOPT_CONNECTTIMEOUT => 15,
+            CURLOPT_FOLLOWLOCATION => true,
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        $error = curl_error($ch);
+        $errno = curl_errno($ch);
+        curl_close($ch);
+
+        if ($errno) {
+            $this->logger->error('Failed to download label', [
+                'errno' => $errno,
+                'error' => $error,
+            ]);
+            throw new \RuntimeException('Failed to download label: ' . $error);
+        }
+
+        if ($httpCode >= 400) {
+            // Try to parse error response as JSON
+            $decoded = json_decode($response, true);
+            $errorMessage = 'HTTP ' . $httpCode;
+            if (isset($decoded['error'])) {
+                if (is_array($decoded['error'])) {
+                    $errorMessage = $decoded['error']['message'] ?? $decoded['error']['type'] ?? $errorMessage;
+                } else {
+                    $errorMessage = $decoded['error'];
+                }
+            }
+            $this->logger->error('Label download HTTP error', [
+                'http_code' => $httpCode,
+                'error' => $errorMessage,
+            ]);
+            throw new \RuntimeException('Label download failed: ' . $errorMessage);
+        }
+
+        // Verify we got a PDF
+        if (strpos($contentType, 'application/pdf') === false && strpos($response, '%PDF') !== 0) {
+            $this->logger->error('Label response is not a PDF', [
+                'content_type' => $contentType,
+                'response_start' => substr($response, 0, 100),
+            ]);
+            throw new \RuntimeException('Label response is not a valid PDF');
+        }
+
+        return $response;
+    }
+
+    /**
+     * Get shipping label PDF URL (legacy method for compatibility)
+     * @deprecated Use getLabelUrl() instead
      */
     public function getLabel(string $orderUuid, string $format = 'pdf'): array
     {
-        return $this->request('GET', '/orders/' . urlencode($orderUuid) . '/labels?format=' . $format);
+        // Return the URL in a structured format for backward compatibility
+        return [
+            'url' => $this->getLabelUrl($orderUuid, $format),
+            'format' => $format,
+        ];
     }
 
     /**

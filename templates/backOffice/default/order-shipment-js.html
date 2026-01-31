@@ -13,7 +13,7 @@ $(function() {
 
     function showLoading($btn) {
         $btn.prop('disabled', true).data('original-html', $btn.html());
-        $btn.html('<i class="fa fa-spinner fa-spin"></i> {intl l="Please wait..." d="myflyingbox"}');
+        $btn.html('<i class="fa fa-spinner fa-spin"></i> {intl l="Please wait..." d="myflyingbox"|escape:"javascript"}');
     }
 
     function hideLoading($btn) {
@@ -30,7 +30,7 @@ $(function() {
         var collectionDate = $form.find('input[name="collection_date"]').val();
 
         if (!serviceId) {
-            showMessage('warning', '{intl l="Please select a carrier service" d="myflyingbox"}');
+            showMessage('warning', '{intl l="Please select a carrier service" d="myflyingbox"|escape:"javascript"}');
             return;
         }
 
@@ -48,17 +48,17 @@ $(function() {
         })
         .done(function(response) {
             if (response.success) {
-                showMessage('success', '{intl l="Shipment created successfully!" d="myflyingbox"}');
+                showMessage('success', '{intl l="Shipment created successfully!" d="myflyingbox"|escape:"javascript"}');
                 // Reload the tab content
                 setTimeout(function() {
                     location.reload();
                 }, 1000);
             } else {
-                showMessage('danger', response.message || '{intl l="An error occurred" d="myflyingbox"}');
+                showMessage('danger', response.message || '{intl l="An error occurred" d="myflyingbox"|escape:"javascript"}');
             }
         })
         .fail(function(xhr) {
-            var msg = '{intl l="An error occurred" d="myflyingbox"}';
+            var msg = '{intl l="An error occurred" d="myflyingbox"|escape:"javascript"}';
             if (xhr.responseJSON && xhr.responseJSON.message) {
                 msg = xhr.responseJSON.message;
             }
@@ -74,7 +74,7 @@ $(function() {
         var $btn = $(this);
         var shipmentId = $btn.data('shipment-id');
 
-        if (!confirm('{intl l="Are you sure you want to book this shipment? This action cannot be undone." d="myflyingbox"}')) {
+        if (!confirm('{intl l="Are you sure you want to book this shipment? This action cannot be undone." d="myflyingbox"|escape:"javascript"}')) {
             return;
         }
 
@@ -88,16 +88,16 @@ $(function() {
         })
         .done(function(response) {
             if (response.success) {
-                showMessage('success', '{intl l="Shipment booked successfully!" d="myflyingbox"}');
+                showMessage('success', '{intl l="Shipment booked successfully!" d="myflyingbox"|escape:"javascript"}');
                 setTimeout(function() {
                     location.reload();
                 }, 1000);
             } else {
-                showMessage('danger', response.message || '{intl l="Failed to book shipment" d="myflyingbox"}');
+                showMessage('danger', response.message || '{intl l="Failed to book shipment" d="myflyingbox"|escape:"javascript"}');
             }
         })
         .fail(function(xhr) {
-            var msg = '{intl l="An error occurred" d="myflyingbox"}';
+            var msg = '{intl l="An error occurred" d="myflyingbox"|escape:"javascript"}';
             if (xhr.responseJSON && xhr.responseJSON.message) {
                 msg = xhr.responseJSON.message;
             }
@@ -115,30 +115,11 @@ $(function() {
 
         showLoading($btn);
 
-        $.ajax({
-            url: '{url path="/admin/module/myflyingbox/shipment/labels"}',
-            method: 'GET',
-            data: { shipment_id: shipmentId },
-            dataType: 'json'
-        })
-        .done(function(response) {
-            if (response.success && response.labels && response.labels.length > 0) {
-                // Open each label URL in a new tab
-                response.labels.forEach(function(label) {
-                    if (label.label_url) {
-                        window.open(label.label_url, '_blank');
-                    }
-                });
-            } else {
-                showMessage('warning', '{intl l="No labels available for this shipment" d="myflyingbox"}');
-            }
-        })
-        .fail(function() {
-            showMessage('danger', '{intl l="Failed to retrieve labels" d="myflyingbox"}');
-        })
-        .always(function() {
-            hideLoading($btn);
-        });
+        // Use the proxy route to download the label PDF
+        var downloadUrl = '{url path="/admin/module/myflyingbox/shipment/download-label"}?shipment_id=' + shipmentId;
+        window.open(downloadUrl, '_blank');
+
+        hideLoading($btn);
     });
 
     // Update tracking
@@ -156,7 +137,7 @@ $(function() {
         })
         .done(function(response) {
             if (response.success) {
-                showMessage('success', '{intl l="Tracking updated successfully!" d="myflyingbox"}');
+                showMessage('success', '{intl l="Tracking updated successfully!" d="myflyingbox"|escape:"javascript"}');
                 loadTrackingTimeline(shipmentId);
                 if (response.status_changed) {
                     setTimeout(function() {
@@ -164,11 +145,11 @@ $(function() {
                     }, 1500);
                 }
             } else {
-                showMessage('info', response.message || '{intl l="No tracking updates available" d="myflyingbox"}');
+                showMessage('info', response.message || '{intl l="No tracking updates available" d="myflyingbox"|escape:"javascript"}');
             }
         })
         .fail(function() {
-            showMessage('danger', '{intl l="Failed to update tracking" d="myflyingbox"}');
+            showMessage('danger', '{intl l="Failed to update tracking" d="myflyingbox"|escape:"javascript"}');
         })
         .always(function() {
             hideLoading($btn);
@@ -180,7 +161,7 @@ $(function() {
         var $btn = $(this);
         var shipmentId = $btn.data('shipment-id');
 
-        if (!confirm('{intl l="Are you sure you want to cancel this shipment?" d="myflyingbox"}')) {
+        if (!confirm('{intl l="Are you sure you want to cancel this shipment?" d="myflyingbox"|escape:"javascript"}')) {
             return;
         }
 
@@ -194,16 +175,16 @@ $(function() {
         })
         .done(function(response) {
             if (response.success) {
-                showMessage('success', '{intl l="Shipment cancelled" d="myflyingbox"}');
+                showMessage('success', '{intl l="Shipment cancelled" d="myflyingbox"|escape:"javascript"}');
                 setTimeout(function() {
                     location.reload();
                 }, 1000);
             } else {
-                showMessage('danger', response.message || '{intl l="Failed to cancel shipment" d="myflyingbox"}');
+                showMessage('danger', response.message || '{intl l="Failed to cancel shipment" d="myflyingbox"|escape:"javascript"}');
             }
         })
         .fail(function() {
-            showMessage('danger', '{intl l="An error occurred" d="myflyingbox"}');
+            showMessage('danger', '{intl l="An error occurred" d="myflyingbox"|escape:"javascript"}');
         })
         .always(function() {
             hideLoading($btn);
@@ -223,17 +204,48 @@ $(function() {
         })
         .done(function(response) {
             if (response.success && response.tracking && response.tracking.length > 0) {
-                var html = '<ul class="timeline">';
+                var html = '';
+                var hasContent = false;
+
                 response.tracking.forEach(function(shipment) {
+                    // Display shipment-level events first
+                    if (shipment.events && shipment.events.length > 0) {
+                        hasContent = true;
+                        html += '<div class="shipment-events" style="margin-bottom: 15px;">';
+                        html += '<h5><i class="fa fa-truck"></i> {intl l="Shipment History" d="myflyingbox"|escape:"javascript"}</h5>';
+                        html += '<ul class="list-unstyled">';
+                        shipment.events.forEach(function(event) {
+                            var statusClass = 'label-default';
+                            if (event.status === 'BOOKED') statusClass = 'label-info';
+                            else if (event.status === 'CREATED') statusClass = 'label-primary';
+                            else if (event.status === 'CANCELLED') statusClass = 'label-danger';
+                            else if (event.status === 'STATUS_CHANGE') statusClass = 'label-warning';
+
+                            html += '<li style="margin-bottom: 5px;">';
+                            html += '<small class="text-muted">' + (event.date || '') + '</small> ';
+                            html += '<span class="label ' + statusClass + '">' + (event.status || '') + '</span> ';
+                            html += event.message || '';
+                            if (event.location) {
+                                html += ' <small class="text-muted">(' + event.location + ')</small>';
+                            }
+                            html += '</li>';
+                        });
+                        html += '</ul>';
+                        html += '</div>';
+                    }
+
+                    // Display parcel tracking events
                     shipment.parcels.forEach(function(parcel) {
                         if (parcel.tracking_number) {
-                            html += '<li class="timeline-item">';
-                            html += '<strong>' + parcel.tracking_number + '</strong>';
+                            hasContent = true;
+                            html += '<div class="parcel-events" style="margin-bottom: 15px;">';
+                            html += '<h5><i class="fa fa-cube"></i> ' + parcel.tracking_number;
                             if (parcel.tracking_url) {
                                 html += ' <a href="' + parcel.tracking_url + '" target="_blank" class="btn btn-xs btn-link"><i class="fa fa-external-link"></i></a>';
                             }
+                            html += '</h5>';
                             if (parcel.events && parcel.events.length > 0) {
-                                html += '<ul class="list-unstyled" style="margin-top: 10px;">';
+                                html += '<ul class="list-unstyled">';
                                 parcel.events.forEach(function(event) {
                                     html += '<li style="margin-bottom: 5px;">';
                                     html += '<small class="text-muted">' + (event.date || '') + '</small> ';
@@ -246,20 +258,25 @@ $(function() {
                                 });
                                 html += '</ul>';
                             } else {
-                                html += '<p class="text-muted">{intl l="No tracking events yet" d="myflyingbox"}</p>';
+                                html += '<p class="text-muted">{intl l="No tracking events yet" d="myflyingbox"|escape:"javascript"}</p>';
                             }
-                            html += '</li>';
+                            html += '</div>';
                         }
                     });
                 });
-                html += '</ul>';
-                $timeline.html(html);
+
+                if (hasContent) {
+                    $timeline.html(html);
+                } else {
+                    $timeline.html('<p class="text-muted"><i class="fa fa-info-circle"></i> {intl l="No history events yet" d="myflyingbox"|escape:"javascript"}</p>');
+                }
             } else {
-                $timeline.html('<p class="text-muted">{intl l="No tracking information available" d="myflyingbox"}</p>');
+                $timeline.html('<p class="text-muted"><i class="fa fa-info-circle"></i> {intl l="No history events yet" d="myflyingbox"|escape:"javascript"}</p>');
             }
         })
-        .fail(function() {
-            $timeline.html('<p class="text-danger">{intl l="Failed to load tracking information" d="myflyingbox"}</p>');
+        .fail(function(xhr, status, error) {
+            console.error('MFB Tracking error:', status, error, xhr.responseText);
+            $timeline.html('<p class="text-danger"><i class="fa fa-exclamation-triangle"></i> {intl l="Failed to load history" d="myflyingbox"|escape:"javascript"}</p>');
         });
     }
 
@@ -289,16 +306,16 @@ $(function() {
         .done(function(response) {
             if (response.success) {
                 $('#mfb-return-modal').modal('hide');
-                showMessage('success', '{intl l="Return shipment created successfully!" d="myflyingbox"}');
+                showMessage('success', '{intl l="Return shipment created successfully!" d="myflyingbox"|escape:"javascript"}');
                 setTimeout(function() {
                     location.reload();
                 }, 1000);
             } else {
-                showMessage('danger', response.message || '{intl l="Failed to create return shipment" d="myflyingbox"}');
+                showMessage('danger', response.message || '{intl l="Failed to create return shipment" d="myflyingbox"|escape:"javascript"}');
             }
         })
         .fail(function(xhr) {
-            var msg = '{intl l="An error occurred" d="myflyingbox"}';
+            var msg = '{intl l="An error occurred" d="myflyingbox"|escape:"javascript"}';
             if (xhr.responseJSON && xhr.responseJSON.message) {
                 msg = xhr.responseJSON.message;
             }
