@@ -225,6 +225,18 @@
     color: #fff;
 }
 
+/* Price Settings input-group fixes for Bootstrap 3 */
+#myflyingbox-config-form .input-group .input-group-addon {
+    background: #f1f5f9;
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border: 1px solid #cbd5e1;
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    padding: 0.75rem 1rem;
+}
+
 /* ========================================
    Buttons - Taille lisible
    ======================================== */
@@ -796,36 +808,36 @@
                         <div class="col-md-3 mb-2">
                             {form_field form=$form field="price_surcharge_percent"}
                                 <label class="form-label">{intl l="Surcharge" d="myflyingbox"}</label>
-                                <div class="input-group" style="max-width: 120px;">
+                                <div class="input-group">
                                     <input type="number" step="0.01" name="{$name}" value="{$value}" class="form-control"/>
-                                    <span class="input-group-text">%</span>
+                                    <span class="input-group-addon">%</span>
                                 </div>
                             {/form_field}
                         </div>
                         <div class="col-md-3 mb-2">
                             {form_field form=$form field="price_surcharge_static"}
                                 <label class="form-label">{intl l="Fixed surcharge" d="myflyingbox"}</label>
-                                <div class="input-group" style="max-width: 120px;">
+                                <div class="input-group">
                                     <input type="number" step="1" name="{$name}" value="{$value}" class="form-control"/>
-                                    <span class="input-group-text">cts</span>
+                                    <span class="input-group-addon">cts</span>
                                 </div>
                             {/form_field}
                         </div>
                         <div class="col-md-3 mb-2">
                             {form_field form=$form field="price_round_increment"}
                                 <label class="form-label">{intl l="Rounding" d="myflyingbox"}</label>
-                                <div class="input-group" style="max-width: 120px;">
+                                <div class="input-group">
                                     <input type="number" step="1" min="1" name="{$name}" value="{$value}" class="form-control"/>
-                                    <span class="input-group-text">cts</span>
+                                    <span class="input-group-addon">cts</span>
                                 </div>
                             {/form_field}
                         </div>
                         <div class="col-md-3 mb-2">
                             {form_field form=$form field="max_weight"}
                                 <label class="form-label">{intl l="Max weight" d="myflyingbox"}</label>
-                                <div class="input-group" style="max-width: 120px;">
+                                <div class="input-group">
                                     <input type="number" step="0.1" min="0.1" name="{$name}" value="{$value}" class="form-control"/>
-                                    <span class="input-group-text">kg</span>
+                                    <span class="input-group-addon">kg</span>
                                 </div>
                             {/form_field}
                         </div>
