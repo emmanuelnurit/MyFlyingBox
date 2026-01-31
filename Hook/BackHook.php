@@ -59,14 +59,23 @@ class BackHook extends BaseHook
         // Build status badge
         $statusBadge = '';
         if ($shipment) {
-            $badgeClass = match($shipment->getStatus()) {
+            $status = $shipment->getStatus();
+            $badgeClass = match($status) {
                 'booked' => 'info',
                 'shipped' => 'primary',
                 'delivered' => 'success',
                 'cancelled' => 'danger',
                 default => 'warning',
             };
-            $statusBadge = '<span class="badge bg-' . $badgeClass . '" style="margin-left: 5px;">' . ucfirst($shipment->getStatus()) . '</span>';
+            $statusLabel = match($status) {
+                'pending' => $this->trans('Pending', [], 'myflyingbox'),
+                'booked' => $this->trans('Booked', [], 'myflyingbox'),
+                'shipped' => $this->trans('Shipped', [], 'myflyingbox'),
+                'delivered' => $this->trans('Delivered', [], 'myflyingbox'),
+                'cancelled' => $this->trans('Cancelled', [], 'myflyingbox'),
+                default => ucfirst($status),
+            };
+            $statusBadge = '<span class="badge bg-' . $badgeClass . '" style="margin-left: 5px;">' . $statusLabel . '</span>';
         }
 
         // Add badge for return shipments count

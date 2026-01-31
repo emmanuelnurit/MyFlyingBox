@@ -162,6 +162,12 @@ class ShipmentService
         // Use relay address if available and relay delivery
         if ($relay && $relay->getRelayCode()) {
             $shipment->setRelayDeliveryCode($relay->getRelayCode());
+            $shipment->setRelayName($relay->getRelayName());
+            $shipment->setRelayStreet($relay->getRelayStreet());
+            $shipment->setRelayCity($relay->getRelayCity());
+            $shipment->setRelayPostalCode($relay->getRelayPostalCode());
+            $shipment->setRelayCountry($relay->getRelayCountry());
+            // Also set recipient address to relay for API
             $shipment->setRecipientStreet($relay->getRelayStreet());
             $shipment->setRecipientCity($relay->getRelayCity());
             $shipment->setRecipientPostalCode($relay->getRelayPostalCode());

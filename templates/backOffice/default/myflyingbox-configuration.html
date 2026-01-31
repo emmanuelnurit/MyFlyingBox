@@ -286,6 +286,44 @@
     background: #f1f5f9;
 }
 
+/* Dimensions table action buttons - inline & discreet style */
+#dimensions-card .actions-cell {
+    white-space: nowrap;
+    display: flex;
+    gap: 0.35rem;
+    align-items: center;
+}
+
+#dimensions-card .btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 12px;
+    transition: all 0.15s ease;
+}
+
+#dimensions-card .btn-action:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#dimensions-card .btn-action-edit:hover {
+    background: #e0e7ff;
+    color: #4a6fa5;
+}
+
+#dimensions-card .btn-action-delete:hover {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
 /* ========================================
    Helper Text - Lisible
    ======================================== */
@@ -984,7 +1022,7 @@
             {loop type="myflyingbox.services" name="active_services_summary" active="true"}
             <span class="mfb-summary-badge" data-id="{$ID}" style="display: inline-flex; align-items: center; padding: 0.4rem 0.75rem; background: #fff; border: 1px solid #22c55e; border-radius: 6px; font-size: 0.9rem; color: #166534; font-weight: 500;">
                 {if $CARRIER_LOGO}
-                <img src="{$CARRIER_LOGO}" alt="{$CARRIER_CODE}" style="height: 20px; width: auto; margin-right: 0.5rem; object-fit: contain;"/>
+                <img src="{$CARRIER_LOGO}" alt="{$CARRIER_CODE}" style="height: 20px; width: auto; margin-right: 0.5rem; object-fit: contain;" data-fallback="{$CARRIER_LOGO_FALLBACK}" onerror="this.onerror=null; this.src=this.dataset.fallback;"/>
                 {else}
                 <i class="fa fa-truck" style="margin-right: 0.5rem; color: #22c55e;"></i>
                 {/if}
@@ -1035,7 +1073,7 @@
                             <td>
                                 <div style="display: flex; align-items: center; gap: 0.75rem;">
                                     {if $CARRIER_LOGO}
-                                    <img src="{$CARRIER_LOGO}" alt="{$CARRIER_CODE}" style="height: 28px; width: auto; max-width: 70px; object-fit: contain;"/>
+                                    <img src="{$CARRIER_LOGO}" alt="{$CARRIER_CODE}" style="height: 28px; width: auto; max-width: 70px; object-fit: contain;" data-fallback="{$CARRIER_LOGO_FALLBACK}" onerror="this.onerror=null; this.src=this.dataset.fallback;"/>
                                     {/if}
                                     <strong style="font-size: 0.95rem;">{$CARRIER_CODE|upper}</strong>
                                 </div>
@@ -1100,11 +1138,11 @@
                             <td>{$LENGTH}</td>
                             <td>{$WIDTH}</td>
                             <td>{$HEIGHT}</td>
-                            <td>
-                                <button type="button" class="btn btn-sm btn-outline-primary mfb-edit-dimension" title="{intl l='Edit' d='myflyingbox'}">
+                            <td class="actions-cell">
+                                <button type="button" class="btn-action btn-action-edit mfb-edit-dimension" title="{intl l='Edit' d='myflyingbox'}">
                                     <i class="glyphicon glyphicon-pencil"></i>
                                 </button>
-                                <button type="button" class="btn btn-sm btn-outline-danger mfb-delete-dimension" title="{intl l='Delete' d='myflyingbox'}">
+                                <button type="button" class="btn-action btn-action-delete mfb-delete-dimension" title="{intl l='Delete' d='myflyingbox'}">
                                     <i class="glyphicon glyphicon-trash"></i>
                                 </button>
                             </td>
