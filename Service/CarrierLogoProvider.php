@@ -13,33 +13,35 @@ class CarrierLogoProvider
      * Mapping of carrier codes to local logo filenames
      */
     private const CARRIER_LOCAL_LOGOS = [
-        'dhl' => 'dhl.png',
-        'dhl_express' => 'dhl.png',
-        'ups' => 'ups.png',
-        'fedex' => 'fedex.png',
-        'tnt' => 'tnt.png',
-        'dpd' => 'dpd.png',
-        'gls' => 'gls.png',
-        'chronopost' => 'chronopost.png',
-        'colissimo' => 'colissimo.png',
-        'laposte' => 'laposte.png',
-        'la_poste' => 'laposte.png',
-        'mondialrelay' => 'mondialrelay.png',
-        'mondial_relay' => 'mondialrelay.png',
-        'relais_colis' => 'relaiscolis.png',
-        'colis_prive' => 'colisprive.png',
-        'db_schenker' => 'dbschenker.png',
-        'hermes' => 'hermes.png',
-        'postnl' => 'postnl.png',
-        'bpost' => 'bpost.png',
-        'correos' => 'correos.png',
-        'poste_italiane' => 'posteitaliane.png',
-        'royal_mail' => 'royalmail.png',
-        'spring' => 'spring.png',
-        'geodis' => 'geodis.png',
-        'seur' => 'seur.png',
-        'mrw' => 'mrw.png',
-        'nacex' => 'nacex.png',
+        'dhl' => 'dhl.svg',
+        'dhl_express' => 'dhl.svg',
+        'ups' => 'ups.svg',
+        'fedex' => 'fedex.svg',
+        'tnt' => 'tnt.svg',
+        'dpd' => 'dpd.svg',
+        'gls' => 'gls.svg',
+        'chronopost' => 'chronopost.svg',
+        'colissimo' => 'colissimo.svg',
+        'laposte' => 'laposte.svg',
+        'la_poste' => 'laposte.svg',
+        'mondialrelay' => 'mondialrelay.svg',
+        'mondial_relay' => 'mondialrelay.svg',
+        'relais_colis' => 'relaiscolis.svg',
+        'colis_prive' => 'colisprive.svg',
+        'db_schenker' => 'dbschenker.svg',
+        'hermes' => 'hermes.svg',
+        'postnl' => 'postnl.svg',
+        'post_nl' => 'postnl.svg',
+        'bpost' => 'bpost.svg',
+        'correos' => 'correos.svg',
+        'correos_express' => 'correos.svg',
+        'poste_italiane' => 'posteitaliane.svg',
+        'royal_mail' => 'royalmail.svg',
+        'spring' => 'spring.svg',
+        'geodis' => 'geodis.svg',
+        'seur' => 'seur.svg',
+        'mrw' => 'mrw.svg',
+        'nacex' => 'nacex.svg',
     ];
 
     /**
@@ -122,7 +124,7 @@ class CarrierLogoProvider
 
     /**
      * Get the URL of a carrier logo
-     * First checks for local file, then generates an inline SVG data URI
+     * Priority: 1) Local file, 2) Inline SVG fallback
      *
      * @param string $carrierCode The carrier code from API
      * @return string|null The logo URL or null if no logo available
@@ -143,6 +145,18 @@ class CarrierLogoProvider
         }
 
         // Fallback to inline SVG with carrier initials
+        return $this->generateSvgDataUri($normalizedCode);
+    }
+
+    /**
+     * Generate fallback SVG for a carrier (public method for templates)
+     *
+     * @param string $carrierCode The carrier code
+     * @return string SVG data URI
+     */
+    public function generateFallbackSvg(string $carrierCode): string
+    {
+        $normalizedCode = $this->normalizeCarrierCode($carrierCode);
         return $this->generateSvgDataUri($normalizedCode);
     }
 

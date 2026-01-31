@@ -36,31 +36,66 @@
                                 <dt>{intl l="Carrier" d="myflyingbox"}</dt>
                                 <dd style="display: flex; align-items: center; gap: 0.5rem;">
                                     {if $CARRIER_LOGO}
-                                    <img src="{$CARRIER_LOGO}" alt="{$CARRIER_CODE}" style="height: 24px; width: auto; max-width: 60px; object-fit: contain;"/>
+                                    <img src="{$CARRIER_LOGO}" alt="{$CARRIER_CODE}" style="height: 24px; width: auto; max-width: 60px; object-fit: contain;" data-fallback="{$CARRIER_LOGO_FALLBACK}" onerror="this.onerror=null; this.src=this.dataset.fallback;"/>
                                     {/if}
                                     <strong>{$CARRIER_CODE|upper}</strong> - {$NAME}
                                 </dd>
+
+                                <dt>{intl l="Delivery type" d="myflyingbox"}</dt>
+                                <dd>
+                                    {if $RELAY_DELIVERY}
+                                        <span class="label label-info"><i class="fa fa-map-marker"></i> {intl l="Relay point delivery" d="myflyingbox"}</span>
+                                    {else}
+                                        <span class="label label-default"><i class="fa fa-home"></i> {intl l="Home delivery" d="myflyingbox"}</span>
+                                    {/if}
+                                </dd>
+
+                                {if $DELIVERY_DELAY}
+                                <dt>{intl l="Delivery time" d="myflyingbox"}</dt>
+                                <dd><i class="fa fa-clock-o"></i> {$DELIVERY_DELAY}</dd>
+                                {/if}
                                 {/loop}
-                            {/if}
-
-                            {if $shipment->getApiOrderUuid()}
-                            <dt>{intl l="API Order" d="myflyingbox"}</dt>
-                            <dd><code>{$shipment->getApiOrderUuid()}</code></dd>
-                            {/if}
-
-                            {if $shipment->getDateBooking()}
-                            <dt>{intl l="Booking Date" d="myflyingbox"}</dt>
-                            <dd>{format_date date=$shipment->getDateBooking() output="datetime"}</dd>
-                            {/if}
-
-                            {if $shipment->getCollectionDate()}
-                            <dt>{intl l="Collection Date" d="myflyingbox"}</dt>
-                            <dd>{format_date date=$shipment->getCollectionDate() output="date"}</dd>
                             {/if}
 
                             {if $shipment->getRelayDeliveryCode()}
                             <dt>{intl l="Relay Point" d="myflyingbox"}</dt>
-                            <dd><span class="label label-info"><i class="fa fa-map-marker"></i> {$shipment->getRelayDeliveryCode()}</span></dd>
+                            <dd>
+                                <div class="well well-sm" style="margin: 0; padding: 10px 14px; background: #f0f7ff; border: 1px solid #b8daff; border-radius: 6px;">
+                                    <div style="display: flex; align-items: flex-start; gap: 10px;">
+                                        <i class="fa fa-map-marker text-info" style="font-size: 1.3em; margin-top: 2px;"></i>
+                                        <div>
+                                            <strong style="color: #0056b3;">{$shipment->getRelayDeliveryCode()}</strong>
+                                            {if $shipment->getRelayName()}
+                                                <br><span style="font-weight: 500;">{$shipment->getRelayName()}</span>
+                                            {/if}
+                                            {if $shipment->getRelayStreet()}
+                                                <br><span class="text-muted">{$shipment->getRelayStreet()}</span>
+                                            {/if}
+                                            {if $shipment->getRelayPostalCode() || $shipment->getRelayCity()}
+                                                <br><span class="text-muted">{$shipment->getRelayPostalCode()} {$shipment->getRelayCity()}</span>
+                                            {/if}
+                                            {if $shipment->getRelayCountry()}
+                                                <br><span class="text-muted">{$shipment->getRelayCountry()}</span>
+                                            {/if}
+                                        </div>
+                                    </div>
+                                </div>
+                            </dd>
+                            {/if}
+
+                            {if $shipment->getApiOrderUuid()}
+                            <dt>{intl l="API Order" d="myflyingbox"}</dt>
+                            <dd><code style="font-size: 0.85em;">{$shipment->getApiOrderUuid()}</code></dd>
+                            {/if}
+
+                            {if $shipment->getDateBooking()}
+                            <dt>{intl l="Booking Date" d="myflyingbox"}</dt>
+                            <dd><i class="fa fa-calendar"></i> {format_date date=$shipment->getDateBooking() output="datetime"}</dd>
+                            {/if}
+
+                            {if $shipment->getCollectionDate()}
+                            <dt>{intl l="Collection Date" d="myflyingbox"}</dt>
+                            <dd><i class="fa fa-truck"></i> {format_date date=$shipment->getCollectionDate() output="date"}</dd>
                             {/if}
                         </dl>
                     </div>

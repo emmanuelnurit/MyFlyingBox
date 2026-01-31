@@ -74,6 +74,11 @@
         <column name="api_order_uuid" type="VARCHAR" size="255"/>
         <column name="collection_date" type="DATE"/>
         <column name="relay_delivery_code" type="VARCHAR" size="50"/>
+        <column name="relay_name" type="VARCHAR" size="255"/>
+        <column name="relay_street" type="VARCHAR" size="500"/>
+        <column name="relay_city" type="VARCHAR" size="255"/>
+        <column name="relay_postal_code" type="VARCHAR" size="20"/>
+        <column name="relay_country" type="VARCHAR" size="2"/>
         <!-- Expediteur -->
         <column name="shipper_name" type="VARCHAR" size="255"/>
         <column name="shipper_company" type="VARCHAR" size="255"/>

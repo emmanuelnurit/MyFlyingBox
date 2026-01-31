@@ -83,6 +83,11 @@ CREATE TABLE `myflyingbox_shipment` (
     `api_order_uuid` VARCHAR(255) NULL COMMENT 'UUID commande LCE (apres booking)',
     `collection_date` DATE NULL COMMENT 'Date enlevement',
     `relay_delivery_code` VARCHAR(50) NULL COMMENT 'Code point relais',
+    `relay_name` VARCHAR(255) NULL COMMENT 'Nom point relais',
+    `relay_street` VARCHAR(500) NULL COMMENT 'Adresse point relais',
+    `relay_city` VARCHAR(255) NULL COMMENT 'Ville point relais',
+    `relay_postal_code` VARCHAR(20) NULL COMMENT 'Code postal point relais',
+    `relay_country` VARCHAR(2) NULL COMMENT 'Pays point relais',
     -- Expediteur
     `shipper_name` VARCHAR(255) NULL,
     `shipper_company` VARCHAR(255) NULL,

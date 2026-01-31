@@ -87,13 +87,16 @@ class ServiceLoop extends BaseLoop implements PropelSearchLoopInterface
             $row = new LoopResultRow($service);
 
             $carrierCode = $service->getCarrierCode();
-            $carrierLogo = $this->getCarrierLogoProvider()->getLogoUrl($carrierCode);
+            $logoProvider = $this->getCarrierLogoProvider();
+            $carrierLogo = $logoProvider->getLogoUrl($carrierCode);
+            $carrierLogoFallback = $logoProvider->generateFallbackSvg($carrierCode);
 
             $row->set('ID', $service->getId())
                 ->set('CODE', $service->getCode())
                 ->set('NAME', $service->getName())
                 ->set('CARRIER_CODE', $carrierCode)
                 ->set('CARRIER_LOGO', $carrierLogo)
+                ->set('CARRIER_LOGO_FALLBACK', $carrierLogoFallback)
                 ->set('PICKUP_AVAILABLE', $service->getPickupAvailable())
                 ->set('DROPOFF_AVAILABLE', $service->getDropoffAvailable())
                 ->set('RELAY_DELIVERY', $service->getRelayDelivery())

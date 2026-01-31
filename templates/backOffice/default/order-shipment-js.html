@@ -5,11 +5,26 @@ $(function() {
     var $container = $('.mfb-shipment-container[data-order-id="' + orderId + '"]');
     var $messages = $('#mfb-shipment-messages');
 
-    // Translations for modals
+    // Translations for modals and statuses
     var MFB_ORDER_TRANSLATIONS = {
         cancel: '{intl l="Cancel" d="myflyingbox"|escape:"javascript"}',
-        confirm: '{intl l="Confirm" d="myflyingbox"|escape:"javascript"}'
+        confirm: '{intl l="Confirm" d="myflyingbox"|escape:"javascript"}',
+        // Status translations
+        statuses: {
+            'CREATED': '{intl l="Created" d="myflyingbox"|escape:"javascript"}',
+            'BOOKED': '{intl l="Booked" d="myflyingbox"|escape:"javascript"}',
+            'SHIPPED': '{intl l="Shipped" d="myflyingbox"|escape:"javascript"}',
+            'DELIVERED': '{intl l="Delivered" d="myflyingbox"|escape:"javascript"}',
+            'CANCELLED': '{intl l="Cancelled" d="myflyingbox"|escape:"javascript"}',
+            'STATUS_CHANGE': '{intl l="Status change" d="myflyingbox"|escape:"javascript"}',
+            'PENDING': '{intl l="Pending" d="myflyingbox"|escape:"javascript"}'
+        }
     };
+
+    // Helper to translate status
+    function translateStatus(status) {
+        return MFB_ORDER_TRANSLATIONS.statuses[status] || status;
+    }
 
     // Modern confirm modal (replaces native confirm())
     function showConfirmModal(title, message, onConfirm, options) {
@@ -296,7 +311,7 @@ showConfirmModal(
 
                             html += '<li style="margin-bottom: 5px;">';
                             html += '<small class="text-muted">' + (event.date || '') + '</small> ';
-                            html += '<span class="label ' + statusClass + '">' + (event.status || '') + '</span> ';
+                            html += '<span class="label ' + statusClass + '">' + translateStatus(event.status || '') + '</span> ';
                             html += event.message || '';
                             if (event.location) {
                                 html += ' <small class="text-muted">(' + event.location + ')</small>';
@@ -322,7 +337,7 @@ showConfirmModal(
                                 parcel.events.forEach(function(event) {
                                     html += '<li style="margin-bottom: 5px;">';
                                     html += '<small class="text-muted">' + (event.date || '') + '</small> ';
-                                    html += '<span class="label label-default">' + (event.status || '') + '</span> ';
+                                    html += '<span class="label label-default">' + translateStatus(event.status || '') + '</span> ';
                                     html += event.message || '';
                                     if (event.location) {
                                         html += ' <small class="text-muted">(' + event.location + ')</small>';
