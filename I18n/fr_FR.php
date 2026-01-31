@@ -244,6 +244,7 @@ return [
     'N° de suivi :' => 'N° de suivi :',
     'Suivre sur le site du transporteur' => 'Suivre sur le site du transporteur',
     'Historique de suivi' => 'Historique de suivi',
+    'Colis' => 'Colis',
     'Le suivi sera disponible une fois votre colis expédié.' => 'Le suivi sera disponible une fois votre colis expédié.',
 
     // Webhook Configuration
@@ -278,6 +279,10 @@ return [
     'Send an email when the shipment is delivered' => 'Envoyer un email lorsque le colis est livré',
     'Email notification sent' => 'Notification email envoyée',
     'Failed to send email notification' => 'Échec de l\'envoi de la notification email',
+
+    // Email Templates Management (Back-office)
+    'Manage Email Templates' => 'Gérer les templates email',
+    'Customize the emails sent to customers for shipping notifications' => 'Personnalisez les emails envoyés aux clients pour les notifications d\'expédition',
 
     // Webhook Accordion
     'Click to configure' => 'Cliquez pour configurer',

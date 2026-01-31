@@ -279,6 +279,10 @@ return [
     'Email notification sent' => 'Email notification sent',
     'Failed to send email notification' => 'Failed to send email notification',
 
+    // Email Templates Management (Back-office)
+    'Manage Email Templates' => 'Manage Email Templates',
+    'Customize the emails sent to customers for shipping notifications' => 'Customize the emails sent to customers for shipping notifications',
+
     // Webhook Accordion
     'Click to configure' => 'Click to configure',
     'Testing...' => 'Testing...',
