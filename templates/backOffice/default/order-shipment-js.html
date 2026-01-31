@@ -311,7 +311,7 @@ $(function() {
                     location.reload();
                 }, 1000);
             } else {
-                showMessage('danger', response.message || '{intl l="Failed to create return shipment" d="myflyingbox"|escape:"javascript"}');
+                showMessage('danger', response.message || "{intl l='Failed to create return shipment' d='myflyingbox'|escape:'javascript'}");
             }
         })
         .fail(function(xhr) {
