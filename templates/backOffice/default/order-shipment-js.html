@@ -5,6 +5,65 @@ $(function() {
     var $container = $('.mfb-shipment-container[data-order-id="' + orderId + '"]');
     var $messages = $('#mfb-shipment-messages');
 
+    // Translations for modals
+    var MFB_ORDER_TRANSLATIONS = {
+        cancel: '{intl l="Cancel" d="myflyingbox"|escape:"javascript"}',
+        confirm: '{intl l="Confirm" d="myflyingbox"|escape:"javascript"}'
+    };
+
+    // Modern confirm modal (replaces native confirm())
+    function showConfirmModal(title, message, onConfirm, options) {
+        options = options || {};
+        var type = options.type || 'warning';
+        var confirmText = options.confirmText || MFB_ORDER_TRANSLATIONS.confirm;
+        var confirmClass = options.confirmClass || 'btn-danger';
+
+        var iconMap = {
+            warning: 'exclamation-triangle',
+            danger: 'times-circle',
+            info: 'info-circle'
+        };
+        var colorMap = {
+            warning: { bg: '#fff3cd', border: '#ffc107', icon: '#664d03', text: '#664d03' },
+            danger: { bg: '#f8d7da', border: '#dc3545', icon: '#842029', text: '#842029' },
+            info: { bg: '#cff4fc', border: '#0dcaf0', icon: '#055160', text: '#055160' }
+        };
+        var colors = colorMap[type] || colorMap.warning;
+        var icon = iconMap[type] || 'exclamation-triangle';
+
+        var modalId = 'mfb-confirm-modal-' + Date.now();
+        var $modal = $('<div class="modal fade" id="' + modalId + '" tabindex="-1" role="dialog">' +
+            '<div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 420px;">' +
+                '<div class="modal-content" style="border-radius: 12px; overflow: hidden; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">' +
+                    '<div class="modal-body text-center" style="padding: 2rem 2rem 1.5rem 2rem; background: ' + colors.bg + ';">' +
+                        '<div style="margin-bottom: 1rem;">' +
+                            '<i class="fa fa-' + icon + '" style="font-size: 3rem; color: ' + colors.icon + ';"></i>' +
+                        '</div>' +
+                        '<h5 style="margin: 0 0 0.75rem 0; font-weight: 600; color: ' + colors.text + ';">' + title + '</h5>' +
+                        '<p style="margin: 0; color: ' + colors.text + '; opacity: 0.9; font-size: 0.95rem;">' + message + '</p>' +
+                    '</div>' +
+                    '<div class="modal-footer" style="padding: 1rem 2rem; background: #fff; border-top: 1px solid ' + colors.border + '40; justify-content: center; gap: 1rem;">' +
+                        '<button type="button" class="btn btn-secondary" data-dismiss="modal" style="padding: 0.5rem 1.5rem; font-weight: 500;">' + MFB_ORDER_TRANSLATIONS.cancel + '</button>' +
+                        '<button type="button" class="btn ' + confirmClass + '" id="mfb-confirm-action-btn" style="padding: 0.5rem 1.5rem; font-weight: 500;">' + confirmText + '</button>' +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>');
+
+        $('body').append($modal);
+
+        $modal.find('#mfb-confirm-action-btn').on('click', function() {
+            $modal.modal('hide');
+            if (onConfirm) onConfirm();
+        });
+
+        $modal.on('hidden.bs.modal', function() {
+            $modal.remove();
+        });
+
+        $modal.modal('show');
+    }
+
     function showMessage(type, message) {
         $messages.html('<div class="alert alert-' + type + ' alert-dismissible">' +
             '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
@@ -74,38 +133,45 @@ $(function() {
         var $btn = $(this);
         var shipmentId = $btn.data('shipment-id');
 
-        if (!confirm('{intl l="Are you sure you want to book this shipment? This action cannot be undone." d="myflyingbox"|escape:"javascript"}')) {
-            return;
-        }
+showConfirmModal(
+            '{intl l="Book Shipment" d="myflyingbox"|escape:"javascript"}',
+            '{intl l="Are you sure you want to book this shipment? This action cannot be undone." d="myflyingbox"|escape:"javascript"}',
+            function() {
+                showLoading($btn);
 
-        showLoading($btn);
-
-        $.ajax({
-            url: '{url path="/admin/module/myflyingbox/shipment/book"}',
-            method: 'POST',
-            data: { shipment_id: shipmentId },
-            dataType: 'json'
-        })
-        .done(function(response) {
-            if (response.success) {
-                showMessage('success', '{intl l="Shipment booked successfully!" d="myflyingbox"|escape:"javascript"}');
-                setTimeout(function() {
-                    location.reload();
-                }, 1000);
-            } else {
-                showMessage('danger', response.message || '{intl l="Failed to book shipment" d="myflyingbox"|escape:"javascript"}');
+                $.ajax({
+                    url: '{url path="/admin/module/myflyingbox/shipment/book"}',
+                    method: 'POST',
+                    data: { shipment_id: shipmentId },
+                    dataType: 'json'
+                })
+                .done(function(response) {
+                    if (response.success) {
+                        showMessage('success', '{intl l="Shipment booked successfully!" d="myflyingbox"|escape:"javascript"}');
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        showMessage('danger', response.message || '{intl l="Failed to book shipment" d="myflyingbox"|escape:"javascript"}');
+                    }
+                })
+                .fail(function(xhr) {
+                    var msg = '{intl l="An error occurred" d="myflyingbox"|escape:"javascript"}';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg = xhr.responseJSON.message;
+                    }
+                    showMessage('danger', msg);
+                })
+                .always(function() {
+                    hideLoading($btn);
+                });
+            },
+            {
+                type: 'info',
+                confirmText: '{intl l="Book" d="myflyingbox"|escape:"javascript"}',
+                confirmClass: 'btn-primary'
             }
-        })
-        .fail(function(xhr) {
-            var msg = '{intl l="An error occurred" d="myflyingbox"|escape:"javascript"}';
-            if (xhr.responseJSON && xhr.responseJSON.message) {
-                msg = xhr.responseJSON.message;
-            }
-            showMessage('danger', msg);
-        })
-        .always(function() {
-            hideLoading($btn);
-        });
+        );
     });
 
     // Download labels
@@ -161,34 +227,41 @@ $(function() {
         var $btn = $(this);
         var shipmentId = $btn.data('shipment-id');
 
-        if (!confirm('{intl l="Are you sure you want to cancel this shipment?" d="myflyingbox"|escape:"javascript"}')) {
-            return;
-        }
+showConfirmModal(
+            '{intl l="Cancel Shipment" d="myflyingbox"|escape:"javascript"}',
+            '{intl l="Are you sure you want to cancel this shipment?" d="myflyingbox"|escape:"javascript"}',
+            function() {
+                showLoading($btn);
 
-        showLoading($btn);
-
-        $.ajax({
-            url: '{url path="/admin/module/myflyingbox/shipment/cancel"}',
-            method: 'POST',
-            data: { shipment_id: shipmentId },
-            dataType: 'json'
-        })
-        .done(function(response) {
-            if (response.success) {
-                showMessage('success', '{intl l="Shipment cancelled" d="myflyingbox"|escape:"javascript"}');
-                setTimeout(function() {
-                    location.reload();
-                }, 1000);
-            } else {
-                showMessage('danger', response.message || '{intl l="Failed to cancel shipment" d="myflyingbox"|escape:"javascript"}');
+                $.ajax({
+                    url: '{url path="/admin/module/myflyingbox/shipment/cancel"}',
+                    method: 'POST',
+                    data: { shipment_id: shipmentId },
+                    dataType: 'json'
+                })
+                .done(function(response) {
+                    if (response.success) {
+                        showMessage('success', '{intl l="Shipment cancelled" d="myflyingbox"|escape:"javascript"}');
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        showMessage('danger', response.message || '{intl l="Failed to cancel shipment" d="myflyingbox"|escape:"javascript"}');
+                    }
+                })
+                .fail(function() {
+                    showMessage('danger', '{intl l="An error occurred" d="myflyingbox"|escape:"javascript"}');
+                })
+                .always(function() {
+                    hideLoading($btn);
+                });
+            },
+            {
+                type: 'danger',
+                confirmText: '{intl l="Cancel Shipment" d="myflyingbox"|escape:"javascript"}',
+                confirmClass: 'btn-danger'
             }
-        })
-        .fail(function() {
-            showMessage('danger', '{intl l="An error occurred" d="myflyingbox"|escape:"javascript"}');
-        })
-        .always(function() {
-            hideLoading($btn);
-        });
+        );
     });
 
     // Load tracking timeline on page load
@@ -352,5 +425,47 @@ $(function() {
     height: 12px;
     background: #428bca;
     border-radius: 50%;
+}
+
+/* Modern Confirm Modal Styles - Bootstrap 3 compatible */
+.modal-dialog-centered {
+    display: flex;
+    align-items: center;
+    min-height: calc(100% - 60px);
+    margin: 30px auto;
+}
+
+/* Modal animation - Bootstrap 3 uses .in instead of .show */
+.modal.fade .modal-dialog {
+    transform: scale(0.9);
+    opacity: 0;
+    transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+}
+.modal.in .modal-dialog {
+    transform: scale(1);
+    opacity: 1;
+}
+
+/* Modal footer button gap */
+.modal-footer {
+    display: flex;
+    gap: 0.75rem;
+}
+
+/* Button hover effects */
+.modal-footer .btn {
+    transition: all 0.2s ease;
+}
+.modal-footer .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.modal-footer .btn-danger:hover {
+    background-color: #bb2d3b;
+    border-color: #b02a37;
+}
+.modal-footer .btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
 }
 </style>
