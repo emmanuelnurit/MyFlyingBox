@@ -187,6 +187,46 @@
     font-size: 0.95rem;
 }
 
+/* Webhook input-group fixes for Bootstrap 3 */
+.mfb-webhook-card .input-group {
+    display: flex;
+    width: 100%;
+}
+
+.mfb-webhook-card .input-group .form-control {
+    flex: 1;
+    border-top-right-radius: 8px !important;
+    border-bottom-right-radius: 8px !important;
+}
+
+.mfb-webhook-card .input-group .form-control:first-child {
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
+.mfb-webhook-card .input-group .input-group-btn {
+    display: flex;
+}
+
+.mfb-webhook-card .input-group .input-group-btn .btn {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    border-top-right-radius: 8px !important;
+    border-bottom-right-radius: 8px !important;
+    height: auto;
+    padding: 0.75rem 1rem;
+    border: 2px solid #4a6fa5;
+    color: #4a6fa5;
+    background: #fff;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.mfb-webhook-card .input-group .input-group-btn .btn:hover {
+    background: #4a6fa5;
+    color: #fff;
+}
+
 /* ========================================
    Buttons - Taille lisible
    ======================================== */
@@ -872,13 +912,13 @@
                         {* Webhook URL - Read only display *}
                         <div style="margin-bottom: 1.5rem;">
                             <label class="form-label" style="font-size: 0.95rem; font-weight: 600; color: #1e3a5f; margin-bottom: 0.5rem;">{intl l="Your Webhook Endpoint" d="myflyingbox"}</label>
-                            <div class="input-group" style="max-width: 100%;">
+                            <div class="input-group">
                                 <input type="text" id="mfb-webhook-url" class="form-control" value="{url path="/myflyingbox/webhook/tracking"}" readonly style="background: #f1f5f9; font-size: 0.95rem; padding: 0.75rem 1rem;"/>
-                                <div class="input-group-append">
-                                    <button type="button" class="btn btn-outline-secondary" id="mfb-copy-webhook-url" title="{intl l='Copy to clipboard' d='myflyingbox'}" style="padding: 0.75rem 1rem;">
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-default" id="mfb-copy-webhook-url" title="{intl l='Copy to clipboard' d='myflyingbox'}">
                                         <i class="fa fa-copy" style="margin-right: 0.35rem;"></i> {intl l="Copy" d="myflyingbox"}
                                     </button>
-                                </div>
+                                </span>
                             </div>
                             <small class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem; display: block;">{intl l="Use this URL in your MyFlyingBox dashboard" d="myflyingbox"}</small>
                         </div>
@@ -902,11 +942,11 @@
                                     <label class="form-label" style="font-size: 0.95rem; font-weight: 600; color: #1e3a5f; margin-bottom: 0.5rem;">{intl l="Webhook Secret" d="myflyingbox"}</label>
                                     <div class="input-group">
                                         <input type="text" id="mfb-webhook-secret" name="{$name}" value="{$value}" class="form-control" placeholder="whsec_xxxxxxxxxxxxxxxx" style="font-size: 0.95rem; padding: 0.75rem 1rem;"/>
-                                        <div class="input-group-append">
-                                            <button type="button" class="btn btn-outline-primary" id="mfb-generate-secret" title="{intl l='Generate new secret' d='myflyingbox'}" style="padding: 0.75rem 1rem;">
+                                        <span class="input-group-btn">
+                                            <button type="button" class="btn btn-primary" id="mfb-generate-secret" title="{intl l='Generate new secret' d='myflyingbox'}">
                                                 <i class="fa fa-refresh" style="margin-right: 0.35rem;"></i> {intl l="New Secret" d="myflyingbox"}
                                             </button>
-                                        </div>
+                                        </span>
                                     </div>
                                     <small class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem; display: block;">{intl l="Secret key used to verify webhook signatures" d="myflyingbox"}</small>
                                 {/form_field}
