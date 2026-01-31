@@ -30,12 +30,6 @@
         <service id="myflyingbox.tracking_notification.service" class="MyFlyingBox\Service\TrackingNotificationService" public="true">
             <argument type="service" id="mailer"/>
             <argument type="service" id="monolog.logger"/>
-            <call method="setEmailTemplateService">
-                <argument type="service" id="myflyingbox.email_template.service"/>
-            </call>
-            <call method="setEmailRenderingService">
-                <argument type="service" id="myflyingbox.email_rendering.service"/>
-            </call>
         </service>
 
         <!-- Tracking Service -->
@@ -58,15 +52,6 @@
         <!-- Carrier Logo Provider -->
         <service id="myflyingbox.carrier_logo.provider" class="MyFlyingBox\Service\CarrierLogoProvider" public="true"/>
 
-        <!-- Email Template Services -->
-        <service id="myflyingbox.email_template.service" class="MyFlyingBox\Service\EmailTemplateService" public="true">
-            <argument type="service" id="monolog.logger"/>
-        </service>
-
-        <service id="myflyingbox.email_rendering.service" class="MyFlyingBox\Service\EmailRenderingService" public="true">
-            <argument type="service" id="myflyingbox.email_template.service"/>
-        </service>
-
         <!-- CLI Commands -->
         <service id="myflyingbox.command.sync_tracking" class="MyFlyingBox\Command\SyncTrackingCommand">
             <argument type="service" id="myflyingbox.tracking.service"/>
@@ -88,13 +73,11 @@
         <loop name="myflyingbox.shipments" class="MyFlyingBox\Loop\ShipmentLoop"/>
         <loop name="myflyingbox.parcels" class="MyFlyingBox\Loop\ParcelLoop"/>
         <loop name="myflyingbox.dimensions" class="MyFlyingBox\Loop\DimensionLoop"/>
-        <loop name="myflyingbox.email_templates" class="MyFlyingBox\Loop\EmailTemplateLoop"/>
     </loops>
 
     <forms>
         <form name="myflyingbox.configuration" class="MyFlyingBox\Form\ConfigurationForm"/>
         <form name="myflyingbox.dimension" class="MyFlyingBox\Form\DimensionForm"/>
-        <form name="myflyingbox.email_template" class="MyFlyingBox\Form\EmailTemplateForm"/>
     </forms>
 
     <hooks>

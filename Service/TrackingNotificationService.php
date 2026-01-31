@@ -11,42 +11,29 @@ use MyFlyingBox\MyFlyingBox;
 use Psr\Log\LoggerInterface;
 use Thelia\Mailer\MailerFactory;
 use Thelia\Model\ConfigQuery;
+use Thelia\Model\MessageQuery;
 use Thelia\Model\Order;
 use Thelia\Model\OrderQuery;
 
 /**
  * Service for sending tracking notification emails to customers
+ * Uses Thelia's native message system with templates in /admin/configuration/messages
  */
 class TrackingNotificationService
 {
     public const STATUS_SHIPPED = 'shipped';
     public const STATUS_DELIVERED = 'delivered';
 
+    public const MESSAGE_SHIPPED = 'myflyingbox_shipped';
+    public const MESSAGE_DELIVERED = 'myflyingbox_delivered';
+
     private MailerFactory $mailer;
     private LoggerInterface $logger;
-    private ?EmailTemplateService $emailTemplateService = null;
-    private ?EmailRenderingService $emailRenderingService = null;
 
     public function __construct(MailerFactory $mailer, LoggerInterface $logger)
     {
         $this->mailer = $mailer;
         $this->logger = $logger;
-    }
-
-    /**
-     * Set the email template service (optional, for template-based emails)
-     */
-    public function setEmailTemplateService(EmailTemplateService $emailTemplateService): void
-    {
-        $this->emailTemplateService = $emailTemplateService;
-    }
-
-    /**
-     * Set the email rendering service (optional, for template-based emails)
-     */
-    public function setEmailRenderingService(EmailRenderingService $emailRenderingService): void
-    {
-        $this->emailRenderingService = $emailRenderingService;
     }
 
     /**
@@ -59,10 +46,6 @@ class TrackingNotificationService
 
     /**
      * Send notification email when shipment status changes
-     *
-     * @param MyFlyingBoxShipment $shipment The shipment
-     * @param string $previousStatus The previous status
-     * @param string $newStatus The new status
      */
     public function sendStatusChangeNotification(
         MyFlyingBoxShipment $shipment,
@@ -84,7 +67,7 @@ class TrackingNotificationService
             return false;
         }
 
-        // Don't send notifications for return shipments (optional behavior)
+        // Don't send notifications for return shipments
         if ($shipment->getIsReturn()) {
             $this->logger->debug('Skipping notification for return shipment');
             return false;
@@ -108,55 +91,25 @@ class TrackingNotificationService
                 return false;
             }
 
-            // Get customer locale
-            $locale = $customer->getCustomerLang()?->getLocale() ?? 'fr_FR';
+            // Get message code based on status
+            $messageCode = $newStatus === self::STATUS_DELIVERED
+                ? self::MESSAGE_DELIVERED
+                : self::MESSAGE_SHIPPED;
 
-            // Try to use database template first
-            $rendered = $this->renderFromTemplate($shipment, $order, $newStatus, $locale);
+            // Check if the message exists in Thelia
+            $message = MessageQuery::create()->findOneByName($messageCode);
 
-            if ($rendered !== null) {
-                // Use template-based content
-                $subject = $rendered['subject'];
-                $htmlBody = $rendered['html'];
-                $textBody = $rendered['text'];
-
-                $this->logger->debug('Using database email template', [
-                    'status' => $newStatus,
-                    'locale' => $locale,
-                ]);
-            } else {
-                // Fallback to hardcoded content
-                $emailData = $this->buildEmailData($shipment, $order, $newStatus);
-                $subject = $this->getEmailSubject($newStatus, $locale, $order->getRef());
-                $htmlBody = $this->buildHtmlBody($emailData, $newStatus, $locale);
-                $textBody = $this->buildTextBody($emailData, $newStatus, $locale);
-
-                $this->logger->debug('Using fallback hardcoded email content', [
-                    'status' => $newStatus,
-                    'locale' => $locale,
-                ]);
+            if ($message !== null) {
+                // Use Thelia native message system
+                return $this->sendWithTheliaMessage($shipment, $order, $messageCode);
             }
 
-            // Send email
-            $storeName = ConfigQuery::getStoreName();
-            $storeEmail = ConfigQuery::getStoreEmail();
-
-            $this->mailer->sendSimpleEmailMessage(
-                [$storeEmail => $storeName],
-                [$customer->getEmail() => $customer->getFirstname() . ' ' . $customer->getLastname()],
-                $subject,
-                $htmlBody,
-                $textBody
-            );
-
-            $this->logger->info('Tracking notification email sent', [
-                'shipment_id' => $shipment->getId(),
-                'order_id' => $order->getId(),
-                'customer_email' => $customer->getEmail(),
-                'status' => $newStatus,
+            // Fallback to hardcoded content if message doesn't exist
+            $this->logger->debug('Thelia message not found, using fallback', [
+                'message_code' => $messageCode,
             ]);
 
-            return true;
+            return $this->sendWithFallback($shipment, $order, $newStatus);
 
         } catch (\Exception $e) {
             $this->logger->error('Failed to send tracking notification email: ' . $e->getMessage(), [
@@ -168,47 +121,141 @@ class TrackingNotificationService
     }
 
     /**
-     * Try to render email from database template
-     *
-     * @return array{subject: string, html: string, text: string}|null
+     * Send notification using Thelia's native message system
      */
-    private function renderFromTemplate(
+    private function sendWithTheliaMessage(
         MyFlyingBoxShipment $shipment,
         Order $order,
-        string $status,
-        string $locale
-    ): ?array {
-        // Check if template services are available
-        if ($this->emailTemplateService === null || $this->emailRenderingService === null) {
-            return null;
-        }
+        string $messageCode
+    ): bool {
+        $customer = $order->getCustomer();
 
-        try {
-            // Try to load template from database
-            $template = $this->emailTemplateService->getTemplate($status, $locale);
+        // Build template variables
+        $parameters = $this->buildTemplateParameters($shipment, $order);
 
-            if ($template === null) {
-                return null;
-            }
+        // Send using MailerFactory
+        $this->mailer->sendEmailToCustomer(
+            $messageCode,
+            $customer,
+            $parameters
+        );
 
-            // Build variables and render
-            $variables = $this->emailRenderingService->buildVariablesFromShipment($shipment, $order, $status);
+        $this->logger->info('Tracking notification sent via Thelia message', [
+            'shipment_id' => $shipment->getId(),
+            'order_id' => $order->getId(),
+            'customer_email' => $customer->getEmail(),
+            'message_code' => $messageCode,
+        ]);
 
-            return $this->emailRenderingService->render($template, $variables);
-
-        } catch (\Exception $e) {
-            $this->logger->warning('Failed to render email from template, using fallback', [
-                'status' => $status,
-                'locale' => $locale,
-                'error' => $e->getMessage(),
-            ]);
-
-            return null;
-        }
+        return true;
     }
 
     /**
-     * Build email data array
+     * Build parameters for email template
+     */
+    private function buildTemplateParameters(MyFlyingBoxShipment $shipment, Order $order): array
+    {
+        $customer = $order->getCustomer();
+
+        // Get carrier info
+        $carrierName = '';
+        if ($shipment->getServiceId()) {
+            $service = MyFlyingBoxServiceQuery::create()->findPk($shipment->getServiceId());
+            if ($service) {
+                $carrierName = $service->getName();
+            }
+        }
+
+        // Get first tracking number and URL
+        $trackingNumber = '';
+        $trackingUrl = '';
+        $parcels = MyFlyingBoxParcelQuery::create()
+            ->filterByShipmentId($shipment->getId())
+            ->find();
+
+        foreach ($parcels as $parcel) {
+            if ($parcel->getTrackingNumber()) {
+                $trackingNumber = $parcel->getTrackingNumber();
+
+                // Build tracking URL
+                if ($shipment->getServiceId()) {
+                    $service = MyFlyingBoxServiceQuery::create()->findPk($shipment->getServiceId());
+                    if ($service && $service->getTrackingUrl()) {
+                        $trackingUrl = str_replace(
+                            '{tracking_number}',
+                            $trackingNumber,
+                            $service->getTrackingUrl()
+                        );
+                    }
+                }
+                break; // Use first tracking number
+            }
+        }
+
+        // Build delivery address
+        $addressParts = [];
+        if ($shipment->getRecipientStreet()) {
+            $addressParts[] = $shipment->getRecipientStreet();
+        }
+        $addressParts[] = $shipment->getRecipientPostalCode() . ' ' . $shipment->getRecipientCity();
+        if ($shipment->getRecipientCountry()) {
+            $addressParts[] = $shipment->getRecipientCountry();
+        }
+        $deliveryAddress = implode("\n", array_filter($addressParts));
+
+        return [
+            'order_ref' => $order->getRef(),
+            'customer_firstname' => $customer->getFirstname(),
+            'customer_lastname' => $customer->getLastname(),
+            'carrier_name' => $carrierName,
+            'tracking_number' => $trackingNumber,
+            'tracking_url' => $trackingUrl,
+            'delivery_address' => $deliveryAddress,
+            'store_name' => ConfigQuery::getStoreName(),
+            'store_url' => ConfigQuery::getConfiguredShopUrl(),
+            'locale' => $customer->getCustomerLang()?->getLocale() ?? 'fr_FR',
+        ];
+    }
+
+    /**
+     * Fallback: Send notification using hardcoded content
+     */
+    private function sendWithFallback(
+        MyFlyingBoxShipment $shipment,
+        Order $order,
+        string $newStatus
+    ): bool {
+        $customer = $order->getCustomer();
+        $locale = $customer->getCustomerLang()?->getLocale() ?? 'fr_FR';
+
+        $emailData = $this->buildEmailData($shipment, $order, $newStatus);
+        $subject = $this->getEmailSubject($newStatus, $locale, $order->getRef());
+        $htmlBody = $this->buildHtmlBody($emailData, $newStatus, $locale);
+        $textBody = $this->buildTextBody($emailData, $newStatus, $locale);
+
+        $storeName = ConfigQuery::getStoreName();
+        $storeEmail = ConfigQuery::getStoreEmail();
+
+        $this->mailer->sendSimpleEmailMessage(
+            [$storeEmail => $storeName],
+            [$customer->getEmail() => $customer->getFirstname() . ' ' . $customer->getLastname()],
+            $subject,
+            $htmlBody,
+            $textBody
+        );
+
+        $this->logger->info('Tracking notification sent via fallback', [
+            'shipment_id' => $shipment->getId(),
+            'order_id' => $order->getId(),
+            'customer_email' => $customer->getEmail(),
+            'status' => $newStatus,
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Build email data array for fallback
      */
     private function buildEmailData(MyFlyingBoxShipment $shipment, Order $order, string $status): array
     {
@@ -251,7 +298,6 @@ class TrackingNotificationService
             if ($parcel->getTrackingNumber()) {
                 $data['tracking_numbers'][] = $parcel->getTrackingNumber();
 
-                // Build tracking URL
                 $service = $shipment->getServiceId()
                     ? MyFlyingBoxServiceQuery::create()->findPk($shipment->getServiceId())
                     : null;
@@ -289,7 +335,7 @@ class TrackingNotificationService
     }
 
     /**
-     * Get email subject based on status and locale
+     * Get email subject based on status and locale (fallback)
      */
     private function getEmailSubject(string $status, string $locale, string $orderRef): string
     {
@@ -311,7 +357,7 @@ class TrackingNotificationService
     }
 
     /**
-     * Build HTML email body
+     * Build HTML email body (fallback)
      */
     private function buildHtmlBody(array $data, string $status, string $locale): string
     {
@@ -323,7 +369,6 @@ class TrackingNotificationService
         $carrierName = htmlspecialchars($data['carrier_name']);
         $deliveryAddress = htmlspecialchars($data['delivery_address']);
 
-        // Translations
         $texts = $this->getEmailTexts($status, $isFrench);
 
         $html = <<<HTML
@@ -344,7 +389,6 @@ class TrackingNotificationService
         .tracking-box { background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin: 20px 0; }
         .tracking-number { font-family: monospace; font-size: 18px; font-weight: bold; color: #2c3e50; }
         .btn { display: inline-block; padding: 12px 24px; background-color: #3498db; color: white; text-decoration: none; border-radius: 5px; margin: 10px 5px 10px 0; }
-        .btn:hover { background-color: #2980b9; }
         .info-box { background-color: #e8f4fd; border-left: 4px solid #3498db; padding: 15px; margin: 20px 0; }
         .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; }
         .delivery-address { padding: 15px; background-color: #f8f9fa; border-radius: 5px; margin: 15px 0; }
@@ -357,19 +401,15 @@ class TrackingNotificationService
         </div>
         <div class="content">
             <p>{$texts['greeting']}, {$customerName},</p>
-
             <p>{$texts['intro']}</p>
-
             <div style="text-align: center;">
                 <span class="status-badge status-{$status}">{$texts['status_label']}</span>
             </div>
-
             <div class="tracking-box">
                 <p><strong>{$texts['order']}:</strong> {$orderRef}</p>
                 <p><strong>{$texts['carrier']}:</strong> {$carrierName}</p>
 HTML;
 
-        // Add tracking numbers
         if (!empty($data['tracking_numbers'])) {
             $trackingLabel = $isFrench ? 'Numéro(s) de suivi' : 'Tracking number(s)';
             $html .= "<p><strong>{$trackingLabel}:</strong></p>";
@@ -384,7 +424,6 @@ HTML;
 
         $html .= <<<HTML
             </div>
-
             <div class="delivery-address">
                 <p><strong>{$texts['delivery_address']}:</strong></p>
                 <p>{$deliveryAddress}</p>
@@ -398,11 +437,9 @@ HTML;
 
         $html .= <<<HTML
             </div>
-
             <div class="info-box">
                 <p>{$texts['info_message']}</p>
             </div>
-
             <p>{$texts['thanks']}</p>
             <p><strong>{$storeName}</strong></p>
         </div>
@@ -418,7 +455,7 @@ HTML;
     }
 
     /**
-     * Build plain text email body
+     * Build plain text email body (fallback)
      */
     private function buildTextBody(array $data, string $status, string $locale): string
     {
@@ -456,7 +493,7 @@ HTML;
     }
 
     /**
-     * Get translated texts for email
+     * Get translated texts for email (fallback)
      */
     private function getEmailTexts(string $status, bool $isFrench): array
     {
@@ -470,28 +507,26 @@ HTML;
                     'carrier' => 'Transporteur',
                     'delivery_address' => 'Adresse de livraison',
                     'track_button' => 'Voir le suivi',
-                    'info_message' => 'Nous espérons que votre commande vous donne entière satisfaction. N\'hésitez pas à nous contacter si vous avez des questions.',
+                    'info_message' => 'Nous espérons que votre commande vous donne entière satisfaction.',
                     'thanks' => 'Merci pour votre confiance,',
-                    'footer' => 'Cet email a été envoyé automatiquement, merci de ne pas y répondre.',
+                    'footer' => 'Cet email a été envoyé automatiquement.',
                 ];
             }
 
-            // shipped
             return [
                 'greeting' => 'Bonjour',
-                'intro' => 'Bonne nouvelle ! Votre commande a été expédiée et est en route vers vous.',
+                'intro' => 'Bonne nouvelle ! Votre commande a été expédiée.',
                 'status_label' => '📦 Expédié',
                 'order' => 'Commande',
                 'carrier' => 'Transporteur',
                 'delivery_address' => 'Adresse de livraison',
                 'track_button' => 'Suivre mon colis',
-                'info_message' => 'Vous pouvez suivre votre colis en temps réel grâce au lien ci-dessus. Le délai de livraison dépend du transporteur et de votre zone géographique.',
+                'info_message' => 'Vous pouvez suivre votre colis en temps réel.',
                 'thanks' => 'Merci pour votre commande,',
-                'footer' => 'Cet email a été envoyé automatiquement, merci de ne pas y répondre.',
+                'footer' => 'Cet email a été envoyé automatiquement.',
             ];
         }
 
-        // English
         if ($status === self::STATUS_DELIVERED) {
             return [
                 'greeting' => 'Hello',
@@ -501,24 +536,23 @@ HTML;
                 'carrier' => 'Carrier',
                 'delivery_address' => 'Delivery address',
                 'track_button' => 'View tracking',
-                'info_message' => 'We hope you are satisfied with your order. Please don\'t hesitate to contact us if you have any questions.',
+                'info_message' => 'We hope you are satisfied with your order.',
                 'thanks' => 'Thank you for your trust,',
-                'footer' => 'This email was sent automatically, please do not reply.',
+                'footer' => 'This email was sent automatically.',
             ];
         }
 
-        // shipped
         return [
             'greeting' => 'Hello',
-            'intro' => 'Great news! Your order has been shipped and is on its way to you.',
+            'intro' => 'Great news! Your order has been shipped.',
             'status_label' => '📦 Shipped',
             'order' => 'Order',
             'carrier' => 'Carrier',
             'delivery_address' => 'Delivery address',
             'track_button' => 'Track my package',
-            'info_message' => 'You can track your package in real-time using the link above. Delivery time depends on the carrier and your geographical area.',
+            'info_message' => 'You can track your package in real-time.',
             'thanks' => 'Thank you for your order,',
-            'footer' => 'This email was sent automatically, please do not reply.',
+            'footer' => 'This email was sent automatically.',
         ];
     }
 }

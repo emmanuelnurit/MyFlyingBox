@@ -100,46 +100,6 @@
         <default key="_controller">MyFlyingBox\Controller\TrackingController::syncStatusAction</default>
     </route>
 
-    <!-- Email Template Management routes -->
-    <route id="myflyingbox.admin.email_templates" path="/admin/module/myflyingbox/email-templates" methods="GET">
-        <default key="_controller">MyFlyingBox\Controller\EmailTemplateController::listAction</default>
-    </route>
-
-    <route id="myflyingbox.admin.email_template.create" path="/admin/module/myflyingbox/email-template/create" methods="GET">
-        <default key="_controller">MyFlyingBox\Controller\EmailTemplateController::createAction</default>
-    </route>
-
-    <route id="myflyingbox.admin.email_template.save" path="/admin/module/myflyingbox/email-template/save" methods="POST">
-        <default key="_controller">MyFlyingBox\Controller\EmailTemplateController::saveAction</default>
-    </route>
-
-    <route id="myflyingbox.admin.email_template.delete" path="/admin/module/myflyingbox/email-template/delete" methods="POST">
-        <default key="_controller">MyFlyingBox\Controller\EmailTemplateController::deleteAction</default>
-    </route>
-
-    <route id="myflyingbox.admin.email_template.preview" path="/admin/module/myflyingbox/email-template/preview" methods="POST">
-        <default key="_controller">MyFlyingBox\Controller\EmailTemplateController::previewAction</default>
-    </route>
-
-    <route id="myflyingbox.admin.email_template.reset" path="/admin/module/myflyingbox/email-template/reset" methods="POST">
-        <default key="_controller">MyFlyingBox\Controller\EmailTemplateController::resetAction</default>
-    </route>
-
-    <route id="myflyingbox.admin.email_template.duplicate" path="/admin/module/myflyingbox/email-template/{id}/duplicate" methods="POST">
-        <default key="_controller">MyFlyingBox\Controller\EmailTemplateController::duplicateAction</default>
-        <requirement key="id">\d+</requirement>
-    </route>
-
-    <route id="myflyingbox.admin.email_template.seed" path="/admin/module/myflyingbox/email-template/seed-defaults" methods="POST">
-        <default key="_controller">MyFlyingBox\Controller\EmailTemplateController::seedDefaultsAction</default>
-    </route>
-
-    <!-- Generic email template edit route - MUST be LAST for email templates -->
-    <route id="myflyingbox.admin.email_template.edit" path="/admin/module/myflyingbox/email-template/{id}" methods="GET">
-        <default key="_controller">MyFlyingBox\Controller\EmailTemplateController::editAction</default>
-        <requirement key="id">\d+</requirement>
-    </route>
-
     <!-- Front-office routes -->
     <route id="myflyingbox.front.relay.points" path="/myflyingbox/relay-points" methods="GET">
         <default key="_controller">MyFlyingBox\Controller\Front\RelayController::getRelayPointsAction</default>

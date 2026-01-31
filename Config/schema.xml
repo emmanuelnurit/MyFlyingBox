@@ -188,24 +188,4 @@
         <behavior name="timestampable"/>
     </table>
 
-    <!-- Templates d'emails personnalisables -->
-    <table name="myflyingbox_email_template" namespace="MyFlyingBox\Model" phpName="MyFlyingBoxEmailTemplate">
-        <column name="id" primaryKey="true" autoIncrement="true" type="INTEGER"/>
-        <column name="code" type="VARCHAR" size="50" required="true" description="Template type: shipped, delivered"/>
-        <column name="locale" type="VARCHAR" size="10" required="true" description="Locale code: fr_FR, en_US"/>
-        <column name="name" type="VARCHAR" size="100" required="true" description="Admin-friendly template name"/>
-        <column name="subject" type="VARCHAR" size="255" required="true" description="Email subject with placeholders"/>
-        <column name="html_content" type="CLOB" required="true" description="HTML email body with placeholders"/>
-        <column name="text_content" type="CLOB" description="Plain text fallback (auto-generated if empty)"/>
-        <column name="is_active" type="BOOLEAN" default="true"/>
-        <column name="is_default" type="BOOLEAN" default="false" description="Shipped with module, restorable"/>
-        <column name="created_at" type="TIMESTAMP"/>
-        <column name="updated_at" type="TIMESTAMP"/>
-        <unique name="myflyingbox_email_template_unique">
-            <unique-column name="code"/>
-            <unique-column name="locale"/>
-        </unique>
-        <behavior name="timestampable"/>
-    </table>
-
 </database>
