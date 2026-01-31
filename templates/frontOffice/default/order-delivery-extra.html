@@ -4,7 +4,58 @@
 {if $offers|@count > 0}
 <tr id="myflyingbox-options-row" class="mfb-options-row">
     <td colspan="3" style="padding: 0; border: none;">
-        <div id="myflyingbox-options" class="mfb-container">
+        {* ============================================
+           SKELETON LOADER - Visible pendant le chargement
+           ============================================ *}
+        <div id="mfb-skeleton" class="mfb-container mfb-skeleton-container">
+            {* Header skeleton *}
+            <div class="mfb-header">
+                <div class="mfb-skeleton-icon"></div>
+                <div class="mfb-skeleton-header-text">
+                    <div class="mfb-skeleton-line mfb-skeleton-title"></div>
+                    <div class="mfb-skeleton-line mfb-skeleton-subtitle"></div>
+                </div>
+            </div>
+
+            {* Offers skeleton (3 fake cards) *}
+            <div class="mfb-offers-grid">
+                <div class="mfb-skeleton-card">
+                    <div class="mfb-skeleton-circle"></div>
+                    <div class="mfb-skeleton-badge"></div>
+                    <div class="mfb-skeleton-content">
+                        <div class="mfb-skeleton-line" style="width: 70%"></div>
+                        <div class="mfb-skeleton-line" style="width: 40%"></div>
+                    </div>
+                    <div class="mfb-skeleton-time"></div>
+                    <div class="mfb-skeleton-price"></div>
+                </div>
+                <div class="mfb-skeleton-card">
+                    <div class="mfb-skeleton-circle"></div>
+                    <div class="mfb-skeleton-badge"></div>
+                    <div class="mfb-skeleton-content">
+                        <div class="mfb-skeleton-line" style="width: 55%"></div>
+                        <div class="mfb-skeleton-line" style="width: 35%"></div>
+                    </div>
+                    <div class="mfb-skeleton-time"></div>
+                    <div class="mfb-skeleton-price"></div>
+                </div>
+                <div class="mfb-skeleton-card">
+                    <div class="mfb-skeleton-circle"></div>
+                    <div class="mfb-skeleton-badge"></div>
+                    <div class="mfb-skeleton-content">
+                        <div class="mfb-skeleton-line" style="width: 65%"></div>
+                        <div class="mfb-skeleton-line" style="width: 45%"></div>
+                    </div>
+                    <div class="mfb-skeleton-time"></div>
+                    <div class="mfb-skeleton-price"></div>
+                </div>
+            </div>
+        </div>
+
+        {* ============================================
+           REAL CONTENT - Hidden initially, revealed by JS
+           ============================================ *}
+        <div id="myflyingbox-options" class="mfb-container mfb-content-hidden">
             {* Header *}
             <div class="mfb-header">
                 <div class="mfb-header-icon">
@@ -148,6 +199,171 @@
 <style>
 /* ============================================
    MyFlyingBox Modern Delivery Selector
+   ============================================ */
+
+/* ============================================
+   SKELETON LOADER STYLES
+   ============================================ */
+
+/* Shimmer animation */
+@keyframes mfb-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* Fade animations */
+@keyframes mfb-fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes mfb-fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Skeleton container */
+.mfb-skeleton-container {
+    pointer-events: none;
+}
+
+.mfb-skeleton-container.mfb-hidden {
+    display: none;
+}
+
+/* Content initially hidden */
+.mfb-content-hidden {
+    opacity: 0;
+    display: none;
+}
+
+.mfb-content-visible {
+    display: block;
+    animation: mfb-fade-in 0.4s ease-out forwards;
+}
+
+/* Skeleton base styles */
+.mfb-skeleton-line,
+.mfb-skeleton-icon,
+.mfb-skeleton-circle,
+.mfb-skeleton-badge,
+.mfb-skeleton-time,
+.mfb-skeleton-price {
+    background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+    background-size: 200% 100%;
+    animation: mfb-shimmer 1.5s ease-in-out infinite;
+    border-radius: 8px;
+}
+
+.mfb-skeleton-header-text {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+}
+
+.mfb-skeleton-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    flex-shrink: 0;
+}
+
+.mfb-skeleton-title {
+    height: 24px;
+    width: 220px;
+}
+
+.mfb-skeleton-subtitle {
+    height: 16px;
+    width: 140px;
+}
+
+.mfb-skeleton-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 24px;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 14px;
+}
+
+.mfb-skeleton-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.mfb-skeleton-badge {
+    width: 100px;
+    height: 40px;
+    flex-shrink: 0;
+}
+
+.mfb-skeleton-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+}
+
+.mfb-skeleton-content .mfb-skeleton-line {
+    height: 18px;
+}
+
+.mfb-skeleton-time {
+    width: 80px;
+    height: 42px;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.mfb-skeleton-price {
+    width: 90px;
+    height: 32px;
+    flex-shrink: 0;
+}
+
+/* Responsive skeleton */
+@media (max-width: 768px) {
+    .mfb-skeleton-card {
+        flex-wrap: wrap;
+        padding: 16px;
+        gap: 12px;
+    }
+
+    .mfb-skeleton-content {
+        flex-basis: 100%;
+        order: 2;
+    }
+
+    .mfb-skeleton-time {
+        order: 3;
+    }
+
+    .mfb-skeleton-price {
+        order: 4;
+        margin-left: auto;
+    }
+
+    .mfb-skeleton-circle {
+        order: -1;
+    }
+
+    .mfb-skeleton-title {
+        width: 160px;
+    }
+
+    .mfb-skeleton-subtitle {
+        width: 100px;
+    }
+}
+
+/* ============================================
+   END SKELETON LOADER STYLES
    ============================================ */
 
 .mfb-container {
@@ -708,8 +924,40 @@
 
     console.log('MFB: Script loaded, cartId=' + cartId + ', selectedOfferId=' + selectedOfferId);
 
+    /**
+     * Transition from skeleton loader to real content
+     */
+    function transitionSkeletonToContent() {
+        var skeleton = document.getElementById('mfb-skeleton');
+        var content = document.getElementById('myflyingbox-options');
+
+        if (!skeleton || !content) {
+            console.log('MFB: Skeleton or content not found');
+            return;
+        }
+
+        console.log('MFB: Starting skeleton to content transition');
+
+        // Small delay to ensure skeleton is visible (better UX perception)
+        setTimeout(function() {
+            // Fade out skeleton
+            skeleton.style.animation = 'mfb-fade-out 0.3s ease-out forwards';
+
+            // After skeleton fade-out, show content
+            setTimeout(function() {
+                skeleton.classList.add('mfb-hidden');
+                content.classList.remove('mfb-content-hidden');
+                content.classList.add('mfb-content-visible');
+                console.log('MFB: Transition complete');
+            }, 300);
+        }, 150);
+    }
+
     function initMFB() {
         console.log('MFB: Initializing...');
+
+        // Start skeleton to content transition
+        transitionSkeletonToContent();
 
         var optionsContainer = document.getElementById('myflyingbox-options');
         console.log('MFB: optionsContainer =', optionsContainer);
