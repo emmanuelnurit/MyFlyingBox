@@ -244,6 +244,7 @@ return [
     'N° de suivi :' => 'N° de suivi :',
     'Suivre sur le site du transporteur' => 'Suivre sur le site du transporteur',
     'Historique de suivi' => 'Historique de suivi',
+    'Colis' => 'Colis',
     'Le suivi sera disponible une fois votre colis expédié.' => 'Le suivi sera disponible une fois votre colis expédié.',
 
     // Webhook Configuration
