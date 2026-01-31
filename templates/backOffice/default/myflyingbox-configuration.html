@@ -187,6 +187,56 @@
     font-size: 0.95rem;
 }
 
+/* Webhook input-group fixes for Bootstrap 3 */
+.mfb-webhook-card .input-group {
+    display: table;
+    width: 100%;
+}
+
+.mfb-webhook-card .input-group .form-control {
+    display: table-cell;
+    width: 100%;
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
+.mfb-webhook-card .input-group .input-group-btn {
+    display: table-cell;
+    width: 1%;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.mfb-webhook-card .input-group .input-group-btn .btn {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    border-top-right-radius: 8px !important;
+    border-bottom-right-radius: 8px !important;
+    padding: 0.75rem 1rem;
+    border: 2px solid #4a6fa5;
+    color: #4a6fa5;
+    background: #fff;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.mfb-webhook-card .input-group .input-group-btn .btn:hover {
+    background: #4a6fa5;
+    color: #fff;
+}
+
+/* Price Settings input-group fixes for Bootstrap 3 */
+#myflyingbox-config-form .input-group .input-group-addon {
+    background: #f1f5f9;
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border: 1px solid #cbd5e1;
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    padding: 0.75rem 1rem;
+}
+
 /* ========================================
    Buttons - Taille lisible
    ======================================== */
@@ -764,42 +814,42 @@
                         <div class="col-md-3 mb-2">
                             {form_field form=$form field="price_surcharge_percent"}
                                 <label class="form-label">{intl l="Surcharge" d="myflyingbox"}</label>
-                                <div class="input-group" style="max-width: 120px;">
+                                <div class="input-group">
                                     <input type="number" step="0.01" name="{$name}" value="{$value}" class="form-control"/>
-                                    <span class="input-group-text">%</span>
+                                    <span class="input-group-addon">%</span>
                                 </div>
                             {/form_field}
                         </div>
                         <div class="col-md-3 mb-2">
                             {form_field form=$form field="price_surcharge_static"}
                                 <label class="form-label">{intl l="Fixed surcharge" d="myflyingbox"}</label>
-                                <div class="input-group" style="max-width: 120px;">
+                                <div class="input-group">
                                     <input type="number" step="1" name="{$name}" value="{$value}" class="form-control"/>
-                                    <span class="input-group-text">cts</span>
+                                    <span class="input-group-addon">cts</span>
                                 </div>
                             {/form_field}
                         </div>
                         <div class="col-md-3 mb-2">
                             {form_field form=$form field="price_round_increment"}
                                 <label class="form-label">{intl l="Rounding" d="myflyingbox"}</label>
-                                <div class="input-group" style="max-width: 120px;">
+                                <div class="input-group">
                                     <input type="number" step="1" min="1" name="{$name}" value="{$value}" class="form-control"/>
-                                    <span class="input-group-text">cts</span>
+                                    <span class="input-group-addon">cts</span>
                                 </div>
                             {/form_field}
                         </div>
                         <div class="col-md-3 mb-2">
                             {form_field form=$form field="max_weight"}
                                 <label class="form-label">{intl l="Max weight" d="myflyingbox"}</label>
-                                <div class="input-group" style="max-width: 120px;">
+                                <div class="input-group">
                                     <input type="number" step="0.1" min="0.1" name="{$name}" value="{$value}" class="form-control"/>
-                                    <span class="input-group-text">kg</span>
+                                    <span class="input-group-addon">kg</span>
                                 </div>
                             {/form_field}
                         </div>
                     </div>
                     <div class="row mt-2">
-                        <div class="col-md-6 mb-2">
+                        <div class="col-md-12 mb-2">
                             {form_field form=$form field="tax_rule_id"}
                                 <label class="form-label">{$label}</label>
                                 <select name="{$name}" class="form-control">
@@ -810,13 +860,23 @@
                                 </select>
                             {/form_field}
                         </div>
-                        <div class="col-md-6 mb-2">
-                            {form_field form=$form field="google_maps_api_key"}
-                                <label class="form-label">{intl l="Google Maps API Key" d="myflyingbox"}</label>
-                                <input type="text" name="{$name}" value="{$value}" class="form-control" placeholder="AIza..."/>
-                            {/form_field}
-                        </div>
                     </div>
+                </div>
+            </div>
+
+            {* Google Maps API *}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="fa fa-map-marker"></i> {intl l="Google Maps" d="myflyingbox"}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        {form_field form=$form field="google_maps_api_key"}
+                            <label class="form-label">{intl l="Google Maps API Key" d="myflyingbox"}</label>
+                            <input type="text" name="{$name}" value="{$value}" class="form-control" placeholder="AIza..."/>
+                        {/form_field}
+                    </div>
+                    <small class="text-muted">{intl l="Required for relay point map display" d="myflyingbox"}</small>
                 </div>
             </div>
 
@@ -878,13 +938,13 @@
                         {* Webhook URL - Read only display *}
                         <div style="margin-bottom: 1.5rem;">
                             <label class="form-label" style="font-size: 0.95rem; font-weight: 600; color: #1e3a5f; margin-bottom: 0.5rem;">{intl l="Your Webhook Endpoint" d="myflyingbox"}</label>
-                            <div class="input-group" style="max-width: 100%;">
+                            <div class="input-group">
                                 <input type="text" id="mfb-webhook-url" class="form-control" value="{url path="/myflyingbox/webhook/tracking"}" readonly style="background: #f1f5f9; font-size: 0.95rem; padding: 0.75rem 1rem;"/>
-                                <div class="input-group-append">
-                                    <button type="button" class="btn btn-outline-secondary" id="mfb-copy-webhook-url" title="{intl l='Copy to clipboard' d='myflyingbox'}" style="padding: 0.75rem 1rem;">
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-default" id="mfb-copy-webhook-url" title="{intl l='Copy to clipboard' d='myflyingbox'}">
                                         <i class="fa fa-copy" style="margin-right: 0.35rem;"></i> {intl l="Copy" d="myflyingbox"}
                                     </button>
-                                </div>
+                                </span>
                             </div>
                             <small class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem; display: block;">{intl l="Use this URL in your MyFlyingBox dashboard" d="myflyingbox"}</small>
                         </div>
@@ -908,11 +968,11 @@
                                     <label class="form-label" style="font-size: 0.95rem; font-weight: 600; color: #1e3a5f; margin-bottom: 0.5rem;">{intl l="Webhook Secret" d="myflyingbox"}</label>
                                     <div class="input-group">
                                         <input type="text" id="mfb-webhook-secret" name="{$name}" value="{$value}" class="form-control" placeholder="whsec_xxxxxxxxxxxxxxxx" style="font-size: 0.95rem; padding: 0.75rem 1rem;"/>
-                                        <div class="input-group-append">
-                                            <button type="button" class="btn btn-outline-primary" id="mfb-generate-secret" title="{intl l='Generate new secret' d='myflyingbox'}" style="padding: 0.75rem 1rem;">
+                                        <span class="input-group-btn">
+                                            <button type="button" class="btn btn-primary" id="mfb-generate-secret" title="{intl l='Generate new secret' d='myflyingbox'}">
                                                 <i class="fa fa-refresh" style="margin-right: 0.35rem;"></i> {intl l="New Secret" d="myflyingbox"}
                                             </button>
-                                        </div>
+                                        </span>
                                     </div>
                                     <small class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem; display: block;">{intl l="Secret key used to verify webhook signatures" d="myflyingbox"}</small>
                                 {/form_field}
