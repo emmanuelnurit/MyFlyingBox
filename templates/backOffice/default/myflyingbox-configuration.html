@@ -843,7 +843,7 @@
                         </div>
                     </div>
                     <div class="row mt-2">
-                        <div class="col-md-6 mb-2">
+                        <div class="col-md-12 mb-2">
                             {form_field form=$form field="tax_rule_id"}
                                 <label class="form-label">{$label}</label>
                                 <select name="{$name}" class="form-control">
@@ -854,13 +854,23 @@
                                 </select>
                             {/form_field}
                         </div>
-                        <div class="col-md-6 mb-2">
-                            {form_field form=$form field="google_maps_api_key"}
-                                <label class="form-label">{intl l="Google Maps API Key" d="myflyingbox"}</label>
-                                <input type="text" name="{$name}" value="{$value}" class="form-control" placeholder="AIza..."/>
-                            {/form_field}
-                        </div>
                     </div>
+                </div>
+            </div>
+
+            {* Google Maps API *}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="fa fa-map-marker"></i> {intl l="Google Maps" d="myflyingbox"}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        {form_field form=$form field="google_maps_api_key"}
+                            <label class="form-label">{intl l="Google Maps API Key" d="myflyingbox"}</label>
+                            <input type="text" name="{$name}" value="{$value}" class="form-control" placeholder="AIza..."/>
+                        {/form_field}
+                    </div>
+                    <small class="text-muted">{intl l="Required for relay point map display" d="myflyingbox"}</small>
                 </div>
             </div>
 
