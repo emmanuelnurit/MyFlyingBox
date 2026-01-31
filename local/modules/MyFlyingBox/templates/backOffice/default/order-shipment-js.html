@@ -1,0 +1,356 @@
+{* MyFlyingBox - Order Shipment JavaScript *}
+<script>
+$(function() {
+    var orderId = {$order_id};
+    var $container = $('.mfb-shipment-container[data-order-id="' + orderId + '"]');
+    var $messages = $('#mfb-shipment-messages');
+
+    function showMessage(type, message) {
+        $messages.html('<div class="alert alert-' + type + ' alert-dismissible">' +
+            '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+            message + '</div>');
+    }
+
+    function showLoading($btn) {
+        $btn.prop('disabled', true).data('original-html', $btn.html());
+        $btn.html('<i class="fa fa-spinner fa-spin"></i> {intl l="Please wait..." d="myflyingbox"|escape:"javascript"}');
+    }
+
+    function hideLoading($btn) {
+        $btn.prop('disabled', false).html($btn.data('original-html'));
+    }
+
+    // Create shipment form
+    $('#mfb-create-shipment-form').on('submit', function(e) {
+        e.preventDefault();
+
+        var $form = $(this);
+        var $btn = $form.find('button[type="submit"]');
+        var serviceId = $('#mfb-service-select').val();
+        var collectionDate = $form.find('input[name="collection_date"]').val();
+
+        if (!serviceId) {
+            showMessage('warning', '{intl l="Please select a carrier service" d="myflyingbox"|escape:"javascript"}');
+            return;
+        }
+
+        showLoading($btn);
+
+        $.ajax({
+            url: '{url path="/admin/module/myflyingbox/shipment/create"}',
+            method: 'POST',
+            data: {
+                order_id: orderId,
+                service_id: serviceId,
+                collection_date: collectionDate
+            },
+            dataType: 'json'
+        })
+        .done(function(response) {
+            if (response.success) {
+                showMessage('success', '{intl l="Shipment created successfully!" d="myflyingbox"|escape:"javascript"}');
+                // Reload the tab content
+                setTimeout(function() {
+                    location.reload();
+                }, 1000);
+            } else {
+                showMessage('danger', response.message || '{intl l="An error occurred" d="myflyingbox"|escape:"javascript"}');
+            }
+        })
+        .fail(function(xhr) {
+            var msg = '{intl l="An error occurred" d="myflyingbox"|escape:"javascript"}';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                msg = xhr.responseJSON.message;
+            }
+            showMessage('danger', msg);
+        })
+        .always(function() {
+            hideLoading($btn);
+        });
+    });
+
+    // Book shipment
+    $container.on('click', '.mfb-action-book', function() {
+        var $btn = $(this);
+        var shipmentId = $btn.data('shipment-id');
+
+        if (!confirm('{intl l="Are you sure you want to book this shipment? This action cannot be undone." d="myflyingbox"|escape:"javascript"}')) {
+            return;
+        }
+
+        showLoading($btn);
+
+        $.ajax({
+            url: '{url path="/admin/module/myflyingbox/shipment/book"}',
+            method: 'POST',
+            data: { shipment_id: shipmentId },
+            dataType: 'json'
+        })
+        .done(function(response) {
+            if (response.success) {
+                showMessage('success', '{intl l="Shipment booked successfully!" d="myflyingbox"|escape:"javascript"}');
+                setTimeout(function() {
+                    location.reload();
+                }, 1000);
+            } else {
+                showMessage('danger', response.message || '{intl l="Failed to book shipment" d="myflyingbox"|escape:"javascript"}');
+            }
+        })
+        .fail(function(xhr) {
+            var msg = '{intl l="An error occurred" d="myflyingbox"|escape:"javascript"}';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                msg = xhr.responseJSON.message;
+            }
+            showMessage('danger', msg);
+        })
+        .always(function() {
+            hideLoading($btn);
+        });
+    });
+
+    // Download labels
+    $container.on('click', '.mfb-action-labels', function() {
+        var $btn = $(this);
+        var shipmentId = $btn.data('shipment-id');
+
+        showLoading($btn);
+
+        // Use the proxy route to download the label PDF
+        var downloadUrl = '{url path="/admin/module/myflyingbox/shipment/download-label"}?shipment_id=' + shipmentId;
+        window.open(downloadUrl, '_blank');
+
+        hideLoading($btn);
+    });
+
+    // Update tracking
+    $container.on('click', '.mfb-action-tracking', function() {
+        var $btn = $(this);
+        var shipmentId = $btn.data('shipment-id');
+
+        showLoading($btn);
+
+        $.ajax({
+            url: '{url path="/admin/module/myflyingbox/shipment/sync-tracking"}',
+            method: 'POST',
+            data: { shipment_id: shipmentId },
+            dataType: 'json'
+        })
+        .done(function(response) {
+            if (response.success) {
+                showMessage('success', '{intl l="Tracking updated successfully!" d="myflyingbox"|escape:"javascript"}');
+                loadTrackingTimeline(shipmentId);
+                if (response.status_changed) {
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
+                }
+            } else {
+                showMessage('info', response.message || '{intl l="No tracking updates available" d="myflyingbox"|escape:"javascript"}');
+            }
+        })
+        .fail(function() {
+            showMessage('danger', '{intl l="Failed to update tracking" d="myflyingbox"|escape:"javascript"}');
+        })
+        .always(function() {
+            hideLoading($btn);
+        });
+    });
+
+    // Cancel shipment
+    $container.on('click', '.mfb-action-cancel', function() {
+        var $btn = $(this);
+        var shipmentId = $btn.data('shipment-id');
+
+        if (!confirm('{intl l="Are you sure you want to cancel this shipment?" d="myflyingbox"|escape:"javascript"}')) {
+            return;
+        }
+
+        showLoading($btn);
+
+        $.ajax({
+            url: '{url path="/admin/module/myflyingbox/shipment/cancel"}',
+            method: 'POST',
+            data: { shipment_id: shipmentId },
+            dataType: 'json'
+        })
+        .done(function(response) {
+            if (response.success) {
+                showMessage('success', '{intl l="Shipment cancelled" d="myflyingbox"|escape:"javascript"}');
+                setTimeout(function() {
+                    location.reload();
+                }, 1000);
+            } else {
+                showMessage('danger', response.message || '{intl l="Failed to cancel shipment" d="myflyingbox"|escape:"javascript"}');
+            }
+        })
+        .fail(function() {
+            showMessage('danger', '{intl l="An error occurred" d="myflyingbox"|escape:"javascript"}');
+        })
+        .always(function() {
+            hideLoading($btn);
+        });
+    });
+
+    // Load tracking timeline on page load
+    function loadTrackingTimeline(shipmentId) {
+        var $timeline = $('#mfb-tracking-timeline');
+        if ($timeline.length === 0) return;
+
+        $.ajax({
+            url: '{url path="/admin/module/myflyingbox/shipment/tracking"}',
+            method: 'GET',
+            data: { order_id: orderId },
+            dataType: 'json'
+        })
+        .done(function(response) {
+            if (response.success && response.tracking && response.tracking.length > 0) {
+                var html = '';
+                var hasContent = false;
+
+                response.tracking.forEach(function(shipment) {
+                    // Display shipment-level events first
+                    if (shipment.events && shipment.events.length > 0) {
+                        hasContent = true;
+                        html += '<div class="shipment-events" style="margin-bottom: 15px;">';
+                        html += '<h5><i class="fa fa-truck"></i> {intl l="Shipment History" d="myflyingbox"|escape:"javascript"}</h5>';
+                        html += '<ul class="list-unstyled">';
+                        shipment.events.forEach(function(event) {
+                            var statusClass = 'label-default';
+                            if (event.status === 'BOOKED') statusClass = 'label-info';
+                            else if (event.status === 'CREATED') statusClass = 'label-primary';
+                            else if (event.status === 'CANCELLED') statusClass = 'label-danger';
+                            else if (event.status === 'STATUS_CHANGE') statusClass = 'label-warning';
+
+                            html += '<li style="margin-bottom: 5px;">';
+                            html += '<small class="text-muted">' + (event.date || '') + '</small> ';
+                            html += '<span class="label ' + statusClass + '">' + (event.status || '') + '</span> ';
+                            html += event.message || '';
+                            if (event.location) {
+                                html += ' <small class="text-muted">(' + event.location + ')</small>';
+                            }
+                            html += '</li>';
+                        });
+                        html += '</ul>';
+                        html += '</div>';
+                    }
+
+                    // Display parcel tracking events
+                    shipment.parcels.forEach(function(parcel) {
+                        if (parcel.tracking_number) {
+                            hasContent = true;
+                            html += '<div class="parcel-events" style="margin-bottom: 15px;">';
+                            html += '<h5><i class="fa fa-cube"></i> ' + parcel.tracking_number;
+                            if (parcel.tracking_url) {
+                                html += ' <a href="' + parcel.tracking_url + '" target="_blank" class="btn btn-xs btn-link"><i class="fa fa-external-link"></i></a>';
+                            }
+                            html += '</h5>';
+                            if (parcel.events && parcel.events.length > 0) {
+                                html += '<ul class="list-unstyled">';
+                                parcel.events.forEach(function(event) {
+                                    html += '<li style="margin-bottom: 5px;">';
+                                    html += '<small class="text-muted">' + (event.date || '') + '</small> ';
+                                    html += '<span class="label label-default">' + (event.status || '') + '</span> ';
+                                    html += event.message || '';
+                                    if (event.location) {
+                                        html += ' <small class="text-muted">(' + event.location + ')</small>';
+                                    }
+                                    html += '</li>';
+                                });
+                                html += '</ul>';
+                            } else {
+                                html += '<p class="text-muted">{intl l="No tracking events yet" d="myflyingbox"|escape:"javascript"}</p>';
+                            }
+                            html += '</div>';
+                        }
+                    });
+                });
+
+                if (hasContent) {
+                    $timeline.html(html);
+                } else {
+                    $timeline.html('<p class="text-muted"><i class="fa fa-info-circle"></i> {intl l="No history events yet" d="myflyingbox"|escape:"javascript"}</p>');
+                }
+            } else {
+                $timeline.html('<p class="text-muted"><i class="fa fa-info-circle"></i> {intl l="No history events yet" d="myflyingbox"|escape:"javascript"}</p>');
+            }
+        })
+        .fail(function(xhr, status, error) {
+            console.error('MFB Tracking error:', status, error, xhr.responseText);
+            $timeline.html('<p class="text-danger"><i class="fa fa-exclamation-triangle"></i> {intl l="Failed to load history" d="myflyingbox"|escape:"javascript"}</p>');
+        });
+    }
+
+    // Load tracking on page load if timeline exists
+    if ($('#mfb-tracking-timeline').length > 0) {
+        loadTrackingTimeline();
+    }
+
+    // Create return shipment
+    $('#mfb-confirm-return').on('click', function() {
+        var $btn = $(this);
+        var $form = $('#mfb-create-return-form');
+        var shipmentId = $form.find('input[name="shipment_id"]').val();
+        var serviceId = $('#mfb-return-service-select').val();
+
+        showLoading($btn);
+
+        $.ajax({
+            url: '{url path="/admin/module/myflyingbox/shipment/create-return"}',
+            method: 'POST',
+            data: {
+                shipment_id: shipmentId,
+                service_id: serviceId || ''
+            },
+            dataType: 'json'
+        })
+        .done(function(response) {
+            if (response.success) {
+                $('#mfb-return-modal').modal('hide');
+                showMessage('success', '{intl l="Return shipment created successfully!" d="myflyingbox"|escape:"javascript"}');
+                setTimeout(function() {
+                    location.reload();
+                }, 1000);
+            } else {
+                showMessage('danger', response.message || '{intl l="Failed to create return shipment" d="myflyingbox"|escape:"javascript"}');
+            }
+        })
+        .fail(function(xhr) {
+            var msg = '{intl l="An error occurred" d="myflyingbox"|escape:"javascript"}';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                msg = xhr.responseJSON.message;
+            }
+            showMessage('danger', msg);
+        })
+        .always(function() {
+            hideLoading($btn);
+        });
+    });
+
+    // Reset modal when closed
+    $('#mfb-return-modal').on('hidden.bs.modal', function() {
+        $('#mfb-return-service-select').val('');
+    });
+});
+</script>
+
+<style>
+.mfb-shipment-container .timeline {
+    list-style: none;
+    padding-left: 20px;
+    border-left: 2px solid #ddd;
+}
+.mfb-shipment-container .timeline-item {
+    position: relative;
+    padding: 10px 0 10px 20px;
+}
+.mfb-shipment-container .timeline-item:before {
+    content: '';
+    position: absolute;
+    left: -7px;
+    top: 15px;
+    width: 12px;
+    height: 12px;
+    background: #428bca;
+    border-radius: 50%;
+}
+</style>

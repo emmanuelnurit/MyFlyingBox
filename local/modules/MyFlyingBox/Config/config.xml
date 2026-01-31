@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://thelia.net/schema/dic/config"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://thelia.net/schema/dic/config http://thelia.net/schema/dic/config/thelia-arg.xsd">
+
+    <services>
+        <!-- API Service -->
+        <service id="myflyingbox.api.service" class="MyFlyingBox\Service\LceApiService" public="true">
+            <argument type="service" id="monolog.logger"/>
+        </service>
+
+        <!-- Dimension Service -->
+        <service id="myflyingbox.dimension.service" class="MyFlyingBox\Service\DimensionService" public="true"/>
+
+        <!-- Quote Service -->
+        <service id="myflyingbox.quote.service" class="MyFlyingBox\Service\QuoteService" public="true">
+            <argument type="service" id="myflyingbox.api.service"/>
+            <argument type="service" id="myflyingbox.dimension.service"/>
+            <argument type="service" id="monolog.logger"/>
+        </service>
+
+        <!-- Shipment Service -->
+        <service id="myflyingbox.shipment.service" class="MyFlyingBox\Service\ShipmentService" public="true">
+            <argument type="service" id="myflyingbox.api.service"/>
+            <argument type="service" id="myflyingbox.dimension.service"/>
+            <argument type="service" id="monolog.logger"/>
+        </service>
+
+        <!-- Tracking Notification Service (for email notifications) -->
+        <service id="myflyingbox.tracking_notification.service" class="MyFlyingBox\Service\TrackingNotificationService" public="true">
+            <argument type="service" id="mailer"/>
+            <argument type="service" id="monolog.logger"/>
+        </service>
+
+        <!-- Tracking Service -->
+        <service id="myflyingbox.tracking.service" class="MyFlyingBox\Service\TrackingService" public="true">
+            <argument type="service" id="myflyingbox.api.service"/>
+            <argument type="service" id="monolog.logger"/>
+            <call method="setNotificationService">
+                <argument type="service" id="myflyingbox.tracking_notification.service"/>
+            </call>
+        </service>
+
+        <!-- Webhook Handler Service -->
+        <service id="myflyingbox.webhook_handler.service" class="MyFlyingBox\Service\WebhookHandlerService" public="true">
+            <argument type="service" id="monolog.logger"/>
+            <call method="setNotificationService">
+                <argument type="service" id="myflyingbox.tracking_notification.service"/>
+            </call>
+        </service>
+
+        <!-- Carrier Logo Provider -->
+        <service id="myflyingbox.carrier_logo.provider" class="MyFlyingBox\Service\CarrierLogoProvider" public="true"/>
+
+        <!-- CLI Commands -->
+        <service id="myflyingbox.command.sync_tracking" class="MyFlyingBox\Command\SyncTrackingCommand">
+            <argument type="service" id="myflyingbox.tracking.service"/>
+            <argument type="service" id="monolog.logger"/>
+            <tag name="console.command"/>
+        </service>
+
+        <!-- Event Listeners -->
+        <service id="myflyingbox.listener.order" class="MyFlyingBox\EventListener\OrderEventListener">
+            <argument type="service" id="myflyingbox.shipment.service"/>
+            <argument type="service" id="request_stack"/>
+            <tag name="kernel.event_subscriber"/>
+        </service>
+    </services>
+
+    <loops>
+        <loop name="myflyingbox.services" class="MyFlyingBox\Loop\ServiceLoop"/>
+        <loop name="myflyingbox.offers" class="MyFlyingBox\Loop\OfferLoop"/>
+        <loop name="myflyingbox.shipments" class="MyFlyingBox\Loop\ShipmentLoop"/>
+        <loop name="myflyingbox.parcels" class="MyFlyingBox\Loop\ParcelLoop"/>
+        <loop name="myflyingbox.dimensions" class="MyFlyingBox\Loop\DimensionLoop"/>
+    </loops>
+
+    <forms>
+        <form name="myflyingbox.configuration" class="MyFlyingBox\Form\ConfigurationForm"/>
+        <form name="myflyingbox.dimension" class="MyFlyingBox\Form\DimensionForm"/>
+    </forms>
+
+    <hooks>
+        <hook id="myflyingbox.hook.front" class="MyFlyingBox\Hook\FrontHook">
+            <argument type="service" id="myflyingbox.quote.service"/>
+            <argument type="service" id="thelia.parser"/>
+            <argument type="service" id="thelia.parser.asset.resolver"/>
+            <argument type="service" id="event_dispatcher"/>
+            <tag name="hook.event_listener" event="order-delivery.extra" type="front"/>
+            <tag name="hook.event_listener" event="account-order.after-information" type="front"/>
+            <tag name="hook.event_listener" event="cart.bottom" type="front" method="onCartBottom"/>
+            <tag name="hook.event_listener" event="order-invoice.delivery-address" type="front" method="onOrderInvoiceDeliveryAddress"/>
+            <tag name="hook.event_listener" event="order-placed.additional-payment-info" type="front" method="onOrderPlacedAdditionalPaymentInfo"/>
+        </hook>
+        <hook id="myflyingbox.hook.back" class="MyFlyingBox\Hook\BackHook">
+            <tag name="hook.event_listener" event="module.configuration" type="back"/>
+            <tag name="hook.event_listener" event="module.config-js" type="back"/>
+            <tag name="hook.event_listener" event="order.tab" type="back"/>
+            <tag name="hook.event_listener" event="order.edit-js" type="back"/>
+            <tag name="hook.event_listener" event="main.top-menu-tools" type="back"/>
+            <tag name="hook.event_listener" event="main.in-top-menu-items" type="back"/>
+        </hook>
+    </hooks>
+
+</config>

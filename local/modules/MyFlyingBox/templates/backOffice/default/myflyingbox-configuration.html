@@ -1,0 +1,1131 @@
+<style>
+/* ========================================
+   MyFlyingBox Configuration - Modern Light Style
+   Gris-bleu clair, texte foncé, polices lisibles
+   ======================================== */
+
+/* Global Configuration Container */
+#myflyingbox-config-form {
+    padding: 2rem;
+    background: #f8fafc;
+    border-radius: 16px;
+    margin: 1.5rem;
+}
+
+/* ========================================
+   Card Styles - Harmonisés
+   ======================================== */
+
+#myflyingbox-config-form .card,
+#mfb-api-card,
+#mfb-services-card,
+#dimensions-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+    overflow: hidden;
+    margin-bottom: 1.5rem !important;
+    background: #fff;
+}
+
+#myflyingbox-config-form .card:hover,
+#mfb-api-card:hover,
+#mfb-services-card:hover,
+#dimensions-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* ========================================
+   Card Headers - Gris-bleu clair + texte foncé
+   ======================================== */
+
+#myflyingbox-config-form .card-header,
+#mfb-api-card > .card-header,
+#mfb-services-card > .card-header,
+#dimensions-card > .card-header,
+.mfb-section-header {
+    background: linear-gradient(135deg, #e8eef5 0%, #dfe7f0 100%);
+    color: #1e3a5f;
+    border: none;
+    border-bottom: 1px solid #d1dae5;
+    padding: 1.25rem 1.75rem;
+}
+
+#myflyingbox-config-form .card-header h4,
+#mfb-api-card .card-header h4,
+.mfb-section-header h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.75px;
+    display: flex;
+    align-items: center;
+    color: #1e3a5f;
+}
+
+#myflyingbox-config-form .card-header h4 i,
+#mfb-api-card .card-header h4 i,
+.mfb-section-header h4 i {
+    margin-right: 1rem;
+    font-size: 1.75rem;
+    color: #4a6fa5;
+}
+
+/* ========================================
+   Card Body - Padding équilibré
+   ======================================== */
+
+#myflyingbox-config-form .card-body,
+#mfb-api-card .card-body,
+#mfb-services-card .card-body,
+#dimensions-card .card-body {
+    padding: 1.75rem 2rem;
+    background: #fff;
+}
+
+/* ========================================
+   Form Controls - Lisibles
+   ======================================== */
+
+#myflyingbox-config-form .form-control,
+#myflyingbox-config-form .form-select,
+#mfb-api-card .form-control,
+#mfb-api-card .form-select,
+#mfb-services-card .form-control,
+#dimensions-card .form-control {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background-color: #fff;
+    color: #334155;
+}
+
+#myflyingbox-config-form .form-control:focus,
+#myflyingbox-config-form .form-select:focus,
+#mfb-api-card .form-control:focus,
+#mfb-api-card .form-select:focus {
+    border-color: #4a6fa5;
+    box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.15);
+    background-color: #fff;
+}
+
+/* ========================================
+   Form Labels - Plus gros et lisibles
+   ======================================== */
+
+#myflyingbox-config-form .form-label,
+#myflyingbox-config-form label,
+#mfb-api-card .form-label,
+#mfb-api-card label,
+#mfb-services-card label,
+#dimensions-card label {
+    font-weight: 600;
+    color: #1e3a5f;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+    display: block;
+}
+
+/* ========================================
+   Form Groups - Espacement harmonieux
+   ======================================== */
+
+#myflyingbox-config-form .mb-3,
+#myflyingbox-config-form .mb-2 {
+    margin-bottom: 1.25rem !important;
+}
+
+#myflyingbox-config-form .row {
+    margin-left: -1rem;
+    margin-right: -1rem;
+}
+
+#myflyingbox-config-form .col-lg-6,
+#myflyingbox-config-form .col-md-6,
+#myflyingbox-config-form .col-md-5,
+#myflyingbox-config-form .col-md-4,
+#myflyingbox-config-form .col-md-3 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+/* ========================================
+   Input Groups
+   ======================================== */
+
+#myflyingbox-config-form .input-group {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#myflyingbox-config-form .input-group .form-control {
+    border-top-left-radius: 8px !important;
+    border-bottom-left-radius: 8px !important;
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
+#myflyingbox-config-form .input-group-append .btn,
+#myflyingbox-config-form .input-group-text {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    border-top-right-radius: 8px !important;
+    border-bottom-right-radius: 8px !important;
+    border: 1px solid #cbd5e1;
+    border-left: none;
+    padding: 0.75rem 1rem;
+}
+
+#myflyingbox-config-form .input-group-text {
+    background: #f1f5f9;
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+/* ========================================
+   Buttons - Taille lisible
+   ======================================== */
+
+#myflyingbox-config-form .btn,
+#mfb-api-card .btn,
+#mfb-services-card .btn,
+#dimensions-card .btn {
+    border-radius: 8px;
+    padding: 0.65rem 1.25rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+#myflyingbox-config-form .btn-primary {
+    background: #4a6fa5;
+    border: none;
+    color: #fff;
+}
+
+#myflyingbox-config-form .btn-primary:hover {
+    background: #3d5d8a;
+}
+
+#myflyingbox-config-form .btn-outline-primary,
+#mfb-services-card .btn-outline-primary,
+#dimensions-card .btn-outline-primary {
+    border: 2px solid #4a6fa5;
+    color: #4a6fa5;
+    background: transparent;
+}
+
+#myflyingbox-config-form .btn-outline-primary:hover,
+#mfb-services-card .btn-outline-primary:hover,
+#dimensions-card .btn-outline-primary:hover {
+    background: #4a6fa5;
+    color: #fff;
+}
+
+#myflyingbox-config-form .btn-outline-secondary,
+#mfb-services-card .btn-outline-secondary {
+    border: 2px solid #94a3b8;
+    color: #475569;
+}
+
+#myflyingbox-config-form .btn-outline-secondary:hover,
+#mfb-services-card .btn-outline-secondary:hover {
+    background: #f1f5f9;
+    border-color: #64748b;
+    color: #1e293b;
+}
+
+#myflyingbox-config-form .btn-outline-success,
+#mfb-services-card .btn-outline-success {
+    border: 2px solid #22c55e;
+    color: #16a34a;
+}
+
+#myflyingbox-config-form .btn-outline-success:hover,
+#mfb-services-card .btn-outline-success:hover {
+    background: #22c55e;
+    color: #fff;
+}
+
+#myflyingbox-config-form .btn-outline-info {
+    border: 2px solid #0ea5e9;
+    color: #0284c7;
+}
+
+#myflyingbox-config-form .btn-outline-info:hover {
+    background: #0ea5e9;
+    color: #fff;
+}
+
+#myflyingbox-config-form .btn-outline-danger,
+#dimensions-card .btn-outline-danger {
+    border: 2px solid #ef4444;
+    color: #dc2626;
+}
+
+#myflyingbox-config-form .btn-outline-danger:hover,
+#dimensions-card .btn-outline-danger:hover {
+    background: #ef4444;
+    color: #fff;
+}
+
+#myflyingbox-config-form .btn-light,
+#dimensions-card .btn-light {
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    color: #1e3a5f;
+}
+
+#myflyingbox-config-form .btn-light:hover,
+#dimensions-card .btn-light:hover {
+    background: #f1f5f9;
+}
+
+/* ========================================
+   Helper Text - Lisible
+   ======================================== */
+
+#myflyingbox-config-form small.text-muted,
+#mfb-services-card .text-muted,
+#dimensions-card .text-muted {
+    color: #64748b !important;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    display: block;
+    line-height: 1.5;
+}
+
+/* ========================================
+   Alerts - Harmonisés
+   ======================================== */
+
+#myflyingbox-config-form .alert,
+#mfb-services-card .alert {
+    border: none;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    font-size: 0.95rem;
+}
+
+#myflyingbox-config-form .alert-info {
+    background: #e0f2fe;
+    color: #0369a1;
+    border-left: 4px solid #0ea5e9;
+}
+
+#myflyingbox-config-form .alert-secondary {
+    background: #f1f5f9;
+    color: #475569;
+    border-left: 4px solid #94a3b8;
+}
+
+/* ========================================
+   Badges - Plus lisibles
+   ======================================== */
+
+#myflyingbox-config-form .badge,
+#mfb-services-card .badge {
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+/* ========================================
+   Form Check / Switch
+   ======================================== */
+
+#myflyingbox-config-form .form-check {
+    padding: 1rem 1.25rem 1rem 2.5rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+}
+
+#myflyingbox-config-form .form-check:hover {
+    border-color: #cbd5e1;
+    background: #f1f5f9;
+}
+
+#myflyingbox-config-form .form-check-input {
+    width: 1.15rem;
+    height: 1.15rem;
+    margin-top: 0.1rem;
+}
+
+#myflyingbox-config-form .form-check-label {
+    font-weight: 500;
+    color: #334155;
+    font-size: 1rem;
+}
+
+/* ========================================
+   Submit Button
+   ======================================== */
+
+#myflyingbox-config-form > .row:last-child {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+#myflyingbox-config-form > .row:last-child .btn-primary {
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
+}
+
+/* ========================================
+   Tables - Services & Dimensions
+   ======================================== */
+
+#mfb-services-card .table,
+#dimensions-card .table {
+    margin-bottom: 0;
+    font-size: 0.95rem;
+}
+
+#mfb-services-card .table-dark th,
+#dimensions-card .table-dark th {
+    background: #e8eef5;
+    color: #1e3a5f;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+    padding: 1rem 1.25rem;
+}
+
+#mfb-services-card .table-striped tbody tr:nth-of-type(odd),
+#dimensions-card .table-striped tbody tr:nth-of-type(odd) {
+    background-color: #f8fafc;
+}
+
+#mfb-services-card .table td,
+#dimensions-card .table td {
+    padding: 1rem 1.25rem;
+    vertical-align: middle;
+    border-color: #e2e8f0;
+    color: #334155;
+    font-size: 0.95rem;
+}
+
+/* ========================================
+   Delivery Delay Input with Suffix
+   ======================================== */
+
+.mfb-delay-input-wrapper {
+    position: relative;
+    width: 95px;
+}
+
+.mfb-delay-input-wrapper input {
+    padding-right: 28px;
+}
+
+.mfb-delay-suffix {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    font-size: 0.85rem;
+    font-weight: 600;
+    pointer-events: none;
+}
+
+/* ========================================
+   Inactive Service Rows - Grayed Out
+   ======================================== */
+
+#mfb-services-table tbody tr.mfb-service-inactive {
+    opacity: 0.5;
+    background-color: #f8fafc !important;
+}
+
+#mfb-services-table tbody tr.mfb-service-inactive td {
+    color: #94a3b8;
+}
+
+#mfb-services-table tbody tr.mfb-service-inactive img {
+    filter: grayscale(100%);
+}
+
+#mfb-services-table tbody tr.mfb-service-inactive code {
+    color: #94a3b8;
+}
+
+#mfb-services-table tbody tr.mfb-service-inactive .badge {
+    opacity: 0.6;
+}
+
+#mfb-services-table tbody tr.mfb-service-inactive .mfb-delivery-delay {
+    background-color: #f1f5f9;
+    color: #94a3b8;
+}
+
+/* ========================================
+   Webhook Accordion - Harmonisé
+   ======================================== */
+
+.mfb-webhook-card {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.mfb-webhook-card:hover {
+    border-color: #4a6fa5 !important;
+    box-shadow: 0 2px 8px rgba(74, 111, 165, 0.12) !important;
+}
+
+.mfb-webhook-card.configured {
+    border-color: #22c55e !important;
+}
+
+.mfb-webhook-card.configured:hover {
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.12) !important;
+}
+
+.mfb-webhook-card .card-header {
+    background: transparent !important;
+    padding: 0 !important;
+}
+
+.mfb-webhook-card .accordion-toggle {
+    background: #f8fafc;
+    border: none;
+    transition: all 0.2s ease;
+    width: 100%;
+    text-align: left;
+    padding: 1.25rem 1.5rem !important;
+}
+
+.mfb-webhook-card .accordion-toggle:hover {
+    background: #f1f5f9;
+}
+
+.mfb-webhook-card .accordion-toggle:not(.collapsed) {
+    background: #e8eef5;
+}
+
+.mfb-webhook-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fef3c7;
+    color: #92400e;
+    transition: all 0.2s ease;
+}
+
+.mfb-webhook-card.configured .mfb-webhook-icon {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.mfb-webhook-icon svg {
+    transition: transform 0.3s ease;
+}
+
+.mfb-webhook-card:hover .mfb-webhook-icon svg {
+    transform: scale(1.1);
+}
+
+.mfb-webhook-card .accordion-toggle h5 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #1e3a5f;
+    margin-bottom: 0.35rem;
+}
+
+.mfb-chevron-icon {
+    transition: transform 0.3s ease;
+}
+
+.accordion-toggle:not(.collapsed) .mfb-chevron-icon {
+    transform: rotate(180deg);
+}
+
+.accordion-toggle:not(.collapsed) {
+    background: #4a6fa5 !important;
+    color: #fff !important;
+    border-color: #4a6fa5 !important;
+}
+
+/* Pulse animation for unconfigured state */
+@keyframes pulse-warning {
+    0%, 100% { box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4); }
+    50% { box-shadow: 0 4px 25px rgba(251, 191, 36, 0.6), 0 0 0 10px rgba(251, 191, 36, 0); }
+}
+
+.mfb-webhook-card:not(.configured) .mfb-webhook-icon {
+    animation: pulse-warning 2s infinite;
+}
+
+/* Success checkmark animation */
+@keyframes checkmark-pop {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.mfb-webhook-card.configured .mfb-webhook-icon svg {
+    animation: checkmark-pop 0.4s ease-out;
+}
+
+/* Smooth collapse transition */
+#webhookConfigCollapse {
+    transition: height 0.35s ease;
+}
+
+#webhookConfigCollapse .card-body {
+    border-top: 1px solid #e2e8f0;
+}
+
+/* ========================================
+   Responsive Adjustments
+   ======================================== */
+
+@media (max-width: 768px) {
+    #myflyingbox-config-form {
+        padding: 1.25rem;
+        margin: 1rem;
+    }
+
+    #myflyingbox-config-form .card-body,
+    #mfb-services-card .card-body,
+    #dimensions-card .card-body {
+        padding: 1.25rem 1.5rem;
+    }
+
+    .mfb-webhook-icon {
+        width: 44px;
+        height: 44px;
+    }
+}
+</style>
+
+{form name="myflyingbox.configuration"}
+<form action="{url path="/admin/module/myflyingbox/config"}" method="post" id="myflyingbox-config-form">
+    {form_hidden_fields form=$form}
+
+    {assign var="active_services_count" value=0}
+    {assign var="total_services_count" value=0}
+    {loop type="myflyingbox.services" name="count_active" active="true"}{assign var="active_services_count" value=$active_services_count+1}{/loop}
+    {loop type="myflyingbox.services" name="count_total"}{assign var="total_services_count" value=$total_services_count+1}{/loop}
+
+    <div class="row">
+        {* Left Column - Shipper Address *}
+        <div class="col-lg-6">
+            {* Shipper Address *}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="fa fa-building"></i> {intl l="Shipper Address" d="myflyingbox"}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            {form_field form=$form field="shipper_name"}
+                                <label class="form-label">{$label}</label>
+                                <input type="text" name="{$name}" value="{$value}" class="form-control"/>
+                            {/form_field}
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            {form_field form=$form field="shipper_company"}
+                                <label class="form-label">{$label}</label>
+                                <input type="text" name="{$name}" value="{$value}" class="form-control"/>
+                            {/form_field}
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        {form_field form=$form field="shipper_street"}
+                            <label class="form-label">{$label}</label>
+                            <input type="text" name="{$name}" value="{$value}" class="form-control"/>
+                        {/form_field}
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            {form_field form=$form field="shipper_postal_code"}
+                                <label class="form-label">{$label}</label>
+                                <input type="text" name="{$name}" value="{$value}" class="form-control"/>
+                            {/form_field}
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            {form_field form=$form field="shipper_city"}
+                                <label class="form-label">{$label}</label>
+                                <input type="text" name="{$name}" value="{$value}" class="form-control"/>
+                            {/form_field}
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            {form_field form=$form field="shipper_country"}
+                                <label class="form-label">{$label}</label>
+                                <input type="text" name="{$name}" value="{$value}" class="form-control" maxlength="2" style="text-transform: uppercase;"/>
+                            {/form_field}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            {form_field form=$form field="shipper_phone"}
+                                <label class="form-label">{$label}</label>
+                                <input type="tel" name="{$name}" value="{$value}" class="form-control"/>
+                            {/form_field}
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            {form_field form=$form field="shipper_email"}
+                                <label class="form-label">{$label}</label>
+                                <input type="email" name="{$name}" value="{$value}" class="form-control"/>
+                            {/form_field}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {* Email Notifications *}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="fa fa-envelope"></i> {intl l="Email Notifications" d="myflyingbox"}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="form-check form-switch mb-2">
+                        {form_field form=$form field="email_notifications_enabled"}
+                            <input class="form-check-input" type="checkbox" id="mfb-email-notifications-enabled" name="{$name}" value="1" {if $value == '1'}checked{/if}/>
+                            <label class="form-check-label" for="mfb-email-notifications-enabled">{intl l="Enable email notifications" d="myflyingbox"}</label>
+                        {/form_field}
+                    </div>
+                    <small class="text-muted">{intl l="When enabled, customers will receive emails when their shipment status changes" d="myflyingbox"}</small>
+                </div>
+            </div>
+        </div>
+
+        {* Right Column - Price Settings, Webhook *}
+        <div class="col-lg-6">
+            {* Price Settings *}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="fa fa-euro"></i> {intl l="Price Settings" d="myflyingbox"}</h4>
+                </div>
+                <div class="card-body">
+                    {* All price fields in one row *}
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            {form_field form=$form field="price_surcharge_percent"}
+                                <label class="form-label">{intl l="Surcharge" d="myflyingbox"}</label>
+                                <div class="input-group" style="max-width: 120px;">
+                                    <input type="number" step="0.01" name="{$name}" value="{$value}" class="form-control"/>
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            {/form_field}
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            {form_field form=$form field="price_surcharge_static"}
+                                <label class="form-label">{intl l="Fixed surcharge" d="myflyingbox"}</label>
+                                <div class="input-group" style="max-width: 120px;">
+                                    <input type="number" step="1" name="{$name}" value="{$value}" class="form-control"/>
+                                    <span class="input-group-text">cts</span>
+                                </div>
+                            {/form_field}
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            {form_field form=$form field="price_round_increment"}
+                                <label class="form-label">{intl l="Rounding" d="myflyingbox"}</label>
+                                <div class="input-group" style="max-width: 120px;">
+                                    <input type="number" step="1" min="1" name="{$name}" value="{$value}" class="form-control"/>
+                                    <span class="input-group-text">cts</span>
+                                </div>
+                            {/form_field}
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            {form_field form=$form field="max_weight"}
+                                <label class="form-label">{intl l="Max weight" d="myflyingbox"}</label>
+                                <div class="input-group" style="max-width: 120px;">
+                                    <input type="number" step="0.1" min="0.1" name="{$name}" value="{$value}" class="form-control"/>
+                                    <span class="input-group-text">kg</span>
+                                </div>
+                            {/form_field}
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-6 mb-2">
+                            {form_field form=$form field="tax_rule_id"}
+                                <label class="form-label">{$label}</label>
+                                <select name="{$name}" class="form-control">
+                                    <option value="">{intl l="No tax" d="myflyingbox"}</option>
+                                    {loop type="tax-rule" name="tax_rules"}
+                                        <option value="{$ID}" {if $value == $ID}selected{/if}>{$TITLE}</option>
+                                    {/loop}
+                                </select>
+                            {/form_field}
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            {form_field form=$form field="google_maps_api_key"}
+                                <label class="form-label">{intl l="Google Maps API Key" d="myflyingbox"}</label>
+                                <input type="text" name="{$name}" value="{$value}" class="form-control" placeholder="AIza..."/>
+                            {/form_field}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {* Webhook Configuration Accordion *}
+            {assign var="webhook_configured" value=false}
+            {form_field form=$form field="webhook_enabled"}{if $value == '1'}{assign var="webhook_configured" value=true}{/if}{/form_field}
+            <div class="card mb-4 mfb-webhook-card{if $webhook_configured} configured{/if}" id="webhook-config-card">
+                <div class="card-header" style="padding: 0; background: linear-gradient(135deg, #e8eef5 0%, #dfe7f0 100%); border-bottom: 1px solid #d1dae5;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.75rem;">
+                        <div style="display: flex; align-items: center;">
+                            <div class="mfb-webhook-icon" id="webhook-status-icon" style="margin-right: 1rem;">
+                                {if $webhook_configured}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                </svg>
+                                {else}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M18 16.98h-5.99c-1.1 0-1.95.94-2.48 1.9A4 4 0 0 1 2 17c.01-.7.2-1.4.57-2"/>
+                                    <path d="m6 17 3.13-5.78c.53-.97.1-2.18-.5-3.1a4 4 0 1 1 6.89-4.06"/>
+                                    <path d="m12 6 3.13 5.73C15.66 12.7 16.9 13 18 13a4 4 0 0 1 0 8"/>
+                                </svg>
+                                {/if}
+                            </div>
+                            <div>
+                                <h4 style="margin: 0; font-size: 1.1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.75px; color: #1e3a5f;">{intl l="Webhook Configuration" d="myflyingbox"}</h4>
+                                <small id="webhook-status-text" style="font-size: 0.9rem;">
+                                    {if $webhook_configured}
+                                        <span class="text-success">
+                                            <i class="fa fa-check-circle"></i> {intl l="Connected" d="myflyingbox"}
+                                        </span>
+                                    {else}
+                                        <span style="color: #b45309;">
+                                            <i class="fa fa-exclamation-circle"></i> {intl l="Click to configure" d="myflyingbox"}
+                                        </span>
+                                    {/if}
+                                </small>
+                            </div>
+                        </div>
+                        <button class="btn accordion-toggle collapsed"
+                                type="button"
+                                data-toggle="collapse"
+                                data-target="#webhookConfigCollapse"
+                                aria-expanded="false"
+                                aria-controls="webhookConfigCollapse"
+                                style="padding: 0.5rem 1rem; background: #fff; border: 2px solid #4a6fa5; color: #4a6fa5; font-weight: 600; border-radius: 8px; display: flex; align-items: center; gap: 0.5rem;">
+                            <span>{intl l="Configure" d="myflyingbox"}</span>
+                            <i class="fa fa-chevron-down mfb-chevron-icon" style="transition: transform 0.3s ease;"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="collapse" id="webhookConfigCollapse">
+                    <div class="card-body" style="padding: 1.75rem 2rem;">
+                        <div class="alert alert-info" style="margin-bottom: 1.5rem; padding: 1rem 1.25rem; font-size: 0.95rem;">
+                            <i class="fa fa-info-circle" style="margin-right: 0.5rem;"></i>
+                            {intl l="Webhooks allow MyFlyingBox to notify your store in real-time about shipment status changes, tracking updates, and delivery confirmations." d="myflyingbox"}
+                        </div>
+
+                        {* Webhook URL - Read only display *}
+                        <div style="margin-bottom: 1.5rem;">
+                            <label class="form-label" style="font-size: 0.95rem; font-weight: 600; color: #1e3a5f; margin-bottom: 0.5rem;">{intl l="Your Webhook Endpoint" d="myflyingbox"}</label>
+                            <div class="input-group" style="max-width: 100%;">
+                                <input type="text" id="mfb-webhook-url" class="form-control" value="{url path="/myflyingbox/webhook/tracking"}" readonly style="background: #f1f5f9; font-size: 0.95rem; padding: 0.75rem 1rem;"/>
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-outline-secondary" id="mfb-copy-webhook-url" title="{intl l='Copy to clipboard' d='myflyingbox'}" style="padding: 0.75rem 1rem;">
+                                        <i class="fa fa-copy" style="margin-right: 0.35rem;"></i> {intl l="Copy" d="myflyingbox"}
+                                    </button>
+                                </div>
+                            </div>
+                            <small class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem; display: block;">{intl l="Use this URL in your MyFlyingBox dashboard" d="myflyingbox"}</small>
+                        </div>
+
+                        {* Two columns: Enable + Secret *}
+                        <div class="row">
+                            {* Enable/Disable Toggle *}
+                            <div class="col-md-4" style="margin-bottom: 1.5rem;">
+                                {form_field form=$form field="webhook_enabled"}
+                                    <label class="form-label" style="font-size: 0.95rem; font-weight: 600; color: #1e3a5f; margin-bottom: 0.5rem;">{intl l="Enable Webhooks" d="myflyingbox"}</label>
+                                    <select name="{$name}" id="mfb-webhook-enabled" class="form-control" style="font-size: 1rem; padding: 0.75rem 1rem;">
+                                        <option value="0" {if $value != '1'}selected{/if}>{intl l="Disabled" d="myflyingbox"}</option>
+                                        <option value="1" {if $value == '1'}selected{/if}>{intl l="Enabled" d="myflyingbox"}</option>
+                                    </select>
+                                {/form_field}
+                            </div>
+
+                            {* Webhook Secret *}
+                            <div class="col-md-8" style="margin-bottom: 1.5rem;">
+                                {form_field form=$form field="webhook_secret"}
+                                    <label class="form-label" style="font-size: 0.95rem; font-weight: 600; color: #1e3a5f; margin-bottom: 0.5rem;">{intl l="Webhook Secret" d="myflyingbox"}</label>
+                                    <div class="input-group">
+                                        <input type="text" id="mfb-webhook-secret" name="{$name}" value="{$value}" class="form-control" placeholder="whsec_xxxxxxxxxxxxxxxx" style="font-size: 0.95rem; padding: 0.75rem 1rem;"/>
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-outline-primary" id="mfb-generate-secret" title="{intl l='Generate new secret' d='myflyingbox'}" style="padding: 0.75rem 1rem;">
+                                                <i class="fa fa-refresh" style="margin-right: 0.35rem;"></i> {intl l="New Secret" d="myflyingbox"}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem; display: block;">{intl l="Secret key used to verify webhook signatures" d="myflyingbox"}</small>
+                                {/form_field}
+                            </div>
+                        </div>
+
+                        {* Validate Configuration Button - Centered *}
+                        <div style="text-align: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0;">
+                            <button type="button" id="mfb-test-webhook" class="btn btn-outline-primary" style="padding: 0.75rem 2rem; font-size: 1rem;">
+                                <i class="fa fa-check-circle" style="margin-right: 0.5rem;"></i> {intl l="Validate Configuration" d="myflyingbox"}
+                            </button>
+                            <div id="webhook-test-result" style="margin-top: 1rem;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{* API Configuration - Full Width *}
+<div class="card mt-4" id="mfb-api-card">
+    <div class="card-header">
+        <h4 class="mb-0"><i class="fa fa-key"></i> {intl l="API Configuration" d="myflyingbox"}</h4>
+    </div>
+    <div class="card-body">
+        <div class="row align-items-end">
+            <div class="col-md-3 mb-2">
+                {form_field form=$form field="api_login"}
+                    <label class="form-label">{$label}</label>
+                    <input type="text" id="mfb-api-login" name="{$name}" value="{$value}" class="form-control" placeholder="{$attr.placeholder|default:''}"/>
+                {/form_field}
+            </div>
+            <div class="col-md-3 mb-2">
+                {form_field form=$form field="api_password"}
+                    <label class="form-label">{$label}</label>
+                    <input type="password" id="mfb-api-password" name="{$name}" class="form-control" placeholder="{intl l='Leave empty to keep current' d='myflyingbox'}" autocomplete="new-password"/>
+                {/form_field}
+            </div>
+            <div class="col-md-2 mb-2">
+                {form_field form=$form field="api_env"}
+                    <label class="form-label">{$label}</label>
+                    <select id="mfb-api-env" name="{$name}" class="form-control">
+                        <option value="staging" {if $value == "staging"}selected{/if}>{intl l="Staging" d="myflyingbox"}</option>
+                        <option value="production" {if $value == "production"}selected{/if}>{intl l="Production" d="myflyingbox"}</option>
+                    </select>
+                {/form_field}
+            </div>
+            <div class="col-md-4 mb-2">
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button type="button" id="mfb-test-api" class="btn btn-outline-primary">
+                        <i class="fa fa-plug" style="margin-right: 0.35rem;"></i> {intl l="Test" d="myflyingbox"}
+                    </button>
+                    <button type="button" id="mfb-refresh-services" class="btn btn-outline-secondary">
+                        <i class="fa fa-refresh" style="margin-right: 0.35rem;"></i> {intl l="Refresh" d="myflyingbox"}
+                        <span id="mfb-services-badge" class="badge {if $active_services_count > 0}bg-success{else}bg-secondary{/if}" style="margin-left: 0.35rem;">{$active_services_count}/{$total_services_count}</span>
+                    </button>
+                    <button type="button" id="mfb-diagnostic" class="btn btn-outline-info">
+                        <i class="fa fa-stethoscope" style="margin-right: 0.35rem;"></i> {intl l="Diagnostic" d="myflyingbox"}
+                    </button>
+                    <a href="https://dashboard.myflyingbox.com/" target="_blank" rel="noopener" class="btn btn-outline-primary" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 32" width="60" height="20">
+                            <rect x="30" y="8" width="14" height="12" rx="2" fill="#2563eb" stroke="#1e40af" stroke-width="1.2"/>
+                            <path d="M30 11 L37 8 L44 11" fill="none" stroke="#1e40af" stroke-width="1.2" stroke-linecap="round"/>
+                            <path d="M29 14 Q22 11 14 12 Q18 14 22 16 Q26 15 29 15" fill="#3b82f6"/>
+                            <path d="M45 14 Q52 11 60 12 Q56 14 52 16 Q48 15 45 15" fill="#3b82f6"/>
+                            <line x1="10" y1="14" x2="5" y2="14" stroke="#93c5fd" stroke-width="1.5" stroke-linecap="round"/>
+                            <line x1="11" y1="17" x2="7" y2="18" stroke="#93c5fd" stroke-width="1" stroke-linecap="round"/>
+                            <text x="66" y="18" font-family="Arial,sans-serif" font-size="9" font-weight="bold" fill="#1e40af">MFB</text>
+                        </svg>
+                        {intl l="Dashboard" d="myflyingbox"}
+                        <i class="fa fa-external-link" style="font-size: 0.8rem;"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div id="mfb-api-result" style="margin-top: 0.75rem;"></div>
+        <div id="mfb-diagnostic-result"></div>
+    </div>
+</div>
+
+{* Services List - Collapsible *}
+<div class="card mt-4" id="mfb-services-card">
+    <div class="card-header" style="cursor: pointer; padding: 1.25rem 1.75rem; background: linear-gradient(135deg, #e8eef5 0%, #dfe7f0 100%); border-bottom: 1px solid #d1dae5;" id="mfb-services-header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h4 class="mb-0" style="font-size: 1.1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.75px; color: #1e3a5f; display: flex; align-items: center;">
+                <i class="fa fa-truck" style="margin-right: 1rem; font-size: 1.75rem; color: #4a6fa5;"></i> {intl l="Available Services" d="myflyingbox"}
+            </h4>
+            <div style="display: flex; align-items: center; gap: 1.25rem;">
+                <span id="mfb-services-summary" style="font-size: 1rem; font-weight: 600; {if $active_services_count > 0}color: #16a34a;{else}color: #dc2626;{/if}">
+                    <i class="fa {if $active_services_count > 0}fa-check-circle{else}fa-exclamation-circle{/if}" style="margin-right: 0.35rem;"></i>
+                    <span id="mfb-summary-count">{$active_services_count}</span> {intl l="active service(s)" d="myflyingbox"}
+                </span>
+                <button type="button" id="mfb-toggle-services" class="btn btn-sm" style="padding: 0.5rem 1rem; background: #fff; border: 2px solid #4a6fa5; color: #4a6fa5; font-weight: 600; border-radius: 8px;">
+                    <i class="fa fa-chevron-down" id="mfb-toggle-icon" style="margin-right: 0.35rem;"></i> {intl l="Details" d="myflyingbox"}
+                </button>
+            </div>
+        </div>
+
+        {* Alert when no services selected *}
+        {if $active_services_count == 0}
+        <div id="mfb-no-services-alert" style="margin-top: 1.25rem; padding: 1rem 1.25rem; background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; display: flex; align-items: center; gap: 1rem;">
+            <i class="fa fa-exclamation-triangle" style="font-size: 1.5rem; color: #92400e;"></i>
+            <div>
+                <strong style="color: #92400e; font-size: 1rem;">{intl l="No carrier service selected!" d="myflyingbox"}</strong>
+            </div>
+        </div>
+        {/if}
+
+        {* Inline summary of active services when collapsed *}
+        {if $active_services_count > 0}
+        <div id="mfb-services-inline-summary" style="margin-top: 1.25rem; padding: 1rem 1.25rem; background: #dcfce7; border: 1px solid #22c55e; border-radius: 8px; display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
+            <span style="color: #166534; font-weight: 600; font-size: 0.95rem; margin-right: 0.5rem;"><i class="fa fa-check" style="margin-right: 0.35rem;"></i>{intl l="Selected:" d="myflyingbox"}</span>
+            {loop type="myflyingbox.services" name="active_services_summary" active="true"}
+            <span class="mfb-summary-badge" data-id="{$ID}" style="display: inline-flex; align-items: center; padding: 0.4rem 0.75rem; background: #fff; border: 1px solid #22c55e; border-radius: 6px; font-size: 0.9rem; color: #166534; font-weight: 500;">
+                {if $CARRIER_LOGO}
+                <img src="{$CARRIER_LOGO}" alt="{$CARRIER_CODE}" style="height: 20px; width: auto; margin-right: 0.5rem; object-fit: contain;"/>
+                {else}
+                <i class="fa fa-truck" style="margin-right: 0.5rem; color: #22c55e;"></i>
+                {/if}
+                <span style="max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{$NAME}</span>
+                {if $DELIVERY_DELAY}<span style="color: #64748b; margin-left: 0.5rem; font-weight: 600; white-space: nowrap;">({$DELIVERY_DELAY}h)</span>{/if}
+            </span>
+            {/loop}
+        </div>
+        {else}
+        <div id="mfb-services-inline-summary" style="display: none;"></div>
+        {/if}
+    </div>
+    <div class="card-body" id="mfb-services-body" style="display: none; padding: 1.75rem 2rem;">
+        <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+                <input type="text" id="mfb-service-search" class="form-control" placeholder="{intl l='Search services...' d='myflyingbox'}" style="font-size: 1rem; padding: 0.75rem 1rem;">
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+                <button type="button" id="mfb-select-all" class="btn btn-outline-success">
+                    <i class="fa fa-check-square-o" style="margin-right: 0.5rem;"></i> {intl l="Select all" d="myflyingbox"}
+                </button>
+                <button type="button" id="mfb-deselect-all" class="btn btn-outline-secondary">
+                    <i class="fa fa-square-o" style="margin-right: 0.5rem;"></i> {intl l="Deselect all" d="myflyingbox"}
+                </button>
+            </div>
+            <div id="mfb-filter-count" style="color: #64748b; font-size: 0.95rem;"></div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover" id="mfb-services-table">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 60px;">{intl l="Active" d="myflyingbox"}</th>
+                        <th>{intl l="Carrier" d="myflyingbox"}</th>
+                        <th>{intl l="Code" d="myflyingbox"}</th>
+                        <th>{intl l="Name" d="myflyingbox"}</th>
+                        <th style="width: 100px;">{intl l="Delay" d="myflyingbox"}</th>
+                        <th>{intl l="Features" d="myflyingbox"}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {loop type="myflyingbox.services" name="services"}
+                        <tr data-service-id="{$ID}" data-carrier="{$CARRIER_CODE}" data-code="{$CODE}"{if !$ACTIVE} class="mfb-service-inactive"{/if}>
+                            <td class="text-center">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input mfb-service-toggle" type="checkbox" data-id="{$ID}" {if $ACTIVE}checked{/if}/>
+                                </div>
+                            </td>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    {if $CARRIER_LOGO}
+                                    <img src="{$CARRIER_LOGO}" alt="{$CARRIER_CODE}" style="height: 28px; width: auto; max-width: 70px; object-fit: contain;"/>
+                                    {/if}
+                                    <strong style="font-size: 0.95rem;">{$CARRIER_CODE|upper}</strong>
+                                </div>
+                            </td>
+                            <td><code>{$CODE}</code></td>
+                            <td>{$NAME}</td>
+                            <td>
+                                <div class="mfb-delay-input-wrapper">
+                                    <input type="text"
+                                           class="form-control form-control-sm mfb-delivery-delay"
+                                           data-id="{$ID}"
+                                           value="{$DELIVERY_DELAY}"
+                                           placeholder="{intl l='ex: 48-72' d='myflyingbox'}"/>
+                                    <span class="mfb-delay-suffix">h</span>
+                                </div>
+                            </td>
+                            <td>
+                                {if $PICKUP_AVAILABLE}<span class="badge bg-info me-1" title="{intl l='Pickup available' d='myflyingbox'}"><i class="fa fa-hand-paper-o"></i> Pickup</span>{/if}
+                                {if $DROPOFF_AVAILABLE}<span class="badge bg-secondary me-1" title="{intl l='Drop-off available' d='myflyingbox'}"><i class="fa fa-archive"></i> Drop-off</span>{/if}
+                                {if $RELAY_DELIVERY}<span class="badge bg-success" title="{intl l='Relay point delivery' d='myflyingbox'}"><i class="fa fa-map-marker"></i> Relay</span>{/if}
+                            </td>
+                        </tr>
+                    {/loop}
+                </tbody>
+            </table>
+        </div>
+        <p class="text-muted mt-2">
+            <i class="fa fa-info-circle"></i> {intl l="Click 'Refresh Services' to update the list from MyFlyingBox API" d="myflyingbox"}
+        </p>
+    </div>
+</div>
+
+{* Dimensions Table *}
+<div class="card mt-4" id="dimensions-card">
+    <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #e8eef5 0%, #dfe7f0 100%); border-bottom: 1px solid #d1dae5; padding: 1.25rem 1.75rem;">
+        <h4 style="margin: 0; font-size: 1.1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.75px; display: flex; align-items: center; color: #1e3a5f;">
+            <i class="fa fa-cube" style="margin-right: 1rem; font-size: 1.75rem; color: #4a6fa5;"></i>
+            {intl l="Weight to Dimensions Mapping" d="myflyingbox"}
+        </h4>
+        <button type="button" class="btn btn-sm" id="mfb-add-dimension" style="background: #4a6fa5; color: #fff; border: none; padding: 0.5rem 1rem; font-weight: 600; border-radius: 8px;">
+            <i class="fa fa-plus" style="margin-right: 0.35rem;"></i> {intl l="Add" d="myflyingbox"}
+        </button>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped" id="mfb-dimensions-table">
+                <thead class="table-dark">
+                    <tr>
+                        <th>{intl l="Weight From (kg)" d="myflyingbox"}</th>
+                        <th>{intl l="Weight To (kg)" d="myflyingbox"}</th>
+                        <th>{intl l="Length (cm)" d="myflyingbox"}</th>
+                        <th>{intl l="Width (cm)" d="myflyingbox"}</th>
+                        <th>{intl l="Height (cm)" d="myflyingbox"}</th>
+                        <th style="width: 100px;">{intl l="Actions" d="myflyingbox"}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {loop type="myflyingbox.dimensions" name="dimensions" order="weight_from"}
+                        <tr data-id="{$ID}">
+                            <td>{$WEIGHT_FROM}</td>
+                            <td>{$WEIGHT_TO}</td>
+                            <td>{$LENGTH}</td>
+                            <td>{$WIDTH}</td>
+                            <td>{$HEIGHT}</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-primary mfb-edit-dimension" title="{intl l='Edit' d='myflyingbox'}">
+                                    <i class="glyphicon glyphicon-pencil"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger mfb-delete-dimension" title="{intl l='Delete' d='myflyingbox'}">
+                                    <i class="glyphicon glyphicon-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    {/loop}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{* Save Button *}
+<div class="row mt-4">
+    <div class="col-12 text-right">
+        <button type="submit" class="btn btn-primary btn-lg">
+            <i class="fa fa-save" style="margin-right: 0.5rem;"></i> {intl l="Save Configuration" d="myflyingbox"}
+        </button>
+    </div>
+</div>
+</form>
+{/form}
+
+{* Include JavaScript *}
+{include file="module-config-js.html"}
