@@ -730,8 +730,11 @@
 
             {* Email Notifications *}
             <div class="card mb-3">
-                <div class="card-header">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="mb-0"><i class="fa fa-envelope"></i> {intl l="Email Notifications" d="myflyingbox"}</h4>
+                    <a href="{url path="/admin/module/myflyingbox/email-templates"}" class="btn btn-sm" style="background: #4a6fa5; color: #fff; border: none; padding: 0.4rem 0.8rem; font-weight: 600; border-radius: 6px;">
+                        <i class="fa fa-cog" style="margin-right: 0.35rem;"></i> {intl l="Manage Email Templates" d="myflyingbox"}
+                    </a>
                 </div>
                 <div class="card-body">
                     <div class="form-check form-switch mb-2">
@@ -741,6 +744,9 @@
                         {/form_field}
                     </div>
                     <small class="text-muted">{intl l="When enabled, customers will receive emails when their shipment status changes" d="myflyingbox"}</small>
+                    <div class="alert alert-info mt-3" style="padding: 0.75rem 1rem; font-size: 0.9rem; background: #e0f2fe; border: none; border-left: 4px solid #0ea5e9; border-radius: 8px;">
+                        <i class="fa fa-lightbulb-o" style="margin-right: 0.5rem; color: #0369a1;"></i> {intl l="Customize the emails sent to customers for shipping notifications" d="myflyingbox"}
+                    </div>
                 </div>
             </div>
         </div>

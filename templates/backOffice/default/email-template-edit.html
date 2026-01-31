@@ -1,0 +1,383 @@
+{extends file="admin-layout.tpl"}
+{default_translation_domain domain="myflyingbox"}
+
+{block name="page-content"}
+<style>
+/* Email Template Edit Page Styles */
+.mfb-email-template-edit {
+    padding: 2rem;
+    background: #f8fafc;
+    border-radius: 16px;
+    margin: 1.5rem;
+}
+
+.mfb-email-template-edit .card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    background: #fff;
+}
+
+.mfb-email-template-edit .card-header {
+    background: linear-gradient(135deg, #e8eef5 0%, #dfe7f0 100%);
+    color: #1e3a5f;
+    border: none;
+    border-bottom: 1px solid #d1dae5;
+    padding: 1.25rem 1.75rem;
+}
+
+.mfb-email-template-edit .card-header h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.75px;
+    display: flex;
+    align-items: center;
+    color: #1e3a5f;
+}
+
+.mfb-email-template-edit .card-header h4 i {
+    margin-right: 1rem;
+    font-size: 1.5rem;
+    color: #4a6fa5;
+}
+
+.mfb-email-template-edit .card-body {
+    padding: 1.75rem 2rem;
+    background: #fff;
+}
+
+.mfb-email-template-edit .form-label {
+    font-weight: 600;
+    color: #1e3a5f;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.mfb-email-template-edit .form-control,
+.mfb-email-template-edit .form-select {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background-color: #fff;
+    color: #334155;
+}
+
+.mfb-email-template-edit .form-control:focus,
+.mfb-email-template-edit .form-select:focus {
+    border-color: #4a6fa5;
+    box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.15);
+}
+
+.mfb-email-template-edit textarea.form-control {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.mfb-email-template-edit .btn {
+    border-radius: 8px;
+    padding: 0.65rem 1.25rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.mfb-email-template-edit .btn-primary {
+    background: #4a6fa5;
+    border: none;
+    color: #fff;
+}
+
+.mfb-email-template-edit .btn-primary:hover {
+    background: #3d5d8a;
+}
+
+.mfb-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    color: #4a6fa5;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.mfb-back-link:hover {
+    color: #3d5d8a;
+}
+
+.mfb-variables-help {
+    background: #e0f2fe;
+    border: 1px solid #7dd3fc;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.mfb-variables-help code {
+    display: inline-block;
+    padding: 0.15rem 0.4rem;
+    margin: 0.15rem;
+    background: #fff;
+    color: #0369a1;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.mfb-variables-help code:hover {
+    background: #0369a1;
+    color: #fff;
+}
+
+.mfb-preview-panel {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.mfb-preview-panel iframe {
+    width: 100%;
+    height: 400px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.form-check-input:checked {
+    background-color: #4a6fa5;
+    border-color: #4a6fa5;
+}
+</style>
+
+<div class="mfb-email-template-edit">
+    <a href="{url path="/admin/module/myflyingbox/email-templates"}" class="mfb-back-link">
+        <i class="fa fa-arrow-left"></i> {intl l="Back to Templates"}
+    </a>
+
+    {form name="myflyingbox.email_template"}
+    <form action="{url path="/admin/module/myflyingbox/email-template/save"}" method="post" id="email-template-form">
+        {form_hidden_fields form=$form}
+
+        {if isset($template_id) && $template_id}
+        <input type="hidden" name="id" value="{$template_id}"/>
+        {/if}
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4>
+                    <i class="fa fa-envelope"></i>
+                    {if isset($template_id) && $template_id}
+                        {intl l="Edit Email Template"}
+                    {else}
+                        {intl l="Create Email Template"}
+                    {/if}
+                </h4>
+                <div>
+                    <button type="button" id="preview-btn" class="btn btn-outline-info me-2">
+                        <i class="fa fa-eye"></i> {intl l="Preview"}
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-save"></i> {intl l="Save"}
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Type, Locale, Name row -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        {form_field form=$form field="code"}
+                            <label class="form-label">{$label} <span class="text-danger">*</span></label>
+                            <select name="{$name}" class="form-select" id="template-code" {if isset($template_id) && $template_id}disabled{/if}>
+                                {foreach from=$available_codes key=code_val item=code_label}
+                                <option value="{$code_val}" {if (isset($template) && $template->getCode() == $code_val) || $value == $code_val}selected{/if}>{$code_label}</option>
+                                {/foreach}
+                            </select>
+                            {if isset($template_id) && $template_id}
+                            <input type="hidden" name="{$name}" value="{if isset($template)}{$template->getCode()}{else}{$value}{/if}"/>
+                            {/if}
+                        {/form_field}
+                    </div>
+                    <div class="col-md-3">
+                        {form_field form=$form field="locale"}
+                            <label class="form-label">{$label} <span class="text-danger">*</span></label>
+                            <select name="{$name}" class="form-select" id="template-locale" {if isset($template_id) && $template_id}disabled{/if}>
+                                <option value="fr_FR" {if (isset($template) && $template->getLocale() == 'fr_FR') || $value == 'fr_FR'}selected{/if}>Francais (FR)</option>
+                                <option value="en_US" {if (isset($template) && $template->getLocale() == 'en_US') || $value == 'en_US'}selected{/if}>English (US)</option>
+                            </select>
+                            {if isset($template_id) && $template_id}
+                            <input type="hidden" name="{$name}" value="{if isset($template)}{$template->getLocale()}{else}{$value}{/if}"/>
+                            {/if}
+                        {/form_field}
+                    </div>
+                    <div class="col-md-4">
+                        {form_field form=$form field="name"}
+                            <label class="form-label">{$label} <span class="text-danger">*</span></label>
+                            <input type="text" name="{$name}" value="{if isset($template)}{$template->getName()}{else}{$value}{/if}" class="form-control" id="template-name" placeholder="{intl l='e.g., Shipped notification FR'}" required/>
+                        {/form_field}
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        {form_field form=$form field="is_active"}
+                            <div class="form-check form-switch" style="padding-top: 0.5rem;">
+                                <input class="form-check-input" type="checkbox" name="{$name}" value="1" id="template-active" {if (isset($template) && $template->getIsActive()) || (!isset($template) && $value)}checked{/if}/>
+                                <label class="form-check-label" for="template-active">{$label}</label>
+                            </div>
+                        {/form_field}
+                    </div>
+                </div>
+
+                <!-- Subject -->
+                <div class="mb-3">
+                    {form_field form=$form field="subject"}
+                        <label class="form-label">{$label} <span class="text-danger">*</span></label>
+                        <input type="text" name="{$name}" value="{if isset($template)}{$template->getSubject()}{else}{$value}{/if}" class="form-control" id="template-subject" placeholder="{intl l='e.g., Your order {literal}{order_ref}{/literal} has been shipped'}" required/>
+                    {/form_field}
+                </div>
+
+                <!-- Variables Help -->
+                <div class="mfb-variables-help">
+                    <strong><i class="fa fa-lightbulb-o"></i> {intl l="Available variables"} </strong>
+                    <small class="text-muted">({intl l="Click to insert at cursor position"})</small>
+                    <div class="mt-2">
+                        {foreach from=$available_variables key=var item=desc}
+                        <code data-variable="{$var}" title="{$desc}">{$var}</code>
+                        {/foreach}
+                    </div>
+                </div>
+
+                <!-- HTML Content -->
+                <div class="mb-3">
+                    {form_field form=$form field="html_content"}
+                        <label class="form-label">{$label} <span class="text-danger">*</span></label>
+                        <textarea name="{$name}" class="form-control" id="template-html" rows="20" required>{if isset($template)}{$template->getHtmlContent()}{else}{$value}{/if}</textarea>
+                    {/form_field}
+                </div>
+
+                <!-- Text Content -->
+                <div class="mb-3">
+                    {form_field form=$form field="text_content"}
+                        <label class="form-label">{$label}</label>
+                        <small class="text-muted ms-2">({intl l="Leave empty to auto-generate from HTML"})</small>
+                        <textarea name="{$name}" class="form-control" id="template-text" rows="10">{if isset($template)}{$template->getTextContent()}{else}{$value}{/if}</textarea>
+                    {/form_field}
+                </div>
+
+                <!-- Preview Panel (hidden by default) -->
+                <div id="live-preview-panel" class="mfb-preview-panel" style="display: none;">
+                    <h5 class="mb-3"><i class="fa fa-eye"></i> {intl l="Live Preview"}</h5>
+                    <div class="mb-2">
+                        <strong>{intl l="Subject"}:</strong> <span id="preview-subject"></span>
+                    </div>
+                    <ul class="nav nav-tabs mb-3" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#preview-html-tab" type="button">HTML</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#preview-text-tab" type="button">Text</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="preview-html-tab">
+                            <iframe id="live-preview-frame"></iframe>
+                        </div>
+                        <div class="tab-pane fade" id="preview-text-tab">
+                            <pre id="live-preview-text" style="white-space: pre-wrap; background: #fff; padding: 1rem; border-radius: 8px; max-height: 400px; overflow: auto; border: 1px solid #e2e8f0;"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    {/form}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var lastActiveField = null;
+
+    // Track last active input/textarea
+    ['template-subject', 'template-html', 'template-text'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('focus', function() {
+                lastActiveField = this;
+            });
+        }
+    });
+
+    // Insert variable on click
+    document.querySelectorAll('.mfb-variables-help code[data-variable]').forEach(function(code) {
+        code.addEventListener('click', function() {
+            var variable = this.dataset.variable;
+            var field = lastActiveField || document.getElementById('template-html');
+
+            if (field && (field.tagName === 'INPUT' || field.tagName === 'TEXTAREA')) {
+                var start = field.selectionStart;
+                var end = field.selectionEnd;
+                var value = field.value;
+
+                field.value = value.substring(0, start) + variable + value.substring(end);
+                field.selectionStart = field.selectionEnd = start + variable.length;
+                field.focus();
+            }
+        });
+    });
+
+    // Preview button
+    document.getElementById('preview-btn').addEventListener('click', function() {
+        var panel = document.getElementById('live-preview-panel');
+        var isVisible = panel.style.display !== 'none';
+
+        if (isVisible) {
+            panel.style.display = 'none';
+            return;
+        }
+
+        var subject = document.getElementById('template-subject').value;
+        var htmlContent = document.getElementById('template-html').value;
+        var textContent = document.getElementById('template-text').value;
+
+        if (!subject || !htmlContent) {
+            alert('{intl l="Please fill in the subject and HTML content"}');
+            return;
+        }
+
+        fetch('{url path="/admin/module/myflyingbox/email-template/preview"}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({
+                subject: subject,
+                html_content: htmlContent,
+                text_content: textContent
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('preview-subject').textContent = data.subject;
+                document.getElementById('live-preview-frame').srcdoc = data.html;
+                document.getElementById('live-preview-text').textContent = data.text;
+                panel.style.display = 'block';
+                panel.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                alert(data.message || '{intl l="Preview error"}');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('{intl l="An error occurred"}');
+        });
+    });
+});
+</script>
+{/block}

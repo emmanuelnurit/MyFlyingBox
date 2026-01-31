@@ -1,0 +1,422 @@
+{extends file="admin-layout.tpl"}
+{default_translation_domain domain="myflyingbox"}
+
+{block name="page-content"}
+<style>
+/* Email Templates List Page Styles */
+.mfb-email-templates {
+    padding: 2rem;
+    background: #f8fafc;
+    border-radius: 16px;
+    margin: 1.5rem;
+}
+
+.mfb-email-templates .card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    background: #fff;
+}
+
+.mfb-email-templates .card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.mfb-email-templates .card-header {
+    background: linear-gradient(135deg, #e8eef5 0%, #dfe7f0 100%);
+    color: #1e3a5f;
+    border: none;
+    border-bottom: 1px solid #d1dae5;
+    padding: 1.25rem 1.75rem;
+}
+
+.mfb-email-templates .card-header h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.75px;
+    display: flex;
+    align-items: center;
+    color: #1e3a5f;
+}
+
+.mfb-email-templates .card-header h4 i {
+    margin-right: 1rem;
+    font-size: 1.75rem;
+    color: #4a6fa5;
+}
+
+.mfb-email-templates .card-body {
+    padding: 1.75rem 2rem;
+    background: #fff;
+}
+
+.mfb-email-templates .table {
+    margin-bottom: 0;
+    font-size: 0.95rem;
+}
+
+.mfb-email-templates .table-dark th {
+    background: #e8eef5;
+    color: #1e3a5f;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+    padding: 1rem 1.25rem;
+}
+
+.mfb-email-templates .table-striped tbody tr:nth-of-type(odd) {
+    background-color: #f8fafc;
+}
+
+.mfb-email-templates .table td {
+    padding: 1rem 1.25rem;
+    vertical-align: middle;
+    border-color: #e2e8f0;
+    color: #334155;
+    font-size: 0.95rem;
+}
+
+.mfb-email-templates .badge {
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.mfb-email-templates .btn {
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.mfb-email-templates .btn-sm {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.85rem;
+}
+
+.mfb-email-templates .btn-primary {
+    background: #4a6fa5;
+    border: none;
+    color: #fff;
+}
+
+.mfb-email-templates .btn-primary:hover {
+    background: #3d5d8a;
+}
+
+.mfb-variables-list code {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    margin: 0.25rem;
+    background: #e0e7ff;
+    color: #3730a3;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    cursor: help;
+}
+
+.mfb-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    color: #4a6fa5;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.mfb-back-link:hover {
+    color: #3d5d8a;
+}
+
+/* Preview Modal */
+#previewModal .modal-dialog {
+    max-width: 800px;
+}
+
+#previewModal .modal-body iframe {
+    width: 100%;
+    height: 500px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+</style>
+
+<div class="mfb-email-templates">
+    <a href="{url path="/admin/module/MyFlyingBox"}" class="mfb-back-link">
+        <i class="fa fa-arrow-left"></i> {intl l="Back to Configuration"}
+    </a>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4><i class="fa fa-envelope"></i> {intl l="Email Templates"}</h4>
+            <div>
+                <button type="button" id="mfb-seed-defaults" class="btn btn-outline-secondary me-2">
+                    <i class="fa fa-magic"></i> {intl l="Seed Defaults"}
+                </button>
+                <a href="{url path="/admin/module/myflyingbox/email-template/create"}" class="btn btn-primary">
+                    <i class="fa fa-plus"></i> {intl l="Create Template"}
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>{intl l="Type"}</th>
+                            <th>{intl l="Language"}</th>
+                            <th>{intl l="Name"}</th>
+                            <th>{intl l="Subject"}</th>
+                            <th>{intl l="Status"}</th>
+                            <th style="width: 180px;">{intl l="Actions"}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {loop type="myflyingbox.email_templates" name="templates" order="code"}
+                        <tr>
+                            <td>
+                                <span class="badge {if $CODE == 'shipped'}bg-primary{else}bg-success{/if}">
+                                    {if $CODE == 'shipped'}{intl l="Shipped"}{else}{intl l="Delivered"}{/if}
+                                </span>
+                            </td>
+                            <td>
+                                {if $LOCALE == 'fr_FR'}
+                                    <i class="fa fa-flag"></i> FR
+                                {elseif $LOCALE == 'en_US'}
+                                    <i class="fa fa-flag"></i> EN
+                                {else}
+                                    {$LOCALE}
+                                {/if}
+                            </td>
+                            <td>{$NAME}</td>
+                            <td>
+                                <small class="text-muted">{$SUBJECT|truncate:50:"..."}</small>
+                            </td>
+                            <td>
+                                {if $IS_ACTIVE}
+                                    <span class="badge bg-success"><i class="fa fa-check"></i> {intl l="Active"}</span>
+                                {else}
+                                    <span class="badge bg-secondary"><i class="fa fa-times"></i> {intl l="Inactive"}</span>
+                                {/if}
+                                {if $IS_DEFAULT}
+                                    <span class="badge bg-info">{intl l="Default"}</span>
+                                {/if}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{url path="/admin/module/myflyingbox/email-template/{$ID}"}" class="btn btn-sm btn-outline-primary" title="{intl l='Edit'}">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-info mfb-preview-template" data-id="{$ID}" data-subject="{$SUBJECT|escape:'html'}" title="{intl l='Preview'}">
+                                        <i class="fa fa-eye"></i>
+                                    </button>
+                                    {if $IS_DEFAULT}
+                                    <button type="button" class="btn btn-sm btn-outline-warning mfb-reset-template" data-id="{$ID}" title="{intl l='Reset to default'}">
+                                        <i class="fa fa-undo"></i>
+                                    </button>
+                                    {else}
+                                    <button type="button" class="btn btn-sm btn-outline-danger mfb-delete-template" data-id="{$ID}" data-name="{$NAME|escape:'html'}" title="{intl l='Delete'}">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                    {/if}
+                                </div>
+                            </td>
+                        </tr>
+                        {foreachelse}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                <i class="fa fa-inbox fa-2x mb-2"></i>
+                                <p>{intl l="No email templates found. Click 'Seed Defaults' to create the default templates."}</p>
+                            </td>
+                        </tr>
+                        {/loop}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Variables Reference -->
+    <div class="card">
+        <div class="card-header">
+            <h4><i class="fa fa-code"></i> {intl l="Available Variables"}</h4>
+        </div>
+        <div class="card-body">
+            <p class="text-muted mb-3">{intl l="Use these variables in your email templates. They will be replaced with actual values when the email is sent."}</p>
+            <div class="mfb-variables-list">
+                {foreach from=$available_variables key=var item=desc}
+                <code title="{$desc}">{$var}</code>
+                {/foreach}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="previewModalLabel"><i class="fa fa-eye"></i> {intl l="Email Preview"}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs" id="previewTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="html-tab" data-bs-toggle="tab" data-bs-target="#preview-html" type="button" role="tab">HTML</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="text-tab" data-bs-toggle="tab" data-bs-target="#preview-text" type="button" role="tab">Text</button>
+                    </li>
+                </ul>
+                <div class="tab-content pt-3">
+                    <div class="tab-pane fade show active" id="preview-html" role="tabpanel">
+                        <div class="mb-2"><strong>{intl l="Subject"}:</strong> <span id="preview-subject"></span></div>
+                        <iframe id="preview-html-frame" style="width: 100%; height: 450px; border: 1px solid #ddd; border-radius: 8px;"></iframe>
+                    </div>
+                    <div class="tab-pane fade" id="preview-text" role="tabpanel">
+                        <pre id="preview-text-content" style="white-space: pre-wrap; background: #f8fafc; padding: 1rem; border-radius: 8px; max-height: 450px; overflow: auto;"></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{intl l="Close"}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Seed defaults
+    document.getElementById('mfb-seed-defaults').addEventListener('click', function() {
+        if (!confirm('{intl l="This will create default email templates for all missing codes/locales. Continue?"}')) {
+            return;
+        }
+
+        fetch('{url path="/admin/module/myflyingbox/email-template/seed-defaults"}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.message || '{intl l="An error occurred"}');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('{intl l="An error occurred"}');
+        });
+    });
+
+    // Preview template
+    document.querySelectorAll('.mfb-preview-template').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var templateId = this.dataset.id;
+            var subject = this.dataset.subject;
+
+            // Get template content via list loop data - use API instead
+            fetch('{url path="/admin/module/myflyingbox/email-template/preview"}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({
+                    id: templateId,
+                    subject: subject,
+                    html_content: '', // Will be fetched server-side
+                    text_content: ''
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('preview-subject').textContent = data.subject;
+                    document.getElementById('preview-html-frame').srcdoc = data.html;
+                    document.getElementById('preview-text-content').textContent = data.text;
+
+                    var modal = new bootstrap.Modal(document.getElementById('previewModal'));
+                    modal.show();
+                } else {
+                    alert(data.message || '{intl l="Preview not available"}');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('{intl l="An error occurred"}');
+            });
+        });
+    });
+
+    // Reset template
+    document.querySelectorAll('.mfb-reset-template').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            if (!confirm('{intl l="Reset this template to its default content? Current customizations will be lost."}')) {
+                return;
+            }
+
+            var templateId = this.dataset.id;
+
+            fetch('{url path="/admin/module/myflyingbox/email-template/reset"}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({ id: templateId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert(data.message || '{intl l="An error occurred"}');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('{intl l="An error occurred"}');
+            });
+        });
+    });
+
+    // Delete template
+    document.querySelectorAll('.mfb-delete-template').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var templateName = this.dataset.name;
+            if (!confirm('{intl l="Delete template"} "' + templateName + '"? {intl l="This action cannot be undone."}')) {
+                return;
+            }
+
+            var templateId = this.dataset.id;
+
+            fetch('{url path="/admin/module/myflyingbox/email-template/delete"}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({ id: templateId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert(data.message || '{intl l="An error occurred"}');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('{intl l="An error occurred"}');
+            });
+        });
+    });
+});
+</script>
+{/block}

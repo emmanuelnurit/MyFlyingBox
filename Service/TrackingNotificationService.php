@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MyFlyingBox\Service;
 
 use MyFlyingBox\Model\MyFlyingBoxParcelQuery;
@@ -22,11 +24,29 @@ class TrackingNotificationService
 
     private MailerFactory $mailer;
     private LoggerInterface $logger;
+    private ?EmailTemplateService $emailTemplateService = null;
+    private ?EmailRenderingService $emailRenderingService = null;
 
     public function __construct(MailerFactory $mailer, LoggerInterface $logger)
     {
         $this->mailer = $mailer;
         $this->logger = $logger;
+    }
+
+    /**
+     * Set the email template service (optional, for template-based emails)
+     */
+    public function setEmailTemplateService(EmailTemplateService $emailTemplateService): void
+    {
+        $this->emailTemplateService = $emailTemplateService;
+    }
+
+    /**
+     * Set the email rendering service (optional, for template-based emails)
+     */
+    public function setEmailRenderingService(EmailRenderingService $emailRenderingService): void
+    {
+        $this->emailRenderingService = $emailRenderingService;
     }
 
     /**
@@ -88,16 +108,34 @@ class TrackingNotificationService
                 return false;
             }
 
-            // Build email content
-            $emailData = $this->buildEmailData($shipment, $order, $newStatus);
-
             // Get customer locale
             $locale = $customer->getCustomerLang()?->getLocale() ?? 'fr_FR';
 
-            // Get email subject and body based on status and locale
-            $subject = $this->getEmailSubject($newStatus, $locale, $order->getRef());
-            $htmlBody = $this->buildHtmlBody($emailData, $newStatus, $locale);
-            $textBody = $this->buildTextBody($emailData, $newStatus, $locale);
+            // Try to use database template first
+            $rendered = $this->renderFromTemplate($shipment, $order, $newStatus, $locale);
+
+            if ($rendered !== null) {
+                // Use template-based content
+                $subject = $rendered['subject'];
+                $htmlBody = $rendered['html'];
+                $textBody = $rendered['text'];
+
+                $this->logger->debug('Using database email template', [
+                    'status' => $newStatus,
+                    'locale' => $locale,
+                ]);
+            } else {
+                // Fallback to hardcoded content
+                $emailData = $this->buildEmailData($shipment, $order, $newStatus);
+                $subject = $this->getEmailSubject($newStatus, $locale, $order->getRef());
+                $htmlBody = $this->buildHtmlBody($emailData, $newStatus, $locale);
+                $textBody = $this->buildTextBody($emailData, $newStatus, $locale);
+
+                $this->logger->debug('Using fallback hardcoded email content', [
+                    'status' => $newStatus,
+                    'locale' => $locale,
+                ]);
+            }
 
             // Send email
             $storeName = ConfigQuery::getStoreName();
@@ -126,6 +164,46 @@ class TrackingNotificationService
                 'exception' => $e,
             ]);
             return false;
+        }
+    }
+
+    /**
+     * Try to render email from database template
+     *
+     * @return array{subject: string, html: string, text: string}|null
+     */
+    private function renderFromTemplate(
+        MyFlyingBoxShipment $shipment,
+        Order $order,
+        string $status,
+        string $locale
+    ): ?array {
+        // Check if template services are available
+        if ($this->emailTemplateService === null || $this->emailRenderingService === null) {
+            return null;
+        }
+
+        try {
+            // Try to load template from database
+            $template = $this->emailTemplateService->getTemplate($status, $locale);
+
+            if ($template === null) {
+                return null;
+            }
+
+            // Build variables and render
+            $variables = $this->emailRenderingService->buildVariablesFromShipment($shipment, $order, $status);
+
+            return $this->emailRenderingService->render($template, $variables);
+
+        } catch (\Exception $e) {
+            $this->logger->warning('Failed to render email from template, using fallback', [
+                'status' => $status,
+                'locale' => $locale,
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
         }
     }
 
