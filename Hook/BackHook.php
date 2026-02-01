@@ -2,9 +2,12 @@
 
 namespace MyFlyingBox\Hook;
 
+use MyFlyingBox\Model\MyFlyingBoxOfferQuery;
 use MyFlyingBox\Model\MyFlyingBoxParcelQuery;
+use MyFlyingBox\Model\MyFlyingBoxQuoteQuery;
 use MyFlyingBox\Model\MyFlyingBoxShipmentQuery;
 use MyFlyingBox\MyFlyingBox;
+use Propel\Runtime\ActiveQuery\Criteria;
 use Thelia\Core\Event\Hook\HookRenderBlockEvent;
 use Thelia\Core\Event\Hook\HookRenderEvent;
 use Thelia\Core\Hook\BaseHook;
@@ -53,6 +56,27 @@ class BackHook extends BaseHook
             ->filterByOrderId($orderId)
             ->filterByIsReturn(false)
             ->findOne();
+
+        // Get selected service from cart quote (for pre-selection in form when no shipment exists)
+        $selectedServiceId = null;
+        if (!$shipment) {
+            $quote = MyFlyingBoxQuoteQuery::create()
+                ->filterByCartId($order->getCartId())
+                ->orderByCreatedAt(Criteria::DESC)
+                ->findOne();
+
+            if ($quote) {
+                // Get the first offer (usually the one selected or cheapest)
+                $offer = MyFlyingBoxOfferQuery::create()
+                    ->filterByQuoteId($quote->getId())
+                    ->orderByTotalPriceInCents(Criteria::ASC)
+                    ->findOne();
+
+                if ($offer) {
+                    $selectedServiceId = $offer->getServiceId();
+                }
+            }
+        }
 
         // Get return shipments for this order
         $returnShipments = MyFlyingBoxShipmentQuery::create()
@@ -105,6 +129,7 @@ class BackHook extends BaseHook
                 'shipment' => $shipment,
                 'parcels_count' => $parcelsCount,
                 'return_shipments' => $returnShipments,
+                'selected_service_id' => $selectedServiceId,
             ]),
         ]);
     }

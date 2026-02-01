@@ -371,7 +371,7 @@
                         <select name="service_id" class="form-control" id="mfb-service-select">
                             <option value="">{intl l="-- Select a service --" d="myflyingbox"}</option>
                             {loop type="myflyingbox.services" name="available_services" active="true"}
-                            <option value="{$ID}">
+                            <option value="{$ID}" {if isset($selected_service_id) && $selected_service_id == $ID}selected{/if}>
                                 {$CARRIER_CODE|upper} - {$NAME}
                                 {if $RELAY_DELIVERY} ({intl l="Relay" d="myflyingbox"}){/if}
                             </option>
