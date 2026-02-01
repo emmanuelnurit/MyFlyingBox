@@ -50,6 +50,7 @@ return [
     'Required for relay point map' => 'Nécessaire pour la carte des points relais',
     'Required for relay point map display' => 'Nécessaire pour afficher la carte des points relais',
     'Get your API key from Google Cloud Console' => 'Obtenir votre clé API depuis Google Cloud Console',
+    'Google Cloud Console' => 'Google Cloud Console',
 
     // Configuration - Actions
     'Save Configuration' => 'Enregistrer la configuration',
@@ -293,6 +294,8 @@ return [
     'Invalid configuration' => 'Configuration invalide',
     'Your Webhook Endpoint' => 'Votre point d\'entrée Webhook',
     'Use this URL in your MyFlyingBox dashboard' => 'Utilisez cette URL dans votre tableau de bord MyFlyingBox',
+    'Use this URL in your' => 'Utilisez cette URL dans votre',
+    'MyFlyingBox dashboard' => 'tableau de bord MyFlyingBox',
     'Enable Webhooks' => 'Activer les Webhooks',
     'Enabled' => 'Activé',
     'Disabled' => 'Désactivé',
