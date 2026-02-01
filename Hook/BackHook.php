@@ -8,6 +8,8 @@ use MyFlyingBox\MyFlyingBox;
 use Thelia\Core\Event\Hook\HookRenderBlockEvent;
 use Thelia\Core\Event\Hook\HookRenderEvent;
 use Thelia\Core\Hook\BaseHook;
+use Thelia\Model\ModuleQuery;
+use Thelia\Model\OrderQuery;
 
 class BackHook extends BaseHook
 {
@@ -32,6 +34,17 @@ class BackHook extends BaseHook
         $orderId = $event->getArgument('id');
 
         if (!$orderId) {
+            return;
+        }
+
+        // Verify this order uses MyFlyingBox delivery module
+        $order = OrderQuery::create()->findPk($orderId);
+        if (!$order) {
+            return;
+        }
+
+        $module = ModuleQuery::create()->findPk($order->getDeliveryModuleId());
+        if (!$module || $module->getCode() !== 'MyFlyingBox') {
             return;
         }
 
@@ -104,6 +117,17 @@ class BackHook extends BaseHook
         $orderId = $event->getArgument('order_id');
 
         if (!$orderId) {
+            return;
+        }
+
+        // Verify this order uses MyFlyingBox delivery module
+        $order = OrderQuery::create()->findPk($orderId);
+        if (!$order) {
+            return;
+        }
+
+        $module = ModuleQuery::create()->findPk($order->getDeliveryModuleId());
+        if (!$module || $module->getCode() !== 'MyFlyingBox') {
             return;
         }
 
