@@ -9,13 +9,13 @@
 {intl l="Great news! Your order %order_ref has been shipped." order_ref=$order_ref|default:'[REF-000]'}
 
 {intl l="Carrier"}: {$carrier_name|default:'[Transporteur]'}
-{if $tracking_number}{intl l="Tracking number"}: {$tracking_number}{/if}
+{if $tracking_number|default:''}{intl l="Tracking number"}: {$tracking_number}{/if}
 
-{if $tracking_url}
+{if $tracking_url|default:''}
 {intl l="Track my shipment"}: {$tracking_url}
 {/if}
 
-{if $delivery_address}
+{if $delivery_address|default:''}
 {intl l="Delivery address"}:
 {$delivery_address}
 {/if}
