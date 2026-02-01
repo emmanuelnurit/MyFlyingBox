@@ -23,7 +23,7 @@
                         <p style="margin: 0; color: #1e3a5f; font-size: 16px; font-weight: bold;">{$carrier_name|default:'[Transporteur]'}</p>
                     </td>
                 </tr>
-                {if $tracking_number}
+                {if $tracking_number|default:''}
                 <tr>
                     <td style="border-top: 1px solid #e2e8f0;">
                         <p style="margin: 0 0 10px 0; color: #64748b; font-size: 14px;">{intl l="Tracking number"}</p>
@@ -31,7 +31,7 @@
                     </td>
                 </tr>
                 {/if}
-                {if $tracking_url}
+                {if $tracking_url|default:''}
                 <tr>
                     <td style="border-top: 1px solid #e2e8f0; text-align: center; padding: 20px;">
                         <a href="{$tracking_url}" style="display: inline-block; background: #4a6fa5; color: #fff; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-weight: bold; font-size: 14px;">
@@ -42,7 +42,7 @@
                 {/if}
             </table>
 
-            {if $delivery_address}
+            {if $delivery_address|default:''}
             <p style="color: #334155; font-size: 16px; line-height: 1.6; margin: 20px 0 10px 0;">
                 <strong>{intl l="Delivery address"}:</strong>
             </p>
