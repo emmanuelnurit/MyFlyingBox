@@ -877,6 +877,12 @@
                         {/form_field}
                     </div>
                     <small class="text-muted">{intl l="Required for relay point map display" d="myflyingbox"}</small>
+                    <div style="margin-top: 0.75rem;">
+                        <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+                            <i class="fa fa-external-link" style="margin-right: 0.35rem;"></i>
+                            {intl l="Google Cloud Console" d="myflyingbox"}
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -946,7 +952,13 @@
                                     </button>
                                 </span>
                             </div>
-                            <small class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem; display: block;">{intl l="Use this URL in your MyFlyingBox dashboard" d="myflyingbox"}</small>
+                            <small class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem; display: block;">
+                                {intl l="Use this URL in your" d="myflyingbox"}
+                                <a href="https://dashboard.myflyingbox.com/" target="_blank" rel="noopener" style="color: #4a6fa5; font-weight: 600;">
+                                    {intl l="MyFlyingBox dashboard" d="myflyingbox"}
+                                    <i class="fa fa-external-link" style="font-size: 0.75rem; margin-left: 0.25rem;"></i>
+                                </a>
+                            </small>
                         </div>
 
                         {* Two columns: Enable + Secret *}
