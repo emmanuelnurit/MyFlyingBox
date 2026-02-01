@@ -1,5 +1,5 @@
 {default_translation_domain domain="myflyingbox.email.default"}
-{default_locale locale={$locale}}
+{default_locale locale={$locale|default:'fr_FR'}}
 
 <table width="100%" cellpadding="0" cellspacing="0" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
     <tr>
@@ -9,18 +9,18 @@
             </h1>
 
             <p style="color: #334155; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                {intl l="Dear"} {$customer_firstname} {$customer_lastname},
+                {intl l="Dear"} {$customer_firstname|default:'[Prénom]'} {$customer_lastname|default:'[Nom]'},
             </p>
 
             <p style="color: #334155; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                {intl l="Great news! Your order %order_ref has been shipped." order_ref=$order_ref}
+                {intl l="Great news! Your order %order_ref has been shipped." order_ref=$order_ref|default:'[REF-000]'}
             </p>
 
             <table width="100%" cellpadding="15" cellspacing="0" style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; margin: 20px 0;">
                 <tr>
                     <td>
                         <p style="margin: 0 0 10px 0; color: #64748b; font-size: 14px;">{intl l="Carrier"}</p>
-                        <p style="margin: 0; color: #1e3a5f; font-size: 16px; font-weight: bold;">{$carrier_name}</p>
+                        <p style="margin: 0; color: #1e3a5f; font-size: 16px; font-weight: bold;">{$carrier_name|default:'[Transporteur]'}</p>
                     </td>
                 </tr>
                 {if $tracking_number}
@@ -57,7 +57,7 @@
 
             <p style="color: #334155; font-size: 16px; line-height: 1.6; margin: 0;">
                 {intl l="Best regards,"}<br/>
-                <strong>{$store_name}</strong>
+                <strong>{$store_name|default:'[Nom boutique]'}</strong>
             </p>
         </td>
     </tr>
