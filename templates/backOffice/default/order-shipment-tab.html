@@ -71,10 +71,10 @@
             </div>
         </div>
 
-        {* === MAIN CONTENT (Two columns) === *}
+        {* === MAIN CONTENT (Details + Actions) === *}
         <div class="row">
             {* Left column - Shipment details *}
-            <div class="col-md-7">
+            <div class="col-md-8">
                 <div class="panel panel-default mfb-history-panel">
                     <div class="panel-heading">
                         <h4 class="panel-title"><i class="fa fa-info-circle"></i> {intl l="Shipment Details" d="myflyingbox"}</h4>
@@ -150,9 +150,28 @@
                             </div>
                             {/if}
 
+                            {* Tracking numbers *}
+                            {loop type="myflyingbox.parcels" name="shipment_parcels" shipment_id=$shipment->getId()}
+                            <div class="mfb-info-row">
+                                <span class="mfb-info-label">{intl l="Tracking" d="myflyingbox"} #{$LOOP_COUNT}</span>
+                                <span class="mfb-info-value">
+                                    {if $TRACKING_NUMBER}
+                                        <code>{$TRACKING_NUMBER}</code>
+                                        {if $LABEL_URL}
+                                        <a href="{$LABEL_URL}" target="_blank" class="btn btn-xs btn-default" title="{intl l='Download label' d='myflyingbox'}" style="margin-left: 0.5rem;">
+                                            <i class="fa fa-download"></i> {intl l="Label" d="myflyingbox"}
+                                        </a>
+                                        {/if}
+                                    {else}
+                                        <span class="text-muted"><i class="fa fa-clock-o"></i> {intl l="Awaiting booking" d="myflyingbox"}</span>
+                                    {/if}
+                                </span>
+                            </div>
+                            {/loop}
+
                             {if $shipment->getApiOrderUuid()}
                             <div class="mfb-info-row">
-                                <span class="mfb-info-label">{intl l="API Order" d="myflyingbox"}</span>
+                                <span class="mfb-info-label">{intl l="API Reference" d="myflyingbox"}</span>
                                 <span class="mfb-info-value"><code>{$shipment->getApiOrderUuid()}</code></span>
                             </div>
                             {/if}
@@ -161,74 +180,63 @@
                 </div>
             </div>
 
-            {* Right column - Parcels with tracking *}
-            <div class="col-md-5">
-                <div class="panel panel-default mfb-history-panel">
-                    <div class="panel-heading">
-                        <h4 class="panel-title">
-                            <i class="fa fa-barcode"></i> {intl l="Tracking" d="myflyingbox"}
-                            <span class="badge">{$parcels_count}</span>
-                        </h4>
+            {* Right column - Actions Panel *}
+            <div class="col-md-4">
+                <div class="mfb-actions-panel">
+                    <div class="mfb-actions-title">
+                        <i class="fa fa-bolt"></i> {intl l="Actions" d="myflyingbox"}
                     </div>
-                    <div class="panel-body">
-                        <div class="mfb-info-list">
-                            {loop type="myflyingbox.parcels" name="shipment_parcels" shipment_id=$shipment->getId()}
-                            <div class="mfb-info-row">
-                                <span class="mfb-info-label">{intl l="Parcel" d="myflyingbox"} #{$LOOP_COUNT}</span>
-                                <span class="mfb-info-value">
-                                    {if $TRACKING_NUMBER}
-                                        <code>{$TRACKING_NUMBER}</code>
-                                        {if $LABEL_URL}
-                                        <a href="{$LABEL_URL}" target="_blank" class="btn btn-xs btn-default" title="{intl l='Download label' d='myflyingbox'}" style="margin-left: 0.5rem;">
-                                            <i class="fa fa-download"></i>
-                                        </a>
-                                        {/if}
-                                    {else}
-                                        <span class="text-muted">{intl l="Pending booking" d="myflyingbox"}</span>
-                                    {/if}
-                                </span>
-                            </div>
-                            {/loop}
-                        </div>
+                    <div class="mfb-actions-list">
+                        {if $shipment->getStatus() == 'pending'}
+                            <button type="button" class="mfb-action-btn btn-primary mfb-action-book" data-shipment-id="{$shipment->getId()}">
+                                <i class="fa fa-check-circle"></i>
+                                <span>{intl l="Confirm & Book Shipment" d="myflyingbox"}</span>
+                            </button>
+                        {/if}
+
+                        {if $shipment->getStatus() == 'booked'}
+                            <button type="button" class="mfb-action-btn btn-success mfb-action-tracking" data-shipment-id="{$shipment->getId()}">
+                                <i class="fa fa-truck"></i>
+                                <span>{intl l="Mark as Shipped" d="myflyingbox"}</span>
+                            </button>
+                        {/if}
+
+                        {if $shipment->getStatus() == 'booked' || $shipment->getStatus() == 'shipped'}
+                            <button type="button" class="mfb-action-btn btn-default mfb-action-labels" data-shipment-id="{$shipment->getId()}">
+                                <i class="fa fa-print"></i>
+                                <span>{intl l="Download Labels" d="myflyingbox"}</span>
+                            </button>
+                        {/if}
+
+                        {if $shipment->getStatus() == 'shipped'}
+                            <button type="button" class="mfb-action-btn btn-default mfb-action-tracking" data-shipment-id="{$shipment->getId()}">
+                                <i class="fa fa-refresh"></i>
+                                <span>{intl l="Refresh Tracking Status" d="myflyingbox"}</span>
+                            </button>
+                        {/if}
+
+                        {if $shipment->getStatus() == 'shipped' || $shipment->getStatus() == 'delivered'}
+                            <button type="button" class="mfb-action-btn btn-warning mfb-action-create-return" data-shipment-id="{$shipment->getId()}" data-toggle="modal" data-target="#mfb-return-modal">
+                                <i class="fa fa-reply"></i>
+                                <span>{intl l="Create Return Label" d="myflyingbox"}</span>
+                            </button>
+                        {/if}
+
+                        {if $shipment->getStatus() == 'pending' || $shipment->getStatus() == 'booked'}
+                            <button type="button" class="mfb-action-btn btn-danger mfb-action-cancel" data-shipment-id="{$shipment->getId()}">
+                                <i class="fa fa-times"></i>
+                                <span>{intl l="Cancel Shipment" d="myflyingbox"}</span>
+                            </button>
+                        {/if}
                     </div>
                 </div>
             </div>
         </div>
 
-        {* === ACTION BUTTONS (Bottom Bar) === *}
-        <div class="mfb-actions-bar">
-            {if $shipment->getStatus() == 'pending'}
-                <button type="button" class="btn btn-primary mfb-action-book" data-shipment-id="{$shipment->getId()}">
-                    <i class="fa fa-check"></i> {intl l="Book Shipment" d="myflyingbox"}
-                </button>
-            {/if}
-
-            {if $shipment->getStatus() == 'booked' || $shipment->getStatus() == 'shipped'}
-                <button type="button" class="btn btn-default mfb-action-labels" data-shipment-id="{$shipment->getId()}">
-                    <i class="fa fa-print"></i> {intl l="Download Labels" d="myflyingbox"}
-                </button>
-                <button type="button" class="btn btn-default mfb-action-tracking" data-shipment-id="{$shipment->getId()}">
-                    <i class="fa fa-refresh"></i> {intl l="Update Tracking" d="myflyingbox"}
-                </button>
-            {/if}
-
-            {if $shipment->getStatus() == 'pending' || $shipment->getStatus() == 'booked'}
-                <button type="button" class="btn btn-danger mfb-action-cancel" data-shipment-id="{$shipment->getId()}">
-                    <i class="fa fa-times"></i> {intl l="Cancel Shipment" d="myflyingbox"}
-                </button>
-            {/if}
-
-            {if $shipment->getStatus() == 'shipped' || $shipment->getStatus() == 'delivered'}
-                <button type="button" class="btn btn-warning mfb-action-create-return" data-shipment-id="{$shipment->getId()}" data-toggle="modal" data-target="#mfb-return-modal">
-                    <i class="fa fa-reply"></i> {intl l="Create Return Shipment" d="myflyingbox"}
-                </button>
-            {/if}
-        </div>
-
         {* === SHIPMENT HISTORY (Unified Style) === *}
-        <div class="panel panel-default mfb-history-panel" style="margin-top: 1rem;">
+        <div class="panel panel-default mfb-history-panel" style="margin-top: 1.5rem;">
             <div class="panel-heading">
-                <h4 class="panel-title"><i class="fa fa-history"></i> {intl l="Shipment History" d="myflyingbox"}</h4>
+                <h4 class="panel-title"><i class="fa fa-history"></i> {intl l="Tracking History" d="myflyingbox"}</h4>
             </div>
             <div class="panel-body" id="mfb-tracking-timeline">
                 <p class="text-center text-muted">
