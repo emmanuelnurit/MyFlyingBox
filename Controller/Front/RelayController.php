@@ -279,12 +279,18 @@ class RelayController extends BaseFrontController
 
     /**
      * Get offers for a cart with relay_delivery information
-     * This API is used by React frontend to determine if MyFlyingBox map should be shown
+     * This API is used by frontend to load shipping options asynchronously
+     * Supports optional quote creation via create_quote=1 parameter
      */
-    public function getOffersAction(Request $request, EventDispatcherInterface $dispatcher): JsonResponse
-    {
+    public function getOffersAction(
+        Request $request,
+        EventDispatcherInterface $dispatcher,
+        QuoteService $quoteService
+    ): JsonResponse {
         try {
             $cartId = $request->get('cart_id');
+            $addressId = $request->get('address_id');
+            $createQuote = $request->get('create_quote', '0') === '1';
 
             if (!$cartId) {
                 return new JsonResponse([
@@ -302,11 +308,30 @@ class RelayController extends BaseFrontController
                 ]);
             }
 
-            // Get the latest quote for this cart
+            // Get delivery address and country
+            $address = null;
+            $country = null;
+
+            if ($addressId) {
+                $address = AddressQuery::create()->findPk($addressId);
+                $country = $address?->getCountry();
+            }
+
+            // Fallback to default country
+            if (!$country) {
+                $country = CountryQuery::create()->findOneByByDefault(1);
+            }
+
+            // Get or create quote
             $quote = MyFlyingBoxQuoteQuery::create()
                 ->filterByCartId($cartId)
                 ->orderByCreatedAt(Criteria::DESC)
                 ->findOne();
+
+            // Create quote if requested and none exists (or if address changed)
+            if ($createQuote && $country) {
+                $quote = $quoteService->getQuoteForCart($sessionCart, $address, $country);
+            }
 
             if (!$quote) {
                 return new JsonResponse([
@@ -337,12 +362,17 @@ class RelayController extends BaseFrontController
                     $hasRelayOffers = true;
                 }
 
+                // Apply price surcharges
+                $price = $this->applyPriceSurcharges($offer->getTotalPriceInCents() / 100);
+
                 $offers[] = [
                     'id' => $offer->getId(),
+                    'service_id' => $service->getId(),
                     'service_code' => $service->getCode(),
                     'service_name' => $service->getName(),
                     'carrier_code' => $service->getCarrierCode(),
-                    'price' => $offer->getTotalPriceInCents() / 100,
+                    'price' => $price,
+                    'price_formatted' => number_format($price, 2, ',', ' ') . ' €',
                     'delivery_days' => $offer->getDeliveryDays(),
                     'relay_delivery' => $isRelay,
                     'api_offer_uuid' => $offer->getApiOfferUuid(),
@@ -372,6 +402,7 @@ class RelayController extends BaseFrontController
             return new JsonResponse([
                 'success' => true,
                 'offers' => $offers,
+                'offers_count' => count($offers),
                 'has_relay_offers' => $hasRelayOffers,
                 'selected_offer_id' => $selectedOfferId,
                 'selected_relay' => $selectedRelay,

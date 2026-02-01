@@ -39,6 +39,7 @@ class FrontHook extends BaseHook
     /**
      * Hook for order-delivery.extra - displays shipping options and relay point selection
      * The hook is called for each delivery module with module=$ID parameter
+     * Renders skeleton immediately, data loaded via AJAX for better UX
      */
     public function onOrderDeliveryExtra(HookRenderEvent $event): void
     {
@@ -56,51 +57,12 @@ class FrontHook extends BaseHook
             return;
         }
 
-        // Get delivery address
+        // Get delivery address ID (data will be loaded via AJAX)
         $addressId = $this->getSession()->getOrder()?->getChoosenDeliveryAddress();
-        $address = null;
-        $country = null;
 
-        if ($addressId) {
-            $address = \Thelia\Model\AddressQuery::create()->findPk($addressId);
-            $country = $address?->getCountry();
-        }
-
-        // Fallback to default country if no address
-        if (!$country) {
-            $country = CountryQuery::create()->findOneByByDefault(1);
-        }
-
-        // Get quote with offers (pass country for fallback)
-        $quote = $this->quoteService->getQuoteForCart($cart, $address, $country);
-
-        // Get all offers for this quote
-        $offers = [];
-        $hasRelayServices = false;
-
-        if ($quote) {
-            $offers = $this->getFormattedOffers($quote->getId());
-            // Check if any offer has relay delivery
-            foreach ($offers as $offer) {
-                if ($offer['relay_delivery']) {
-                    $hasRelayServices = true;
-                    break;
-                }
-            }
-        }
-
-        // Get currently selected relay point
-        $selectedRelay = $this->getSelectedRelay($cart->getId());
-
-        // Get selected offer from session (if any)
-        $selectedOfferId = $this->getSession()->get('mfb_selected_offer_id');
-
+        // Render skeleton template immediately - offers will be loaded via AJAX
+        // This provides instant visual feedback instead of waiting for API
         $event->add($this->render('order-delivery-extra.html', [
-            'quote_id' => $quote?->getId(),
-            'offers' => $offers,
-            'has_relay_services' => $hasRelayServices,
-            'selected_offer_id' => $selectedOfferId,
-            'selected_relay' => $selectedRelay,
             'cart_id' => $cart->getId(),
             'address_id' => $addressId,
             'google_maps_api_key' => MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_GOOGLE_MAPS_API_KEY, ''),
