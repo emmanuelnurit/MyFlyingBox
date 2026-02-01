@@ -995,26 +995,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Webhook: Generate new secret
-    var generateSecretBtn = document.getElementById('mfb-generate-secret');
+    var generateSecretLink = document.getElementById('mfb-generate-secret');
     var webhookSecretInput = document.getElementById('mfb-webhook-secret');
 
-    if (generateSecretBtn && webhookSecretInput) {
-        generateSecretBtn.addEventListener('click', function() {
+    if (generateSecretLink && webhookSecretInput) {
+        generateSecretLink.addEventListener('click', function(e) {
+            e.preventDefault();
+
             // Generate a cryptographically secure random string
             var secret = generateSecureSecret(32);
             webhookSecretInput.value = secret;
 
             // Visual feedback
-            var btn = this;
-            var originalHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fa fa-check"></i> ' + MFB_TRANSLATIONS.webhookSecretGenerated;
-            btn.classList.remove('btn-outline-secondary');
-            btn.classList.add('btn-success');
+            var link = this;
+            var originalHtml = link.innerHTML;
+            link.innerHTML = '<i class="fa fa-check"></i> ' + (MFB_TRANSLATIONS.webhookSecretGenerated || 'Generated!');
+            link.style.color = '#22c55e';
 
             setTimeout(function() {
-                btn.innerHTML = originalHtml;
-                btn.classList.remove('btn-success');
-                btn.classList.add('btn-outline-secondary');
+                link.innerHTML = originalHtml;
+                link.style.color = '#4a6fa5';
             }, 2000);
         });
     }

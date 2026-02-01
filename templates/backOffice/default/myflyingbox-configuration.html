@@ -981,15 +981,17 @@
                                 <div class="input-group">
                                     <input type="text" id="mfb-webhook-secret" name="{$name}" value="{$value}" class="form-control" placeholder="whsec_xxxxxxxxxxxxxxxx" style="font-size: 0.95rem; padding: 0.75rem 1rem; border: 2px solid #cbd5e1; height: 44px;"/>
                                     <span class="input-group-btn">
-                                        <button type="button" class="btn btn-default" id="mfb-copy-webhook-secret" title="{intl l='Copy to clipboard' d='myflyingbox'}" style="height: 44px; border: 2px solid #4a6fa5; border-right: none; border-radius: 0; color: #4a6fa5; background: #fff; font-weight: 600;">
+                                        <button type="button" class="btn btn-default" id="mfb-copy-webhook-secret" title="{intl l='Copy to clipboard' d='myflyingbox'}" style="height: 44px; border: 2px solid #4a6fa5; border-radius: 0 8px 8px 0; color: #4a6fa5; background: #fff; font-weight: 600;">
                                             <i class="fa fa-copy" style="margin-right: 0.35rem;"></i> {intl l="Copy" d="myflyingbox"}
-                                        </button>
-                                        <button type="button" class="btn btn-primary" id="mfb-generate-secret" title="{intl l='Generate new secret' d='myflyingbox'}">
-                                            <i class="fa fa-refresh" style="margin-right: 0.35rem;"></i> {intl l="New Secret" d="myflyingbox"}
                                         </button>
                                     </span>
                                 </div>
-                                <small class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem; display: block;">{intl l="Secret key used to verify webhook signatures" d="myflyingbox"}</small>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+                                    <small class="text-muted" style="font-size: 0.9rem;">{intl l="Secret key used to verify webhook signatures" d="myflyingbox"}</small>
+                                    <a href="#" id="mfb-generate-secret" style="font-size: 0.9rem; color: #4a6fa5; text-decoration: none;">
+                                        <i class="fa fa-refresh" style="margin-right: 0.25rem;"></i> {intl l="Generate new secret" d="myflyingbox"}
+                                    </a>
+                                </div>
                             {/form_field}
                         </div>
 
