@@ -32,7 +32,7 @@ class OrderEventListener implements EventSubscriberInterface
     {
         return [
             TheliaEvents::ORDER_SET_DELIVERY_MODULE => ['onOrderSetDeliveryModule', 128],
-            TheliaEvents::ORDER_PAY => ['onOrderPay', 128],
+            TheliaEvents::ORDER_BEFORE_PAYMENT => ['onOrderBeforePayment', 128],
         ];
     }
 
@@ -53,14 +53,14 @@ class OrderEventListener implements EventSubscriberInterface
     }
 
     /**
-     * Called when order is paid
+     * Called before payment processing, after order is created
      * Create shipment record for MyFlyingBox orders
      */
-    public function onOrderPay(OrderEvent $event): void
+    public function onOrderBeforePayment(OrderEvent $event): void
     {
         $order = $event->getOrder();
 
-        $this->logger->info('[MFB] onOrderPay called for order ' . $order->getId());
+        $this->logger->info('[MFB] onOrderBeforePayment called for order ' . $order->getId());
 
         // Check if MyFlyingBox is the delivery module
         if (!$this->isMyFlyingBoxDelivery($order->getDeliveryModuleId())) {
