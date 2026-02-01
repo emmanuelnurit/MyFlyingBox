@@ -41,7 +41,7 @@
             {* Step 1: Pending *}
             <div class="mfb-timeline-step {if $shipment->getStatus() == 'pending'}current{elseif $shipment->getStatus() == 'cancelled'}cancelled{else}completed{/if}">
                 <div class="mfb-timeline-icon">
-                    <i class="fa {if $shipment->getStatus() == 'cancelled'}fa-times{else}fa-clock-o{/if}"></i>
+                    <i class="fa {if $shipment->getStatus() == 'cancelled'}fa-times{else}fa-pencil{/if}"></i>
                 </div>
                 <div class="mfb-timeline-label">{intl l="Pending" d="myflyingbox"}</div>
             </div>
