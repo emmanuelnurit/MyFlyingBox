@@ -1150,9 +1150,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Also update when secret is generated
-    if (generateSecretBtn) {
-        var originalGenerateHandler = generateSecretBtn.onclick;
-        generateSecretBtn.addEventListener('click', function() {
+    if (generateSecretLink) {
+        generateSecretLink.addEventListener('click', function() {
             setTimeout(function() {
                 updateWebhookStatus(checkWebhookConfigured());
             }, 100);
