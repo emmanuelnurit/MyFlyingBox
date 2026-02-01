@@ -3,6 +3,7 @@
 namespace MyFlyingBox\EventListener;
 
 use MyFlyingBox\Model\MyFlyingBoxOfferQuery;
+use MyFlyingBox\Model\MyFlyingBoxShipmentQuery;
 use MyFlyingBox\MyFlyingBox;
 use MyFlyingBox\Service\ShipmentService;
 use Psr\Log\LoggerInterface;
@@ -69,6 +70,17 @@ class OrderEventListener implements EventSubscriberInterface
         }
 
         $this->logger->info('[MFB] Order ' . $order->getId() . ' uses MyFlyingBox');
+
+        // Check if shipment already exists for this order (prevent duplicates from double event triggering)
+        $existingShipment = MyFlyingBoxShipmentQuery::create()
+            ->filterByOrderId($order->getId())
+            ->filterByIsReturn(false)
+            ->findOne();
+
+        if ($existingShipment) {
+            $this->logger->info('[MFB] Shipment already exists for order ' . $order->getId() . ', skipping');
+            return;
+        }
 
         // Check if auto-create shipment is enabled
         $autoCreate = MyFlyingBox::getConfigValue('myflyingbox_auto_create_shipment', true);
