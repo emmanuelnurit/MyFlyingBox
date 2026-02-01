@@ -39,6 +39,7 @@ class FrontHook extends BaseHook
     /**
      * Hook for order-delivery.extra - displays shipping options and relay point selection
      * The hook is called for each delivery module with module=$ID parameter
+     * Renders skeleton immediately, data loaded via AJAX for better UX
      */
     public function onOrderDeliveryExtra(HookRenderEvent $event): void
     {
@@ -56,51 +57,12 @@ class FrontHook extends BaseHook
             return;
         }
 
-        // Get delivery address
+        // Get delivery address ID (data will be loaded via AJAX)
         $addressId = $this->getSession()->getOrder()?->getChoosenDeliveryAddress();
-        $address = null;
-        $country = null;
 
-        if ($addressId) {
-            $address = \Thelia\Model\AddressQuery::create()->findPk($addressId);
-            $country = $address?->getCountry();
-        }
-
-        // Fallback to default country if no address
-        if (!$country) {
-            $country = CountryQuery::create()->findOneByByDefault(1);
-        }
-
-        // Get quote with offers (pass country for fallback)
-        $quote = $this->quoteService->getQuoteForCart($cart, $address, $country);
-
-        // Get all offers for this quote
-        $offers = [];
-        $hasRelayServices = false;
-
-        if ($quote) {
-            $offers = $this->getFormattedOffers($quote->getId());
-            // Check if any offer has relay delivery
-            foreach ($offers as $offer) {
-                if ($offer['relay_delivery']) {
-                    $hasRelayServices = true;
-                    break;
-                }
-            }
-        }
-
-        // Get currently selected relay point
-        $selectedRelay = $this->getSelectedRelay($cart->getId());
-
-        // Get selected offer from session (if any)
-        $selectedOfferId = $this->getSession()->get('mfb_selected_offer_id');
-
+        // Render skeleton template immediately - offers will be loaded via AJAX
+        // This provides instant visual feedback instead of waiting for API
         $event->add($this->render('order-delivery-extra.html', [
-            'quote_id' => $quote?->getId(),
-            'offers' => $offers,
-            'has_relay_services' => $hasRelayServices,
-            'selected_offer_id' => $selectedOfferId,
-            'selected_relay' => $selectedRelay,
             'cart_id' => $cart->getId(),
             'address_id' => $addressId,
             'google_maps_api_key' => MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_GOOGLE_MAPS_API_KEY, ''),
@@ -109,6 +71,7 @@ class FrontHook extends BaseHook
 
     /**
      * Hook for cart.bottom - displays delivery cost estimation in cart page
+     * Renders skeleton immediately, data loaded via AJAX for better UX
      */
     public function onCartBottom(HookRenderEvent $event): void
     {
@@ -118,48 +81,11 @@ class FrontHook extends BaseHook
             return;
         }
 
-        // Get default delivery country
-        $country = CountryQuery::create()->findOneByByDefault(1);
-        if (!$country) {
-            return;
-        }
-
-        try {
-            // Get quote with default country (no specific address in cart page)
-            $quote = $this->quoteService->getQuoteForCart($cart, null, $country);
-
-            if (!$quote) {
-                return;
-            }
-
-            // Get formatted offers
-            $offers = $this->getFormattedOffers($quote->getId());
-            if (empty($offers)) {
-                return;
-            }
-
-            // Find minimum price
-            $prices = array_column($offers, 'price');
-            $minPrice = min($prices);
-
-            // Check if any relay service is available
-            $hasRelay = false;
-            foreach ($offers as $offer) {
-                if ($offer['relay_delivery']) {
-                    $hasRelay = true;
-                    break;
-                }
-            }
-
-            $event->add($this->render('cart-delivery-estimation.html', [
-                'min_price' => number_format($minPrice, 2, ',', ' ') . ' €',
-                'carriers_count' => count($offers),
-                'has_relay' => $hasRelay,
-            ]));
-
-        } catch (\Exception $e) {
-            // Silently fail - API may be unavailable
-        }
+        // Render skeleton template immediately - data will be loaded via AJAX
+        // This provides instant visual feedback instead of waiting for API
+        $event->add($this->render('cart-delivery-estimation.html', [
+            'cart_id' => $cart->getId(),
+        ]));
     }
 
     /**

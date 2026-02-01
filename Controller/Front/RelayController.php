@@ -6,7 +6,9 @@ use MyFlyingBox\Model\MyFlyingBoxCartRelay;
 use MyFlyingBox\Model\MyFlyingBoxCartRelayQuery;
 use MyFlyingBox\Model\MyFlyingBoxOfferQuery;
 use MyFlyingBox\Model\MyFlyingBoxQuoteQuery;
+use MyFlyingBox\MyFlyingBox;
 use MyFlyingBox\Service\LceApiService;
+use MyFlyingBox\Service\QuoteService;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -277,12 +279,18 @@ class RelayController extends BaseFrontController
 
     /**
      * Get offers for a cart with relay_delivery information
-     * This API is used by React frontend to determine if MyFlyingBox map should be shown
+     * This API is used by frontend to load shipping options asynchronously
+     * Supports optional quote creation via create_quote=1 parameter
      */
-    public function getOffersAction(Request $request, EventDispatcherInterface $dispatcher): JsonResponse
-    {
+    public function getOffersAction(
+        Request $request,
+        EventDispatcherInterface $dispatcher,
+        QuoteService $quoteService
+    ): JsonResponse {
         try {
             $cartId = $request->get('cart_id');
+            $addressId = $request->get('address_id');
+            $createQuote = $request->get('create_quote', '0') === '1';
 
             if (!$cartId) {
                 return new JsonResponse([
@@ -300,11 +308,30 @@ class RelayController extends BaseFrontController
                 ]);
             }
 
-            // Get the latest quote for this cart
+            // Get delivery address and country
+            $address = null;
+            $country = null;
+
+            if ($addressId) {
+                $address = AddressQuery::create()->findPk($addressId);
+                $country = $address?->getCountry();
+            }
+
+            // Fallback to default country
+            if (!$country) {
+                $country = CountryQuery::create()->findOneByByDefault(1);
+            }
+
+            // Get or create quote
             $quote = MyFlyingBoxQuoteQuery::create()
                 ->filterByCartId($cartId)
                 ->orderByCreatedAt(Criteria::DESC)
                 ->findOne();
+
+            // Create quote if requested and none exists (or if address changed)
+            if ($createQuote && $country) {
+                $quote = $quoteService->getQuoteForCart($sessionCart, $address, $country);
+            }
 
             if (!$quote) {
                 return new JsonResponse([
@@ -335,12 +362,17 @@ class RelayController extends BaseFrontController
                     $hasRelayOffers = true;
                 }
 
+                // Apply price surcharges
+                $price = $this->applyPriceSurcharges($offer->getTotalPriceInCents() / 100);
+
                 $offers[] = [
                     'id' => $offer->getId(),
+                    'service_id' => $service->getId(),
                     'service_code' => $service->getCode(),
                     'service_name' => $service->getName(),
                     'carrier_code' => $service->getCarrierCode(),
-                    'price' => $offer->getTotalPriceInCents() / 100,
+                    'price' => $price,
+                    'price_formatted' => number_format($price, 2, ',', ' ') . ' €',
                     'delivery_days' => $offer->getDeliveryDays(),
                     'relay_delivery' => $isRelay,
                     'api_offer_uuid' => $offer->getApiOfferUuid(),
@@ -370,6 +402,7 @@ class RelayController extends BaseFrontController
             return new JsonResponse([
                 'success' => true,
                 'offers' => $offers,
+                'offers_count' => count($offers),
                 'has_relay_offers' => $hasRelayOffers,
                 'selected_offer_id' => $selectedOfferId,
                 'selected_relay' => $selectedRelay,
@@ -381,5 +414,142 @@ class RelayController extends BaseFrontController
                 'message' => 'Error fetching offers: ' . $e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Get cart delivery estimation data via AJAX
+     * Used by skeleton loader pattern on cart page
+     */
+    public function getCartEstimateAction(
+        Request $request,
+        EventDispatcherInterface $dispatcher,
+        QuoteService $quoteService
+    ): JsonResponse {
+        try {
+            $cartId = $request->get('cart_id');
+
+            if (!$cartId) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Missing cart_id parameter',
+                ]);
+            }
+
+            // Verify cart belongs to current session
+            $sessionCart = $this->getSession()->getSessionCart($dispatcher);
+            if (!$sessionCart || $sessionCart->getId() != $cartId) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Invalid cart',
+                ]);
+            }
+
+            // Check cart has items
+            if ($sessionCart->countCartItems() === 0) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Cart is empty',
+                ]);
+            }
+
+            // Get default delivery country
+            $country = CountryQuery::create()->findOneByByDefault(1);
+            if (!$country) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'No default country configured',
+                ]);
+            }
+
+            // Get quote with offers
+            $quote = $quoteService->getQuoteForCart($sessionCart, null, $country);
+            if (!$quote) {
+                return new JsonResponse([
+                    'success' => true,
+                    'carriers_count' => 0,
+                ]);
+            }
+
+            // Get formatted offers with prices
+            $dbOffers = MyFlyingBoxOfferQuery::create()
+                ->filterByQuoteId($quote->getId())
+                ->joinWithMyFlyingBoxService()
+                ->orderByTotalPriceInCents(Criteria::ASC)
+                ->find();
+
+            $prices = [];
+            $hasRelay = false;
+
+            foreach ($dbOffers as $offer) {
+                $service = $offer->getMyFlyingBoxService();
+                if (!$service || !$service->getActive()) {
+                    continue;
+                }
+
+                $price = $this->applyPriceSurcharges($offer->getTotalPriceInCents() / 100);
+                $prices[] = $price;
+
+                if ($service->getRelayDelivery()) {
+                    $hasRelay = true;
+                }
+            }
+
+            if (empty($prices)) {
+                return new JsonResponse([
+                    'success' => true,
+                    'carriers_count' => 0,
+                ]);
+            }
+
+            $minPrice = min($prices);
+            $carriersCount = count($prices);
+
+            // Build carriers label
+            if ($carriersCount === 1) {
+                $carriersLabel = '1 transporteur disponible';
+            } else {
+                $carriersLabel = $carriersCount . ' transporteurs disponibles';
+            }
+
+            return new JsonResponse([
+                'success' => true,
+                'min_price' => number_format($minPrice, 2, ',', ' ') . ' €',
+                'carriers_count' => $carriersCount,
+                'carriers_label' => $carriersLabel,
+                'has_relay' => $hasRelay,
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Error fetching estimate: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Apply price surcharges (percentage + static)
+     */
+    private function applyPriceSurcharges(float $price): float
+    {
+        // Percentage surcharge
+        $percentSurcharge = (float) MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_PRICE_SURCHARGE_PERCENT, 0);
+        if ($percentSurcharge > 0) {
+            $price += $price * ($percentSurcharge / 100);
+        }
+
+        // Static surcharge (stored in cents, convert to euros)
+        $staticSurcharge = (float) MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_PRICE_SURCHARGE_STATIC, 0);
+        if ($staticSurcharge > 0) {
+            $price += $staticSurcharge / 100;
+        }
+
+        // Rounding
+        $roundIncrement = (int) MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_PRICE_ROUND_INCREMENT, 1);
+        if ($roundIncrement > 1) {
+            $price = ceil($price * 100 / $roundIncrement) * $roundIncrement / 100;
+        }
+
+        return round($price, 2);
     }
 }

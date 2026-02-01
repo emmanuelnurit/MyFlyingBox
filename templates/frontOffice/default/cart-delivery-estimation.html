@@ -1,29 +1,38 @@
-{* MyFlyingBox - Cart Delivery Estimation *}
+{* MyFlyingBox - Cart Delivery Estimation with Skeleton Loader *}
 {* Hook: cart.bottom - Affiche une estimation des frais de port dans le panier *}
 
-{if $carriers_count > 0}
 <div class="mfb-cart-estimation" id="mfb-cart-estimation">
-    <div class="mfb-estimation-card">
+    {* ============================================
+       SKELETON LOADER - Visible during loading
+       ============================================ *}
+    <div id="mfb-cart-skeleton" class="mfb-estimation-card mfb-skeleton-card-container">
+        <div class="mfb-skeleton-icon-circle"></div>
+        <div class="mfb-skeleton-content">
+            <div class="mfb-skeleton-line mfb-skeleton-title-line"></div>
+            <div class="mfb-skeleton-line mfb-skeleton-price-line"></div>
+            <div class="mfb-skeleton-line mfb-skeleton-info-line"></div>
+        </div>
+        <div class="mfb-skeleton-button-rect"></div>
+    </div>
+
+    {* ============================================
+       REAL CONTENT - Hidden initially
+       ============================================ *}
+    <div id="mfb-cart-content" class="mfb-estimation-card mfb-content-hidden">
         <div class="mfb-estimation-icon">
             <i class="fa fa-truck"></i>
         </div>
         <div class="mfb-estimation-content">
             <h4 class="mfb-estimation-title">{intl l="Estimation des frais de port" d="myflyingbox"}</h4>
             <p class="mfb-estimation-price">
-                {intl l="À partir de" d="myflyingbox"} <strong>{$min_price}</strong>
+                {intl l="À partir de" d="myflyingbox"} <strong id="mfb-min-price"></strong>
             </p>
             <p class="mfb-estimation-info">
-                {if $carriers_count == 1}
-                    {intl l="1 transporteur disponible" d="myflyingbox"}
-                {else}
-                    {intl l="%count transporteurs disponibles" count=$carriers_count d="myflyingbox"}
-                {/if}
-                {if $has_relay}
-                    <span class="mfb-relay-badge-small">
-                        <i class="fa fa-map-marker"></i>
-                        {intl l="Point Relais" d="myflyingbox"}
-                    </span>
-                {/if}
+                <span id="mfb-carriers-count"></span>
+                <span id="mfb-relay-badge" class="mfb-relay-badge-small" style="display: none;">
+                    <i class="fa fa-map-marker"></i>
+                    {intl l="Point Relais" d="myflyingbox"}
+                </span>
             </p>
         </div>
         <div class="mfb-estimation-action">
@@ -36,7 +45,94 @@
 </div>
 
 <style>
-/* Cart Delivery Estimation Styles */
+/* ============================================
+   SKELETON LOADER ANIMATIONS
+   ============================================ */
+
+@keyframes mfb-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+@keyframes mfb-fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes mfb-fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Content states */
+.mfb-content-hidden {
+    opacity: 0;
+    display: none !important;
+}
+
+.mfb-content-visible {
+    display: flex !important;
+    animation: mfb-fade-in 0.4s ease-out forwards;
+}
+
+/* Skeleton base styles */
+.mfb-skeleton-line,
+.mfb-skeleton-icon-circle,
+.mfb-skeleton-button-rect {
+    background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+    background-size: 200% 100%;
+    animation: mfb-shimmer 1.5s ease-in-out infinite;
+    border-radius: 8px;
+}
+
+.mfb-skeleton-card-container {
+    pointer-events: none;
+}
+
+.mfb-skeleton-card-container.mfb-hidden {
+    display: none !important;
+}
+
+.mfb-skeleton-icon-circle {
+    flex-shrink: 0;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+}
+
+.mfb-skeleton-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.mfb-skeleton-title-line {
+    height: 18px;
+    width: 180px;
+}
+
+.mfb-skeleton-price-line {
+    height: 22px;
+    width: 140px;
+}
+
+.mfb-skeleton-info-line {
+    height: 14px;
+    width: 160px;
+}
+
+.mfb-skeleton-button-rect {
+    flex-shrink: 0;
+    width: 140px;
+    height: 36px;
+    border-radius: 6px;
+}
+
+/* ============================================
+   CARD STYLES (shared by skeleton and content)
+   ============================================ */
+
 .mfb-cart-estimation {
     margin-top: 20px;
     margin-bottom: 20px;
@@ -145,15 +241,18 @@
         text-align: center;
     }
 
+    .mfb-skeleton-content,
     .mfb-estimation-content {
         width: 100%;
+        align-items: center;
     }
 
     .mfb-estimation-info {
         justify-content: center;
     }
 
-    .mfb-estimation-action {
+    .mfb-estimation-action,
+    .mfb-skeleton-button-rect {
         width: 100%;
     }
 
@@ -161,6 +260,105 @@
         width: 100%;
         justify-content: center;
     }
+
+    .mfb-skeleton-title-line {
+        width: 140px;
+    }
+
+    .mfb-skeleton-price-line {
+        width: 120px;
+    }
+
+    .mfb-skeleton-info-line {
+        width: 130px;
+    }
+
+    .mfb-skeleton-button-rect {
+        height: 40px;
+    }
 }
 </style>
-{/if}
+
+<script>
+(function() {
+    var cartId = parseInt("{$cart_id|default:0}", 10);
+
+    if (!cartId) {
+        hideEstimationBlock();
+        return;
+    }
+
+    function loadCartEstimate() {
+        fetch('/myflyingbox/cart-estimate?cart_id=' + cartId)
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                if (data.success && data.carriers_count > 0) {
+                    populateContent(data);
+                    transitionSkeletonToContent();
+                } else {
+                    hideEstimationBlock();
+                }
+            })
+            .catch(function(error) {
+                console.error('MFB Cart Estimate Error:', error);
+                hideEstimationBlock();
+            });
+    }
+
+    function populateContent(data) {
+        var minPriceEl = document.getElementById('mfb-min-price');
+        var carriersCountEl = document.getElementById('mfb-carriers-count');
+        var relayBadgeEl = document.getElementById('mfb-relay-badge');
+
+        if (minPriceEl) {
+            minPriceEl.textContent = data.min_price;
+        }
+
+        if (carriersCountEl) {
+            carriersCountEl.textContent = data.carriers_label;
+        }
+
+        if (relayBadgeEl && data.has_relay) {
+            relayBadgeEl.style.display = 'inline-flex';
+        }
+    }
+
+    function transitionSkeletonToContent() {
+        var skeleton = document.getElementById('mfb-cart-skeleton');
+        var content = document.getElementById('mfb-cart-content');
+
+        if (!skeleton || !content) {
+            return;
+        }
+
+        // Small delay for better UX perception
+        setTimeout(function() {
+            // Fade out skeleton
+            skeleton.style.animation = 'mfb-fade-out 0.3s ease-out forwards';
+
+            // After skeleton fade-out, show content
+            setTimeout(function() {
+                skeleton.classList.add('mfb-hidden');
+                content.classList.remove('mfb-content-hidden');
+                content.classList.add('mfb-content-visible');
+            }, 300);
+        }, 150);
+    }
+
+    function hideEstimationBlock() {
+        var container = document.getElementById('mfb-cart-estimation');
+        if (container) {
+            container.style.display = 'none';
+        }
+    }
+
+    // Run on DOM ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadCartEstimate);
+    } else {
+        loadCartEstimate();
+    }
+})();
+</script>
