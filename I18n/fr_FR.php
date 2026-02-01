@@ -322,14 +322,22 @@ return [
 
     // Order Shipment Tab - Back-office
     'Shipment Information' => 'Informations d\'expédition',
+    'Shipment Details' => 'Détails de l\'expédition',
     'Shipment ID' => 'ID Expédition',
     'API Order' => 'Commande API',
+    'API Reference' => 'Référence API',
     'Booking Date' => 'Date de réservation',
     'Relay Point' => 'Point relais',
     'No tracking' => 'Pas de suivi',
+    'Awaiting booking' => 'En attente de réservation',
     'Download Labels' => 'Télécharger les étiquettes',
     'Download label' => 'Télécharger l\'étiquette',
     'Update Tracking' => 'Mettre à jour le suivi',
+    'Confirm & Book Shipment' => 'Confirmer et réserver',
+    'Mark as Shipped' => 'Marquer comme expédié',
+    'Refresh Tracking Status' => 'Actualiser le suivi',
+    'Create Return Label' => 'Créer une étiquette retour',
+    'Tracking History' => 'Historique de suivi',
     'Loading history...' => 'Chargement...',
     'Carrier Service' => 'Service transporteur',
     'No shipment has been created for this order yet.' => 'Aucune expédition n\'a encore été créée pour cette commande.',
@@ -339,6 +347,7 @@ return [
     'Shipment History' => 'Historique',
     'Delivery type' => 'Type de livraison',
     'Home delivery' => 'Livraison à domicile',
+    'other parcels' => 'autre(s) colis',
 
     // Order Shipment JS - Messages
     'Please wait...' => 'Veuillez patienter...',

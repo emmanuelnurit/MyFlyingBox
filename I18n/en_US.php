@@ -321,14 +321,22 @@ return [
 
     // Order Shipment Tab - Back-office
     'Shipment Information' => 'Shipment Information',
+    'Shipment Details' => 'Shipment Details',
     'Shipment ID' => 'Shipment ID',
     'API Order' => 'API Order',
+    'API Reference' => 'API Reference',
     'Booking Date' => 'Booking Date',
     'Relay Point' => 'Relay Point',
     'No tracking' => 'No tracking',
+    'Awaiting booking' => 'Awaiting booking',
     'Download Labels' => 'Download Labels',
     'Download label' => 'Download label',
     'Update Tracking' => 'Update Tracking',
+    'Confirm & Book Shipment' => 'Confirm & Book Shipment',
+    'Mark as Shipped' => 'Mark as Shipped',
+    'Refresh Tracking Status' => 'Refresh Tracking Status',
+    'Create Return Label' => 'Create Return Label',
+    'Tracking History' => 'Tracking History',
     'Loading history...' => 'Loading history...',
     'Carrier Service' => 'Carrier Service',
     'No shipment has been created for this order yet.' => 'No shipment has been created for this order yet.',
@@ -338,6 +346,7 @@ return [
     'Shipment History' => 'Shipment History',
     'Delivery type' => 'Delivery type',
     'Home delivery' => 'Home delivery',
+    'other parcels' => 'other parcel(s)',
 
     // Order Shipment JS - Messages
     'Please wait...' => 'Please wait...',
