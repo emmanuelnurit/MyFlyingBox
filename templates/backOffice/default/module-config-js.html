@@ -937,6 +937,63 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.removeChild(textarea);
     }
 
+    // Webhook: Copy Secret to clipboard
+    var copyWebhookSecretBtn = document.getElementById('mfb-copy-webhook-secret');
+    var webhookSecretInput = document.getElementById('mfb-webhook-secret');
+
+    if (copyWebhookSecretBtn && webhookSecretInput) {
+        copyWebhookSecretBtn.addEventListener('click', function() {
+            var secret = webhookSecretInput.value;
+            var btn = this;
+            var originalHtml = btn.innerHTML;
+
+            if (!secret) {
+                showAlertModal(MFB_TRANSLATIONS.warning || 'Warning', MFB_TRANSLATIONS.webhookSecretEmpty || 'No secret to copy', 'warning');
+                return;
+            }
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(secret)
+                    .then(function() {
+                        btn.innerHTML = '<i class="fa fa-check"></i> ' + (MFB_TRANSLATIONS.copied || 'Copied');
+                        btn.classList.add('btn-success');
+                        setTimeout(function() {
+                            btn.innerHTML = originalHtml;
+                            btn.classList.remove('btn-success');
+                        }, 2000);
+                    })
+                    .catch(function() {
+                        fallbackCopySecret(secret, btn, originalHtml);
+                    });
+            } else {
+                fallbackCopySecret(secret, btn, originalHtml);
+            }
+        });
+    }
+
+    function fallbackCopySecret(text, btn, originalHtml) {
+        var textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+
+        try {
+            document.execCommand('copy');
+            btn.innerHTML = '<i class="fa fa-check"></i> ' + (MFB_TRANSLATIONS.copied || 'Copied');
+            btn.classList.add('btn-success');
+            setTimeout(function() {
+                btn.innerHTML = originalHtml;
+                btn.classList.remove('btn-success');
+            }, 2000);
+        } catch (err) {
+            showAlertModal(MFB_TRANSLATIONS.error, MFB_TRANSLATIONS.webhookCopyFailed || 'Copy failed', 'warning');
+        }
+
+        document.body.removeChild(textarea);
+    }
+
     // Webhook: Generate new secret
     var generateSecretBtn = document.getElementById('mfb-generate-secret');
     var webhookSecretInput = document.getElementById('mfb-webhook-secret');

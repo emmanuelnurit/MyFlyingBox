@@ -963,34 +963,34 @@
                             </small>
                         </div>
 
-                        {* Two columns: Enable + Secret *}
-                        <div class="row">
-                            {* Enable/Disable Toggle *}
-                            <div class="col-md-4" style="margin-bottom: 1.5rem;">
-                                {form_field form=$form field="webhook_enabled"}
-                                    <label class="form-label" style="font-size: 0.95rem; font-weight: 600; color: #1e3a5f; margin-bottom: 0.5rem;">{intl l="Enable Webhooks" d="myflyingbox"}</label>
-                                    <select name="{$name}" id="mfb-webhook-enabled" class="form-control" style="font-size: 1rem; padding: 0.75rem 1rem;">
-                                        <option value="0" {if $value != '1'}selected{/if}>{intl l="Disabled" d="myflyingbox"}</option>
-                                        <option value="1" {if $value == '1'}selected{/if}>{intl l="Enabled" d="myflyingbox"}</option>
-                                    </select>
-                                {/form_field}
-                            </div>
+                        {* Enable/Disable Toggle *}
+                        <div style="margin-bottom: 1.5rem;">
+                            {form_field form=$form field="webhook_enabled"}
+                                <label class="form-label" style="font-size: 0.95rem; font-weight: 600; color: #1e3a5f; margin-bottom: 0.5rem;">{intl l="Enable Webhooks" d="myflyingbox"}</label>
+                                <select name="{$name}" id="mfb-webhook-enabled" class="form-control" style="font-size: 1rem; padding: 0.75rem 1rem; max-width: 200px;">
+                                    <option value="0" {if $value != '1'}selected{/if}>{intl l="Disabled" d="myflyingbox"}</option>
+                                    <option value="1" {if $value == '1'}selected{/if}>{intl l="Enabled" d="myflyingbox"}</option>
+                                </select>
+                            {/form_field}
+                        </div>
 
-                            {* Webhook Secret *}
-                            <div class="col-md-8" style="margin-bottom: 1.5rem;">
-                                {form_field form=$form field="webhook_secret"}
-                                    <label class="form-label" style="font-size: 0.95rem; font-weight: 600; color: #1e3a5f; margin-bottom: 0.5rem;">{intl l="Webhook Secret" d="myflyingbox"}</label>
-                                    <div class="input-group">
-                                        <input type="text" id="mfb-webhook-secret" name="{$name}" value="{$value}" class="form-control" placeholder="whsec_xxxxxxxxxxxxxxxx" style="font-size: 0.95rem; padding: 0.75rem 1rem; border: 2px solid #cbd5e1; height: 44px;"/>
-                                        <span class="input-group-btn">
-                                            <button type="button" class="btn btn-primary" id="mfb-generate-secret" title="{intl l='Generate new secret' d='myflyingbox'}">
-                                                <i class="fa fa-refresh" style="margin-right: 0.35rem;"></i> {intl l="New Secret" d="myflyingbox"}
-                                            </button>
-                                        </span>
-                                    </div>
-                                    <small class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem; display: block;">{intl l="Secret key used to verify webhook signatures" d="myflyingbox"}</small>
-                                {/form_field}
-                            </div>
+                        {* Webhook Secret - Full width *}
+                        <div style="margin-bottom: 1.5rem;">
+                            {form_field form=$form field="webhook_secret"}
+                                <label class="form-label" style="font-size: 0.95rem; font-weight: 600; color: #1e3a5f; margin-bottom: 0.5rem;">{intl l="Webhook Secret" d="myflyingbox"}</label>
+                                <div class="input-group">
+                                    <input type="text" id="mfb-webhook-secret" name="{$name}" value="{$value}" class="form-control" placeholder="whsec_xxxxxxxxxxxxxxxx" style="font-size: 0.95rem; padding: 0.75rem 1rem; border: 2px solid #cbd5e1; height: 44px;"/>
+                                    <span class="input-group-btn">
+                                        <button type="button" class="btn btn-default" id="mfb-copy-webhook-secret" title="{intl l='Copy to clipboard' d='myflyingbox'}" style="height: 44px; border: 2px solid #4a6fa5; border-right: none; border-radius: 0; color: #4a6fa5; background: #fff; font-weight: 600;">
+                                            <i class="fa fa-copy" style="margin-right: 0.35rem;"></i> {intl l="Copy" d="myflyingbox"}
+                                        </button>
+                                        <button type="button" class="btn btn-primary" id="mfb-generate-secret" title="{intl l='Generate new secret' d='myflyingbox'}">
+                                            <i class="fa fa-refresh" style="margin-right: 0.35rem;"></i> {intl l="New Secret" d="myflyingbox"}
+                                        </button>
+                                    </span>
+                                </div>
+                                <small class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem; display: block;">{intl l="Secret key used to verify webhook signatures" d="myflyingbox"}</small>
+                            {/form_field}
                         </div>
 
                         {* Validate Configuration Button - Centered *}
