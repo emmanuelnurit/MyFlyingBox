@@ -1,6 +1,16 @@
 {* MyFlyingBox - Order Shipment JavaScript *}
 <script>
-$(function() {
+(function() {
+    // Vérifier que jQuery est disponible
+    if (typeof jQuery === 'undefined' && typeof $ === 'undefined') {
+        console.warn('MyFlyingBox: jQuery is required for shipment management. Some features may not work.');
+        return;
+    }
+
+    // Utiliser jQuery ou $ selon disponibilité
+    var $ = window.jQuery || window.$;
+
+    $(function() {
     var orderId = {$order_id};
     var $container = $('.mfb-shipment-container[data-order-id="' + orderId + '"]');
     var $messages = $('#mfb-shipment-messages');
@@ -418,7 +428,8 @@ showConfirmModal(
     $('#mfb-return-modal').on('hidden.bs.modal', function() {
         $('#mfb-return-service-select').val('');
     });
-});
+    });
+})();
 </script>
 
 <style>
