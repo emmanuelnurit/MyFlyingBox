@@ -305,30 +305,50 @@ showConfirmModal(
                 var html = '';
                 var hasContent = false;
 
+                // Helper function to get icon and status class based on event status
+                function getEventStyle(status) {
+                    var styles = {
+                        'DELIVERED': { icon: 'fa-check', statusClass: 'status-delivered' },
+                        'IN_TRANSIT': { icon: 'fa-truck', statusClass: 'status-shipped' },
+                        'SHIPPED': { icon: 'fa-truck', statusClass: 'status-shipped' },
+                        'BOOKED': { icon: 'fa-bookmark', statusClass: 'status-booked' },
+                        'CREATED': { icon: 'fa-plus-circle', statusClass: 'status-created' },
+                        'CANCELLED': { icon: 'fa-times', statusClass: 'status-cancelled' },
+                        'STATUS_CHANGE': { icon: 'fa-refresh', statusClass: 'status-change' },
+                        'OUT_FOR_DELIVERY': { icon: 'fa-truck', statusClass: 'status-shipped' },
+                        'PICKED_UP': { icon: 'fa-cube', statusClass: 'status-shipped' }
+                    };
+                    return styles[status] || { icon: 'fa-circle', statusClass: '' };
+                }
+
                 response.tracking.forEach(function(shipment) {
                     // Display shipment-level events first
                     if (shipment.events && shipment.events.length > 0) {
                         hasContent = true;
-                        html += '<div class="shipment-events" style="margin-bottom: 15px;">';
-                        html += '<h5><i class="fa fa-truck"></i> {intl l="Shipment History" d="myflyingbox"|escape:"javascript"}</h5>';
-                        html += '<ul class="list-unstyled">';
+                        html += '<div class="mfb-history-section" style="margin-bottom: 1.25rem;">';
+                        html += '<div class="mfb-history-section-header" style="font-weight: 600; font-size: 0.875rem; color: #475569; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">';
+                        html += '<i class="fa fa-truck"></i> {intl l="Shipment History" d="myflyingbox"|escape:"javascript"}';
+                        html += '</div>';
+                        html += '<div class="mfb-history-list">';
                         shipment.events.forEach(function(event) {
-                            var statusClass = 'label-default';
-                            if (event.status === 'BOOKED') statusClass = 'label-info';
-                            else if (event.status === 'CREATED') statusClass = 'label-primary';
-                            else if (event.status === 'CANCELLED') statusClass = 'label-danger';
-                            else if (event.status === 'STATUS_CHANGE') statusClass = 'label-warning';
-
-                            html += '<li style="margin-bottom: 5px;">';
-                            html += '<small class="text-muted">' + (event.date || '') + '</small> ';
-                            html += '<span class="label ' + statusClass + '">' + translateStatus(event.status || '') + '</span> ';
-                            html += event.message || '';
-                            if (event.location) {
-                                html += ' <small class="text-muted">(' + event.location + ')</small>';
+                            var style = getEventStyle(event.status);
+                            html += '<div class="mfb-history-item ' + style.statusClass + '">';
+                            html += '<div class="mfb-history-icon"><i class="fa ' + style.icon + '"></i></div>';
+                            html += '<div class="mfb-history-content">';
+                            html += '<div class="mfb-history-title">' + translateStatus(event.status || '') + '</div>';
+                            if (event.message || event.location) {
+                                html += '<div class="mfb-history-description">';
+                                html += event.message || '';
+                                if (event.location) {
+                                    html += (event.message ? ' - ' : '') + event.location;
+                                }
+                                html += '</div>';
                             }
-                            html += '</li>';
+                            html += '</div>';
+                            html += '<div class="mfb-history-date">' + (event.date || '') + '</div>';
+                            html += '</div>';
                         });
-                        html += '</ul>';
+                        html += '</div>';
                         html += '</div>';
                     }
 
@@ -336,27 +356,36 @@ showConfirmModal(
                     shipment.parcels.forEach(function(parcel) {
                         if (parcel.tracking_number) {
                             hasContent = true;
-                            html += '<div class="parcel-events" style="margin-bottom: 15px;">';
-                            html += '<h5><i class="fa fa-cube"></i> ' + parcel.tracking_number;
+                            html += '<div class="mfb-history-section" style="margin-bottom: 1.25rem;">';
+                            html += '<div class="mfb-history-section-header" style="font-weight: 600; font-size: 0.875rem; color: #475569; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">';
+                            html += '<i class="fa fa-cube"></i> ' + parcel.tracking_number;
                             if (parcel.tracking_url) {
-                                html += ' <a href="' + parcel.tracking_url + '" target="_blank" class="btn btn-xs btn-link"><i class="fa fa-external-link"></i></a>';
+                                html += ' <a href="' + parcel.tracking_url + '" target="_blank" style="color: #3b82f6; font-size: 0.75rem;"><i class="fa fa-external-link"></i></a>';
                             }
-                            html += '</h5>';
+                            html += '</div>';
                             if (parcel.events && parcel.events.length > 0) {
-                                html += '<ul class="list-unstyled">';
+                                html += '<div class="mfb-history-list">';
                                 parcel.events.forEach(function(event) {
-                                    html += '<li style="margin-bottom: 5px;">';
-                                    html += '<small class="text-muted">' + (event.date || '') + '</small> ';
-                                    html += '<span class="label label-default">' + translateStatus(event.status || '') + '</span> ';
-                                    html += event.message || '';
-                                    if (event.location) {
-                                        html += ' <small class="text-muted">(' + event.location + ')</small>';
+                                    var style = getEventStyle(event.status);
+                                    html += '<div class="mfb-history-item ' + style.statusClass + '">';
+                                    html += '<div class="mfb-history-icon"><i class="fa ' + style.icon + '"></i></div>';
+                                    html += '<div class="mfb-history-content">';
+                                    html += '<div class="mfb-history-title">' + translateStatus(event.status || '') + '</div>';
+                                    if (event.message || event.location) {
+                                        html += '<div class="mfb-history-description">';
+                                        html += event.message || '';
+                                        if (event.location) {
+                                            html += (event.message ? ' - ' : '') + event.location;
+                                        }
+                                        html += '</div>';
                                     }
-                                    html += '</li>';
+                                    html += '</div>';
+                                    html += '<div class="mfb-history-date">' + (event.date || '') + '</div>';
+                                    html += '</div>';
                                 });
-                                html += '</ul>';
+                                html += '</div>';
                             } else {
-                                html += '<p class="text-muted">{intl l="No tracking events yet" d="myflyingbox"|escape:"javascript"}</p>';
+                                html += '<p class="text-muted" style="font-size: 0.875rem; margin: 0;"><i class="fa fa-info-circle"></i> {intl l="No tracking events yet" d="myflyingbox"|escape:"javascript"}</p>';
                             }
                             html += '</div>';
                         }
@@ -366,10 +395,10 @@ showConfirmModal(
                 if (hasContent) {
                     $timeline.html(html);
                 } else {
-                    $timeline.html('<p class="text-muted"><i class="fa fa-info-circle"></i> {intl l="No history events yet" d="myflyingbox"|escape:"javascript"}</p>');
+                    $timeline.html('<p class="text-muted" style="font-size: 0.875rem;"><i class="fa fa-info-circle"></i> {intl l="No history events yet" d="myflyingbox"|escape:"javascript"}</p>');
                 }
             } else {
-                $timeline.html('<p class="text-muted"><i class="fa fa-info-circle"></i> {intl l="No history events yet" d="myflyingbox"|escape:"javascript"}</p>');
+                $timeline.html('<p class="text-muted" style="font-size: 0.875rem;"><i class="fa fa-info-circle"></i> {intl l="No history events yet" d="myflyingbox"|escape:"javascript"}</p>');
             }
         })
         .fail(function(xhr, status, error) {
@@ -996,6 +1025,21 @@ showConfirmModal(
 .mfb-history-item.status-booked .mfb-history-icon {
     background: #e0f2fe;
     color: #0ea5e9;
+}
+
+.mfb-history-item.status-created .mfb-history-icon {
+    background: #f3e8ff;
+    color: #a855f7;
+}
+
+.mfb-history-item.status-cancelled .mfb-history-icon {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+.mfb-history-item.status-change .mfb-history-icon {
+    background: #fef3c7;
+    color: #f59e0b;
 }
 
 .mfb-history-content {
