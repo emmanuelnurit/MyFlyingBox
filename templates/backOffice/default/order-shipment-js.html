@@ -585,7 +585,7 @@ showConfirmModal(
     display: flex;
     justify-content: center;
     align-items: stretch;
-    gap: 3rem;
+    gap: 2rem;
     padding: 1.5rem 2rem;
     background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
     border: 2px solid #e2e8f0;
@@ -594,10 +594,25 @@ showConfirmModal(
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
+.mfb-envelope-logo {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-right: 2rem;
+    border-right: 2px dashed #cbd5e1;
+}
+
+.mfb-envelope-logo .mfb-logo {
+    height: 45px;
+    width: auto;
+    object-fit: contain;
+}
+
 .mfb-envelope-recipient {
-    flex: 0 1 auto;
-    min-width: 250px;
-    max-width: 400px;
+    flex: 1 1 auto;
+    min-width: 200px;
+    max-width: 350px;
 }
 
 .mfb-envelope-label {
