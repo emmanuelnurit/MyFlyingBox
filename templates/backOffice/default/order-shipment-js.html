@@ -636,16 +636,37 @@ showConfirmModal(
     border-right: 2px dashed #cbd5e1;
 }
 
+.mfb-logo-box {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: #ffffff;
+    padding: 0.625rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
 .mfb-envelope-logo .mfb-logo {
-    height: 45px;
+    height: 36px;
     width: auto;
     object-fit: contain;
+}
+
+.mfb-logo-text {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1e293b;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
 }
 
 .mfb-envelope-recipient {
     flex: 1 1 auto;
     min-width: 200px;
     max-width: 350px;
+    position: relative;
+    overflow: hidden;
 }
 
 .mfb-envelope-label {
@@ -688,6 +709,42 @@ showConfirmModal(
     display: flex;
     flex-direction: column;
     justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Background pictograms for blocks */
+.mfb-block-picto {
+    position: absolute;
+    right: -10px;
+    bottom: -15px;
+    width: 90px;
+    height: 90px;
+    color: #e2e8f0;
+    opacity: 0.5;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.mfb-envelope-recipient .mfb-block-picto {
+    right: -5px;
+    bottom: -10px;
+}
+
+.mfb-envelope-parcel .mfb-block-picto {
+    right: -15px;
+    bottom: -20px;
+    width: 100px;
+    height: 100px;
+}
+
+.mfb-envelope-recipient .mfb-envelope-label,
+.mfb-envelope-recipient .mfb-envelope-address,
+.mfb-envelope-parcel .mfb-envelope-label,
+.mfb-envelope-parcel .mfb-parcel-dimensions,
+.mfb-envelope-parcel .mfb-parcel-weight {
+    position: relative;
+    z-index: 1;
 }
 
 .mfb-envelope-parcel .mfb-parcel-dimensions {

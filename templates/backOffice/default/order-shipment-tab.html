@@ -8,21 +8,32 @@
         {* === ENVELOPE HEADER (Postal Style) === *}
         <div class="mfb-envelope-header">
             <div class="mfb-envelope-logo">
-                <img src="/modules/MyFlyingBox/images/mfb-icon.png" alt="MyFlyingBox" class="mfb-logo"/>
+                <div class="mfb-logo-box">
+                    <img src="/modules/MyFlyingBox/images/mfb-icon.png" alt="MyFlyingBox" class="mfb-logo"/>
+                    <span class="mfb-logo-text">My Flying Box</span>
+                </div>
             </div>
             <div class="mfb-envelope-recipient">
-                <div class="mfb-envelope-label"><i class="fa fa-user"></i> {intl l="Recipient" d="myflyingbox"}</div>
+                <svg class="mfb-block-picto" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" fill="currentColor"/>
+                    <path d="M12 14C7.58172 14 4 17.5817 4 22H20C20 17.5817 16.4183 14 12 14Z" fill="currentColor"/>
+                </svg>
+                <div class="mfb-envelope-label"><span class="glyphicon glyphicon-user"></span> {intl l="Recipient" d="myflyingbox"}</div>
                 <div class="mfb-envelope-address">
                     <strong>{$shipment->getRecipientName()}</strong><br>
                     {if $shipment->getRecipientCompany()}{$shipment->getRecipientCompany()}<br>{/if}
                     {$shipment->getRecipientStreet()|nl2br}<br>
                     {$shipment->getRecipientPostalCode()} {$shipment->getRecipientCity()}<br>
                     {$shipment->getRecipientCountry()}
-                    {if $shipment->getRecipientPhone()}<br><i class="fa fa-phone"></i> {$shipment->getRecipientPhone()}{/if}
+                    {if $shipment->getRecipientPhone()}<br><span class="glyphicon glyphicon-earphone"></span> {$shipment->getRecipientPhone()}{/if}
                 </div>
             </div>
             <div class="mfb-envelope-parcel">
-                <div class="mfb-envelope-label"><i class="fa fa-archive"></i> {intl l="Parcel" d="myflyingbox"}</div>
+                <svg class="mfb-block-picto" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 7L12 3L4 7V17L12 21L20 17V7Z" fill="currentColor"/>
+                    <path d="M12 12V21M12 12L4 7M12 12L20 7" stroke="white" stroke-width="1" stroke-opacity="0.3"/>
+                </svg>
+                <div class="mfb-envelope-label"><span class="glyphicon glyphicon-gift"></span> {intl l="Parcel" d="myflyingbox"}</div>
                 {loop type="myflyingbox.parcels" name="header_parcels" shipment_id=$shipment->getId() limit="1"}
                 <div class="mfb-parcel-dimensions">{$LENGTH}×{$WIDTH}×{$HEIGHT} cm</div>
                 <div class="mfb-parcel-weight">{$WEIGHT} kg</div>
