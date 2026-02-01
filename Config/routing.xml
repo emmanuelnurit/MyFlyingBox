@@ -117,6 +117,10 @@
         <default key="_controller">MyFlyingBox\Controller\Front\RelayController::getOffersAction</default>
     </route>
 
+    <route id="myflyingbox.front.cart.estimate" path="/myflyingbox/cart-estimate" methods="GET">
+        <default key="_controller">MyFlyingBox\Controller\Front\RelayController::getCartEstimateAction</default>
+    </route>
+
     <!-- Webhook routes (external, no Thelia authentication required) -->
     <route id="myflyingbox.webhook.tracking" path="/myflyingbox/webhook/tracking" methods="POST">
         <default key="_controller">MyFlyingBox\Controller\WebhookController::trackingAction</default>

@@ -109,6 +109,7 @@ class FrontHook extends BaseHook
 
     /**
      * Hook for cart.bottom - displays delivery cost estimation in cart page
+     * Renders skeleton immediately, data loaded via AJAX for better UX
      */
     public function onCartBottom(HookRenderEvent $event): void
     {
@@ -118,48 +119,11 @@ class FrontHook extends BaseHook
             return;
         }
 
-        // Get default delivery country
-        $country = CountryQuery::create()->findOneByByDefault(1);
-        if (!$country) {
-            return;
-        }
-
-        try {
-            // Get quote with default country (no specific address in cart page)
-            $quote = $this->quoteService->getQuoteForCart($cart, null, $country);
-
-            if (!$quote) {
-                return;
-            }
-
-            // Get formatted offers
-            $offers = $this->getFormattedOffers($quote->getId());
-            if (empty($offers)) {
-                return;
-            }
-
-            // Find minimum price
-            $prices = array_column($offers, 'price');
-            $minPrice = min($prices);
-
-            // Check if any relay service is available
-            $hasRelay = false;
-            foreach ($offers as $offer) {
-                if ($offer['relay_delivery']) {
-                    $hasRelay = true;
-                    break;
-                }
-            }
-
-            $event->add($this->render('cart-delivery-estimation.html', [
-                'min_price' => number_format($minPrice, 2, ',', ' ') . ' €',
-                'carriers_count' => count($offers),
-                'has_relay' => $hasRelay,
-            ]));
-
-        } catch (\Exception $e) {
-            // Silently fail - API may be unavailable
-        }
+        // Render skeleton template immediately - data will be loaded via AJAX
+        // This provides instant visual feedback instead of waiting for API
+        $event->add($this->render('cart-delivery-estimation.html', [
+            'cart_id' => $cart->getId(),
+        ]));
     }
 
     /**
