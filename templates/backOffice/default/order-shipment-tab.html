@@ -41,7 +41,7 @@
             {* Step 1: Pending *}
             <div class="mfb-timeline-step {if $shipment->getStatus() == 'pending'}current{elseif $shipment->getStatus() == 'cancelled'}cancelled{else}completed{/if}">
                 <div class="mfb-timeline-icon">
-                    <i class="fa {if $shipment->getStatus() == 'cancelled'}fa-times{else}fa-pencil{/if}"></i>
+                    <span class="glyphicon {if $shipment->getStatus() == 'cancelled'}glyphicon-remove{else}glyphicon-pencil{/if}"></span>
                 </div>
                 <div class="mfb-timeline-label">{intl l="Pending" d="myflyingbox"}</div>
             </div>
@@ -49,7 +49,7 @@
             {* Step 2: Booked *}
             <div class="mfb-timeline-step {if $shipment->getStatus() == 'booked'}current{elseif $shipment->getStatus() == 'shipped' || $shipment->getStatus() == 'delivered'}completed{elseif $shipment->getStatus() == 'cancelled'}cancelled{else}pending{/if}">
                 <div class="mfb-timeline-icon">
-                    <i class="fa fa-check"></i>
+                    <span class="glyphicon glyphicon-ok"></span>
                 </div>
                 <div class="mfb-timeline-label">{intl l="Booked" d="myflyingbox"}</div>
                 {if $shipment->getDateBooking()}
@@ -60,7 +60,7 @@
             {* Step 3: Shipped *}
             <div class="mfb-timeline-step {if $shipment->getStatus() == 'shipped'}current{elseif $shipment->getStatus() == 'delivered'}completed{elseif $shipment->getStatus() == 'cancelled'}cancelled{else}pending{/if}">
                 <div class="mfb-timeline-icon">
-                    <i class="fa fa-truck"></i>
+                    <span class="glyphicon glyphicon-send"></span>
                 </div>
                 <div class="mfb-timeline-label">{intl l="Shipped" d="myflyingbox"}</div>
             </div>
@@ -68,7 +68,7 @@
             {* Step 4: Delivered *}
             <div class="mfb-timeline-step {if $shipment->getStatus() == 'delivered'}current completed{elseif $shipment->getStatus() == 'cancelled'}cancelled{else}pending{/if}">
                 <div class="mfb-timeline-icon">
-                    <i class="fa fa-home"></i>
+                    <span class="glyphicon glyphicon-home"></span>
                 </div>
                 <div class="mfb-timeline-label">{intl l="Delivered" d="myflyingbox"}</div>
             </div>
