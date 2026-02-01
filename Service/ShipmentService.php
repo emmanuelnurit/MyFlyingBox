@@ -90,6 +90,7 @@ class ShipmentService
             $shipment->setApiQuoteUuid($quoteUuid);
             $shipment->setApiOfferUuid($offerUuid);
             $shipment->setStatus(self::STATUS_PENDING);
+            $shipment->setIsReturn(false);
 
             // Set shipper info from config
             $shipment->setShipperName(MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_NAME, ''));
