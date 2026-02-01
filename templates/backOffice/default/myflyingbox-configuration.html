@@ -219,6 +219,7 @@
     background: #fff;
     font-weight: 600;
     white-space: nowrap;
+    height: 44px;
 }
 
 .mfb-webhook-card .input-group .input-group-btn .btn:hover {
@@ -946,7 +947,7 @@
                         <div style="margin-bottom: 1.5rem;">
                             <label class="form-label" style="font-size: 0.95rem; font-weight: 600; color: #1e3a5f; margin-bottom: 0.5rem;">{intl l="Your Webhook Endpoint" d="myflyingbox"}</label>
                             <div class="input-group">
-                                <input type="text" id="mfb-webhook-url" class="form-control" value="{url path="/myflyingbox/webhook/tracking"}" readonly style="background: #f1f5f9; font-size: 0.95rem; padding: 0.75rem 1rem;"/>
+                                <input type="text" id="mfb-webhook-url" class="form-control" value="{url path="/myflyingbox/webhook/tracking"}" readonly style="background: #f1f5f9; font-size: 0.95rem; padding: 0.75rem 1rem; border: 2px solid #cbd5e1; height: 44px;"/>
                                 <span class="input-group-btn">
                                     <button type="button" class="btn btn-default" id="mfb-copy-webhook-url" title="{intl l='Copy to clipboard' d='myflyingbox'}">
                                         <i class="fa fa-copy" style="margin-right: 0.35rem;"></i> {intl l="Copy" d="myflyingbox"}
@@ -980,7 +981,7 @@
                                 {form_field form=$form field="webhook_secret"}
                                     <label class="form-label" style="font-size: 0.95rem; font-weight: 600; color: #1e3a5f; margin-bottom: 0.5rem;">{intl l="Webhook Secret" d="myflyingbox"}</label>
                                     <div class="input-group">
-                                        <input type="text" id="mfb-webhook-secret" name="{$name}" value="{$value}" class="form-control" placeholder="whsec_xxxxxxxxxxxxxxxx" style="font-size: 0.95rem; padding: 0.75rem 1rem;"/>
+                                        <input type="text" id="mfb-webhook-secret" name="{$name}" value="{$value}" class="form-control" placeholder="whsec_xxxxxxxxxxxxxxxx" style="font-size: 0.95rem; padding: 0.75rem 1rem; border: 2px solid #cbd5e1; height: 44px;"/>
                                         <span class="input-group-btn">
                                             <button type="button" class="btn btn-primary" id="mfb-generate-secret" title="{intl l='Generate new secret' d='myflyingbox'}">
                                                 <i class="fa fa-refresh" style="margin-right: 0.35rem;"></i> {intl l="New Secret" d="myflyingbox"}
