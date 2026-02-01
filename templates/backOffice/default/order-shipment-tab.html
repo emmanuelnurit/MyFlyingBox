@@ -6,7 +6,7 @@
         {* Shipment exists - Show details *}
         <div class="row">
             {* Left column - Shipment info *}
-            <div class="col-md-6">
+            <div class="col-md-7">
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <h4 class="panel-title">
@@ -27,77 +27,90 @@
                         </h4>
                     </div>
                     <div class="panel-body">
-                        <dl class="dl-horizontal">
-                            <dt>{intl l="Shipment ID" d="myflyingbox"}</dt>
-                            <dd>#{$shipment->getId()}</dd>
+                        <div class="mfb-info-list">
+                            <div class="mfb-info-row">
+                                <span class="mfb-info-label">{intl l="Shipment ID" d="myflyingbox"}</span>
+                                <span class="mfb-info-value">#{$shipment->getId()}</span>
+                            </div>
 
                             {if $shipment->getServiceId()}
                                 {loop type="myflyingbox.services" name="shipment_service" id=$shipment->getServiceId()}
-                                <dt>{intl l="Carrier" d="myflyingbox"}</dt>
-                                <dd style="display: flex; align-items: center; gap: 0.5rem;">
-                                    {if $CARRIER_LOGO}
-                                    <img src="{$CARRIER_LOGO}" alt="{$CARRIER_CODE}" style="height: 24px; width: auto; max-width: 60px; object-fit: contain;" data-fallback="{$CARRIER_LOGO_FALLBACK}" onerror="this.onerror=null; this.src=this.dataset.fallback;"/>
-                                    {/if}
-                                    <strong>{$CARRIER_CODE|upper}</strong> - {$NAME}
-                                </dd>
+                                <div class="mfb-info-row">
+                                    <span class="mfb-info-label">{intl l="Carrier" d="myflyingbox"}</span>
+                                    <span class="mfb-info-value">
+                                        <span class="mfb-carrier-display">
+                                            {if $CARRIER_LOGO}
+                                            <img src="{$CARRIER_LOGO}" alt="{$CARRIER_CODE}"
+                                                 data-fallback="{$CARRIER_LOGO_FALLBACK}"
+                                                 onerror="this.onerror=null; this.src=this.dataset.fallback;"/>
+                                            {/if}
+                                            <strong>{$CARRIER_CODE|upper}</strong>
+                                            <span class="mfb-service-name">- {$NAME}</span>
+                                        </span>
+                                    </span>
+                                </div>
 
-                                <dt>{intl l="Delivery type" d="myflyingbox"}</dt>
-                                <dd>
-                                    {if $RELAY_DELIVERY}
-                                        <span class="label label-info"><i class="fa fa-map-marker"></i> {intl l="Relay point delivery" d="myflyingbox"}</span>
-                                    {else}
-                                        <span class="label label-default"><i class="fa fa-home"></i> {intl l="Home delivery" d="myflyingbox"}</span>
-                                    {/if}
-                                </dd>
+                                <div class="mfb-info-row">
+                                    <span class="mfb-info-label">{intl l="Delivery type" d="myflyingbox"}</span>
+                                    <span class="mfb-info-value">
+                                        {if $RELAY_DELIVERY}
+                                            <span class="label label-info"><i class="fa fa-map-marker"></i> {intl l="Relay point delivery" d="myflyingbox"}</span>
+                                        {else}
+                                            <span class="label label-default"><i class="fa fa-home"></i> {intl l="Home delivery" d="myflyingbox"}</span>
+                                        {/if}
+                                    </span>
+                                </div>
 
                                 {if $DELIVERY_DELAY}
-                                <dt>{intl l="Delivery time" d="myflyingbox"}</dt>
-                                <dd><i class="fa fa-clock-o"></i> {$DELIVERY_DELAY}</dd>
+                                <div class="mfb-info-row">
+                                    <span class="mfb-info-label">{intl l="Delivery time" d="myflyingbox"}</span>
+                                    <span class="mfb-info-value"><i class="fa fa-clock-o"></i> {$DELIVERY_DELAY}</span>
+                                </div>
                                 {/if}
                                 {/loop}
                             {/if}
 
                             {if $shipment->getRelayDeliveryCode()}
-                            <dt>{intl l="Relay Point" d="myflyingbox"}</dt>
-                            <dd>
-                                <div class="well well-sm" style="margin: 0; padding: 10px 14px; background: #f0f7ff; border: 1px solid #b8daff; border-radius: 6px;">
-                                    <div style="display: flex; align-items: flex-start; gap: 10px;">
-                                        <i class="fa fa-map-marker text-info" style="font-size: 1.3em; margin-top: 2px;"></i>
-                                        <div>
-                                            <strong style="color: #0056b3;">{$shipment->getRelayDeliveryCode()}</strong>
-                                            {if $shipment->getRelayName()}
-                                                <br><span style="font-weight: 500;">{$shipment->getRelayName()}</span>
-                                            {/if}
-                                            {if $shipment->getRelayStreet()}
-                                                <br><span class="text-muted">{$shipment->getRelayStreet()}</span>
-                                            {/if}
-                                            {if $shipment->getRelayPostalCode() || $shipment->getRelayCity()}
-                                                <br><span class="text-muted">{$shipment->getRelayPostalCode()} {$shipment->getRelayCity()}</span>
-                                            {/if}
-                                            {if $shipment->getRelayCountry()}
-                                                <br><span class="text-muted">{$shipment->getRelayCountry()}</span>
-                                            {/if}
+                            <div class="mfb-info-row">
+                                <span class="mfb-info-label">{intl l="Relay Point" d="myflyingbox"}</span>
+                                <span class="mfb-info-value">
+                                    <div class="mfb-relay-block">
+                                        <div style="display: flex; align-items: flex-start; gap: 10px;">
+                                            <i class="fa fa-map-marker text-info" style="font-size: 1.2em; margin-top: 2px;"></i>
+                                            <div>
+                                                <strong style="color: #0056b3;">{$shipment->getRelayDeliveryCode()}</strong>
+                                                {if $shipment->getRelayName()}<br><span style="font-weight: 500;">{$shipment->getRelayName()}</span>{/if}
+                                                {if $shipment->getRelayStreet()}<br><span class="text-muted">{$shipment->getRelayStreet()}</span>{/if}
+                                                {if $shipment->getRelayPostalCode() || $shipment->getRelayCity()}<br><span class="text-muted">{$shipment->getRelayPostalCode()} {$shipment->getRelayCity()}</span>{/if}
+                                                {if $shipment->getRelayCountry()}<br><span class="text-muted">{$shipment->getRelayCountry()}</span>{/if}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </dd>
+                                </span>
+                            </div>
                             {/if}
 
                             {if $shipment->getApiOrderUuid()}
-                            <dt>{intl l="API Order" d="myflyingbox"}</dt>
-                            <dd><code style="font-size: 0.85em;">{$shipment->getApiOrderUuid()}</code></dd>
+                            <div class="mfb-info-row">
+                                <span class="mfb-info-label">{intl l="API Order" d="myflyingbox"}</span>
+                                <span class="mfb-info-value"><code>{$shipment->getApiOrderUuid()}</code></span>
+                            </div>
                             {/if}
 
                             {if $shipment->getDateBooking()}
-                            <dt>{intl l="Booking Date" d="myflyingbox"}</dt>
-                            <dd><i class="fa fa-calendar"></i> {format_date date=$shipment->getDateBooking() output="datetime"}</dd>
+                            <div class="mfb-info-row">
+                                <span class="mfb-info-label">{intl l="Booking Date" d="myflyingbox"}</span>
+                                <span class="mfb-info-value"><i class="fa fa-calendar"></i> {format_date date=$shipment->getDateBooking() output="datetime"}</span>
+                            </div>
                             {/if}
 
                             {if $shipment->getCollectionDate()}
-                            <dt>{intl l="Collection Date" d="myflyingbox"}</dt>
-                            <dd><i class="fa fa-truck"></i> {format_date date=$shipment->getCollectionDate() output="date"}</dd>
+                            <div class="mfb-info-row">
+                                <span class="mfb-info-label">{intl l="Collection Date" d="myflyingbox"}</span>
+                                <span class="mfb-info-value"><i class="fa fa-truck"></i> {format_date date=$shipment->getCollectionDate() output="date"}</span>
+                            </div>
                             {/if}
-                        </dl>
+                        </div>
                     </div>
                 </div>
 
@@ -120,7 +133,7 @@
             </div>
 
             {* Right column - Parcels and Actions *}
-            <div class="col-md-6">
+            <div class="col-md-5">
                 {* Parcels *}
                 <div class="panel panel-default">
                     <div class="panel-heading">

@@ -494,4 +494,86 @@ showConfirmModal(
     background-color: #0b5ed7;
     border-color: #0a58ca;
 }
+
+/* ========================================
+   MFB Shipment Info - Modern Key-Value Style
+   ======================================== */
+
+.mfb-info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.mfb-info-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 0.625rem 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.mfb-info-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.mfb-info-row:first-child {
+    padding-top: 0;
+}
+
+.mfb-info-label {
+    flex: 0 0 130px;
+    font-weight: 600;
+    color: #64748b;
+    font-size: 0.875rem;
+    text-align: left;
+    padding-top: 0.125rem;
+}
+
+.mfb-info-value {
+    flex: 1;
+    color: #1e293b;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    min-width: 0;
+}
+
+/* Carrier display */
+.mfb-carrier-display {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+}
+
+.mfb-carrier-display img {
+    height: 22px;
+    width: auto;
+    max-width: 55px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.mfb-carrier-display .mfb-service-name {
+    color: #475569;
+}
+
+/* API UUID monospace */
+.mfb-info-value code {
+    font-size: 0.8125rem;
+    background: #f1f5f9;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    word-break: break-all;
+}
+
+/* Relay point block */
+.mfb-relay-block {
+    margin: 0;
+    padding: 0.75rem 1rem;
+    background: #f0f7ff;
+    border: 1px solid #b8daff;
+    border-radius: 6px;
+}
 </style>
