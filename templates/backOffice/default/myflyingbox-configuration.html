@@ -198,6 +198,7 @@
     width: 100%;
     border-top-right-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
+    border: 2px solid #cbd5e1;
 }
 
 .mfb-webhook-card .input-group .input-group-btn {
@@ -218,6 +219,7 @@
     background: #fff;
     font-weight: 600;
     white-space: nowrap;
+    height: 44px;
 }
 
 .mfb-webhook-card .input-group .input-group-btn .btn:hover {
@@ -877,6 +879,12 @@
                         {/form_field}
                     </div>
                     <small class="text-muted">{intl l="Required for relay point map display" d="myflyingbox"}</small>
+                    <div style="margin-top: 0.75rem;">
+                        <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+                            <i class="fa fa-external-link" style="margin-right: 0.35rem;"></i>
+                            {intl l="Google Cloud Console" d="myflyingbox"}
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -902,7 +910,7 @@
                                 {/if}
                             </div>
                             <div>
-                                <h4 style="margin: 0; font-size: 1.1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.75px; color: #1e3a5f;">{intl l="Webhook Configuration" d="myflyingbox"}</h4>
+                                <h4 style="margin: 0; font-size: 1.1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.75px; color: #1e3a5f;">{intl l="Webhook Configuration" d="myflyingbox"} <span style="font-size: 0.65rem; font-weight: 600; color: #fff; background: #f59e0b; padding: 0.15rem 0.5rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; vertical-align: middle; margin-left: 0.5rem;">BETA</span></h4>
                                 <small id="webhook-status-text" style="font-size: 0.9rem;">
                                     {if $webhook_configured}
                                         <span class="text-success">
@@ -939,44 +947,52 @@
                         <div style="margin-bottom: 1.5rem;">
                             <label class="form-label" style="font-size: 0.95rem; font-weight: 600; color: #1e3a5f; margin-bottom: 0.5rem;">{intl l="Your Webhook Endpoint" d="myflyingbox"}</label>
                             <div class="input-group">
-                                <input type="text" id="mfb-webhook-url" class="form-control" value="{url path="/myflyingbox/webhook/tracking"}" readonly style="background: #f1f5f9; font-size: 0.95rem; padding: 0.75rem 1rem;"/>
+                                <input type="text" id="mfb-webhook-url" class="form-control" value="{url path="/myflyingbox/webhook/tracking"}" readonly style="background: #f1f5f9; font-size: 0.95rem; padding: 0.75rem 1rem; border: 2px solid #cbd5e1; height: 44px;"/>
                                 <span class="input-group-btn">
                                     <button type="button" class="btn btn-default" id="mfb-copy-webhook-url" title="{intl l='Copy to clipboard' d='myflyingbox'}">
                                         <i class="fa fa-copy" style="margin-right: 0.35rem;"></i> {intl l="Copy" d="myflyingbox"}
                                     </button>
                                 </span>
                             </div>
-                            <small class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem; display: block;">{intl l="Use this URL in your MyFlyingBox dashboard" d="myflyingbox"}</small>
+                            <small class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem; display: block;">
+                                {intl l="Use this URL in your" d="myflyingbox"}
+                                <a href="https://dashboard.myflyingbox.com/" target="_blank" rel="noopener" style="color: #4a6fa5; font-weight: 600;">
+                                    {intl l="MyFlyingBox dashboard" d="myflyingbox"}
+                                    <i class="fa fa-external-link" style="font-size: 0.75rem; margin-left: 0.25rem;"></i>
+                                </a>
+                            </small>
                         </div>
 
-                        {* Two columns: Enable + Secret *}
-                        <div class="row">
-                            {* Enable/Disable Toggle *}
-                            <div class="col-md-4" style="margin-bottom: 1.5rem;">
-                                {form_field form=$form field="webhook_enabled"}
-                                    <label class="form-label" style="font-size: 0.95rem; font-weight: 600; color: #1e3a5f; margin-bottom: 0.5rem;">{intl l="Enable Webhooks" d="myflyingbox"}</label>
-                                    <select name="{$name}" id="mfb-webhook-enabled" class="form-control" style="font-size: 1rem; padding: 0.75rem 1rem;">
-                                        <option value="0" {if $value != '1'}selected{/if}>{intl l="Disabled" d="myflyingbox"}</option>
-                                        <option value="1" {if $value == '1'}selected{/if}>{intl l="Enabled" d="myflyingbox"}</option>
-                                    </select>
-                                {/form_field}
-                            </div>
+                        {* Enable/Disable Toggle *}
+                        <div style="margin-bottom: 1.5rem;">
+                            {form_field form=$form field="webhook_enabled"}
+                                <label class="form-label" style="font-size: 0.95rem; font-weight: 600; color: #1e3a5f; margin-bottom: 0.5rem;">{intl l="Enable Webhooks" d="myflyingbox"}</label>
+                                <select name="{$name}" id="mfb-webhook-enabled" class="form-control" style="font-size: 1rem; padding: 0.75rem 1rem; max-width: 200px;">
+                                    <option value="0" {if $value != '1'}selected{/if}>{intl l="Disabled" d="myflyingbox"}</option>
+                                    <option value="1" {if $value == '1'}selected{/if}>{intl l="Enabled" d="myflyingbox"}</option>
+                                </select>
+                            {/form_field}
+                        </div>
 
-                            {* Webhook Secret *}
-                            <div class="col-md-8" style="margin-bottom: 1.5rem;">
-                                {form_field form=$form field="webhook_secret"}
-                                    <label class="form-label" style="font-size: 0.95rem; font-weight: 600; color: #1e3a5f; margin-bottom: 0.5rem;">{intl l="Webhook Secret" d="myflyingbox"}</label>
-                                    <div class="input-group">
-                                        <input type="text" id="mfb-webhook-secret" name="{$name}" value="{$value}" class="form-control" placeholder="whsec_xxxxxxxxxxxxxxxx" style="font-size: 0.95rem; padding: 0.75rem 1rem;"/>
-                                        <span class="input-group-btn">
-                                            <button type="button" class="btn btn-primary" id="mfb-generate-secret" title="{intl l='Generate new secret' d='myflyingbox'}">
-                                                <i class="fa fa-refresh" style="margin-right: 0.35rem;"></i> {intl l="New Secret" d="myflyingbox"}
-                                            </button>
-                                        </span>
-                                    </div>
-                                    <small class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem; display: block;">{intl l="Secret key used to verify webhook signatures" d="myflyingbox"}</small>
-                                {/form_field}
-                            </div>
+                        {* Webhook Secret - Full width *}
+                        <div style="margin-bottom: 1.5rem;">
+                            {form_field form=$form field="webhook_secret"}
+                                <label class="form-label" style="font-size: 0.95rem; font-weight: 600; color: #1e3a5f; margin-bottom: 0.5rem;">{intl l="Webhook Secret" d="myflyingbox"}</label>
+                                <div class="input-group">
+                                    <input type="text" id="mfb-webhook-secret" name="{$name}" value="{$value}" class="form-control" placeholder="whsec_xxxxxxxxxxxxxxxx" style="font-size: 0.95rem; padding: 0.75rem 1rem; border: 2px solid #cbd5e1; height: 44px;"/>
+                                    <span class="input-group-btn">
+                                        <button type="button" class="btn btn-default" id="mfb-copy-webhook-secret" title="{intl l='Copy to clipboard' d='myflyingbox'}" style="height: 44px; border: 2px solid #4a6fa5; border-radius: 0 8px 8px 0; color: #4a6fa5; background: #fff; font-weight: 600;">
+                                            <i class="fa fa-copy" style="margin-right: 0.35rem;"></i> {intl l="Copy" d="myflyingbox"}
+                                        </button>
+                                    </span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+                                    <small class="text-muted" style="font-size: 0.9rem;">{intl l="Secret key used to verify webhook signatures" d="myflyingbox"}</small>
+                                    <a href="#" id="mfb-generate-secret" style="font-size: 0.9rem; color: #4a6fa5; text-decoration: none;">
+                                        <i class="fa fa-refresh" style="margin-right: 0.25rem;"></i> {intl l="Generate new secret" d="myflyingbox"}
+                                    </a>
+                                </div>
+                            {/form_field}
                         </div>
 
                         {* Validate Configuration Button - Centered *}
@@ -1033,15 +1049,7 @@
                         <i class="fa fa-stethoscope" style="margin-right: 0.35rem;"></i> {intl l="Diagnostic" d="myflyingbox"}
                     </button>
                     <a href="https://dashboard.myflyingbox.com/" target="_blank" rel="noopener" class="btn btn-outline-primary" style="display: inline-flex; align-items: center; gap: 0.5rem;">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 32" width="60" height="20">
-                            <rect x="30" y="8" width="14" height="12" rx="2" fill="#2563eb" stroke="#1e40af" stroke-width="1.2"/>
-                            <path d="M30 11 L37 8 L44 11" fill="none" stroke="#1e40af" stroke-width="1.2" stroke-linecap="round"/>
-                            <path d="M29 14 Q22 11 14 12 Q18 14 22 16 Q26 15 29 15" fill="#3b82f6"/>
-                            <path d="M45 14 Q52 11 60 12 Q56 14 52 16 Q48 15 45 15" fill="#3b82f6"/>
-                            <line x1="10" y1="14" x2="5" y2="14" stroke="#93c5fd" stroke-width="1.5" stroke-linecap="round"/>
-                            <line x1="11" y1="17" x2="7" y2="18" stroke="#93c5fd" stroke-width="1" stroke-linecap="round"/>
-                            <text x="66" y="18" font-family="Arial,sans-serif" font-size="9" font-weight="bold" fill="#1e40af">MFB</text>
-                        </svg>
+<img src="/modules/MyFlyingBox/images/mfb-icon.png" alt="MyFlyingBox" width="22" height="22" style="vertical-align: middle;"/>
                         {intl l="Dashboard" d="myflyingbox"}
                         <i class="fa fa-external-link" style="font-size: 0.8rem;"></i>
                     </a>

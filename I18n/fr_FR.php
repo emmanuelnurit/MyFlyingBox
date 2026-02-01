@@ -50,6 +50,7 @@ return [
     'Required for relay point map' => 'Nécessaire pour la carte des points relais',
     'Required for relay point map display' => 'Nécessaire pour afficher la carte des points relais',
     'Get your API key from Google Cloud Console' => 'Obtenir votre clé API depuis Google Cloud Console',
+    'Google Cloud Console' => 'Google Cloud Console',
 
     // Configuration - Actions
     'Save Configuration' => 'Enregistrer la configuration',
@@ -256,8 +257,8 @@ return [
     'When enabled, tracking updates will be received in real-time' => 'Lorsque active, les mises a jour de suivi seront recues en temps reel',
     'Webhook Secret' => 'Secret Webhook',
     'Leave empty for no signature validation' => 'Laisser vide pour ne pas valider la signature',
-    'Generate new secret' => 'Generer un nouveau secret',
-    'Generate' => 'Generer',
+    'Generate new secret' => 'Générer un nouveau secret',
+    'Generate' => 'Générer',
     'Used to validate webhook signatures (HMAC-SHA256). Configure the same secret in MyFlyingBox.' => 'Utilise pour valider les signatures des webhooks (HMAC-SHA256). Configurez le meme secret dans MyFlyingBox.',
     'How to configure:' => 'Comment configurer :',
     'Copy the webhook URL above' => 'Copiez cette URL de webhook ci-dessus',
@@ -293,6 +294,8 @@ return [
     'Invalid configuration' => 'Configuration invalide',
     'Your Webhook Endpoint' => 'Votre point d\'entrée Webhook',
     'Use this URL in your MyFlyingBox dashboard' => 'Utilisez cette URL dans votre tableau de bord MyFlyingBox',
+    'Use this URL in your' => 'Utilisez cette URL dans votre',
+    'MyFlyingBox dashboard' => 'tableau de bord MyFlyingBox',
     'Enable Webhooks' => 'Activer les Webhooks',
     'Enabled' => 'Activé',
     'Disabled' => 'Désactivé',

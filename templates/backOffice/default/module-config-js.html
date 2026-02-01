@@ -937,27 +937,84 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.removeChild(textarea);
     }
 
-    // Webhook: Generate new secret
-    var generateSecretBtn = document.getElementById('mfb-generate-secret');
+    // Webhook: Copy Secret to clipboard
+    var copyWebhookSecretBtn = document.getElementById('mfb-copy-webhook-secret');
     var webhookSecretInput = document.getElementById('mfb-webhook-secret');
 
-    if (generateSecretBtn && webhookSecretInput) {
-        generateSecretBtn.addEventListener('click', function() {
+    if (copyWebhookSecretBtn && webhookSecretInput) {
+        copyWebhookSecretBtn.addEventListener('click', function() {
+            var secret = webhookSecretInput.value;
+            var btn = this;
+            var originalHtml = btn.innerHTML;
+
+            if (!secret) {
+                showAlertModal(MFB_TRANSLATIONS.warning || 'Warning', MFB_TRANSLATIONS.webhookSecretEmpty || 'No secret to copy', 'warning');
+                return;
+            }
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(secret)
+                    .then(function() {
+                        btn.innerHTML = '<i class="fa fa-check"></i> ' + (MFB_TRANSLATIONS.copied || 'Copied');
+                        btn.classList.add('btn-success');
+                        setTimeout(function() {
+                            btn.innerHTML = originalHtml;
+                            btn.classList.remove('btn-success');
+                        }, 2000);
+                    })
+                    .catch(function() {
+                        fallbackCopySecret(secret, btn, originalHtml);
+                    });
+            } else {
+                fallbackCopySecret(secret, btn, originalHtml);
+            }
+        });
+    }
+
+    function fallbackCopySecret(text, btn, originalHtml) {
+        var textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+
+        try {
+            document.execCommand('copy');
+            btn.innerHTML = '<i class="fa fa-check"></i> ' + (MFB_TRANSLATIONS.copied || 'Copied');
+            btn.classList.add('btn-success');
+            setTimeout(function() {
+                btn.innerHTML = originalHtml;
+                btn.classList.remove('btn-success');
+            }, 2000);
+        } catch (err) {
+            showAlertModal(MFB_TRANSLATIONS.error, MFB_TRANSLATIONS.webhookCopyFailed || 'Copy failed', 'warning');
+        }
+
+        document.body.removeChild(textarea);
+    }
+
+    // Webhook: Generate new secret
+    var generateSecretLink = document.getElementById('mfb-generate-secret');
+    var webhookSecretInput = document.getElementById('mfb-webhook-secret');
+
+    if (generateSecretLink && webhookSecretInput) {
+        generateSecretLink.addEventListener('click', function(e) {
+            e.preventDefault();
+
             // Generate a cryptographically secure random string
             var secret = generateSecureSecret(32);
             webhookSecretInput.value = secret;
 
             // Visual feedback
-            var btn = this;
-            var originalHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fa fa-check"></i> ' + MFB_TRANSLATIONS.webhookSecretGenerated;
-            btn.classList.remove('btn-outline-secondary');
-            btn.classList.add('btn-success');
+            var link = this;
+            var originalHtml = link.innerHTML;
+            link.innerHTML = '<i class="fa fa-check"></i> ' + (MFB_TRANSLATIONS.webhookSecretGenerated || 'Generated!');
+            link.style.color = '#22c55e';
 
             setTimeout(function() {
-                btn.innerHTML = originalHtml;
-                btn.classList.remove('btn-success');
-                btn.classList.add('btn-outline-secondary');
+                link.innerHTML = originalHtml;
+                link.style.color = '#4a6fa5';
             }, 2000);
         });
     }
