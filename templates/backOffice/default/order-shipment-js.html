@@ -576,4 +576,309 @@ showConfirmModal(
     border: 1px solid #b8daff;
     border-radius: 6px;
 }
+
+/* ========================================
+   MFB Envelope Header (Postal Style)
+   ======================================== */
+
+.mfb-envelope-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.mfb-envelope-recipient {
+    flex: 1;
+    min-width: 0;
+}
+
+.mfb-envelope-recipient .mfb-envelope-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.mfb-envelope-recipient .mfb-envelope-address {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: #1e293b;
+}
+
+.mfb-envelope-recipient .mfb-envelope-address strong {
+    font-size: 1rem;
+    color: #0f172a;
+}
+
+.mfb-envelope-parcel {
+    flex: 0 0 auto;
+    text-align: right;
+    padding-left: 1.5rem;
+    border-left: 1px dashed #cbd5e1;
+}
+
+.mfb-envelope-parcel .mfb-envelope-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.mfb-envelope-parcel .mfb-parcel-dimensions {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.mfb-envelope-parcel .mfb-parcel-weight {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin-top: 0.25rem;
+}
+
+/* ========================================
+   MFB Status Timeline (Horizontal)
+   ======================================== */
+
+.mfb-status-timeline {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1rem 0;
+    margin: 1rem 0;
+    position: relative;
+}
+
+.mfb-status-timeline::before {
+    content: '';
+    position: absolute;
+    top: 1.75rem;
+    left: 2rem;
+    right: 2rem;
+    height: 3px;
+    background: #e2e8f0;
+    z-index: 0;
+}
+
+.mfb-timeline-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    position: relative;
+    z-index: 1;
+}
+
+.mfb-timeline-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+/* Step states */
+.mfb-timeline-step.completed .mfb-timeline-icon {
+    background: #22c55e;
+    color: white;
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.4);
+}
+
+.mfb-timeline-step.current .mfb-timeline-icon {
+    background: #3b82f6;
+    color: white;
+    box-shadow: 0 2px 12px rgba(59, 130, 246, 0.5);
+    animation: pulse 2s infinite;
+}
+
+.mfb-timeline-step.pending .mfb-timeline-icon {
+    background: #f1f5f9;
+    color: #94a3b8;
+    border: 2px solid #e2e8f0;
+}
+
+.mfb-timeline-step.cancelled .mfb-timeline-icon {
+    background: #ef4444;
+    color: white;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.mfb-timeline-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    text-align: center;
+}
+
+.mfb-timeline-step.completed .mfb-timeline-label {
+    color: #22c55e;
+}
+
+.mfb-timeline-step.current .mfb-timeline-label {
+    color: #3b82f6;
+}
+
+.mfb-timeline-step.pending .mfb-timeline-label {
+    color: #94a3b8;
+}
+
+.mfb-timeline-step.cancelled .mfb-timeline-label {
+    color: #ef4444;
+}
+
+.mfb-timeline-date {
+    font-size: 0.6875rem;
+    color: #64748b;
+    margin-top: 0.25rem;
+}
+
+/* Progress line overlay */
+.mfb-timeline-progress {
+    position: absolute;
+    top: 1.75rem;
+    left: 2rem;
+    height: 3px;
+    background: #22c55e;
+    z-index: 0;
+    transition: width 0.5s ease;
+}
+
+/* ========================================
+   MFB Action Buttons (Bottom Bar)
+   ======================================== */
+
+.mfb-actions-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 1rem 0;
+    margin-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.mfb-actions-bar .btn {
+    flex: 1 1 auto;
+    min-width: 140px;
+}
+
+/* ========================================
+   MFB History Panel (Unified Style)
+   ======================================== */
+
+.mfb-history-panel {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.mfb-history-panel .panel-heading {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0.875rem 1.25rem;
+}
+
+.mfb-history-panel .panel-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+
+.mfb-history-panel .panel-body {
+    padding: 1rem 1.25rem;
+}
+
+.mfb-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.mfb-history-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.mfb-history-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.mfb-history-item:first-child {
+    padding-top: 0;
+}
+
+.mfb-history-icon {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.mfb-history-item.status-delivered .mfb-history-icon {
+    background: #dcfce7;
+    color: #22c55e;
+}
+
+.mfb-history-item.status-shipped .mfb-history-icon {
+    background: #dbeafe;
+    color: #3b82f6;
+}
+
+.mfb-history-item.status-booked .mfb-history-icon {
+    background: #e0f2fe;
+    color: #0ea5e9;
+}
+
+.mfb-history-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.mfb-history-title {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #1e293b;
+    margin-bottom: 0.125rem;
+}
+
+.mfb-history-description {
+    font-size: 0.8125rem;
+    color: #64748b;
+}
+
+.mfb-history-date {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    white-space: nowrap;
+}
 </style>
