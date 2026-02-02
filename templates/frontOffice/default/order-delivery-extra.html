@@ -1186,7 +1186,7 @@
         fetch('/myflyingbox/offer/save', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ offer_id: offerId })
+            body: JSON.stringify({ cart_id: cartId, offer_id: offerId })
         })
         .then(function(response) { return response.json(); })
         .then(function(data) {
