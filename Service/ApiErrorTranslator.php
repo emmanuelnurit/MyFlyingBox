@@ -20,11 +20,13 @@ final class ApiErrorTranslator
      * Patterns are matched in order, so more specific patterns should come first
      */
     private const ERROR_PATTERNS = [
-        // Order state errors (most specific first)
-        'order not booked' => 'api_error.order_not_booked',
-        'not booked' => 'api_error.order_not_booked',
+        // Payment/billing errors (specific API error codes)
+        'payment.payorcountry.invalid' => 'api_error.payment_country_invalid',
+        'payment.' => 'api_error.payment_error',
+        'billing' => 'api_error.payment_error',
+
+        // Order state errors
         'already cancelled' => 'api_error.order_already_cancelled',
-        'cancelled' => 'api_error.order_already_cancelled',
         'already shipped' => 'api_error.order_already_shipped',
         'already delivered' => 'api_error.order_already_delivered',
 
@@ -32,6 +34,7 @@ final class ApiErrorTranslator
         'invalid address' => 'api_error.invalid_address',
         'postal code' => 'api_error.invalid_address',
         'city required' => 'api_error.invalid_address',
+        'address.' => 'api_error.invalid_address',
 
         // Authentication errors
         'unauthorized' => 'api_error.authentication_failed',
@@ -42,12 +45,15 @@ final class ApiErrorTranslator
         // Offer/service availability errors
         'no offer' => 'api_error.no_offers_available',
         'no service' => 'api_error.no_offers_available',
-        'not available' => 'api_error.no_offers_available',
+        'offer expired' => 'api_error.offer_expired',
 
         // Parcel validation errors
         'invalid parcel' => 'api_error.invalid_parcel',
-        'weight' => 'api_error.invalid_parcel',
-        'dimension' => 'api_error.invalid_parcel',
+        'parcel.' => 'api_error.invalid_parcel',
+
+        // Shipment validation errors
+        'shipper.' => 'api_error.invalid_shipper',
+        'recipient.' => 'api_error.invalid_recipient',
 
         // Service availability errors
         'timeout' => 'api_error.service_unavailable',
