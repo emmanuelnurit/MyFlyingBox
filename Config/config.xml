@@ -12,6 +12,9 @@
         <!-- Dimension Service -->
         <service id="myflyingbox.dimension.service" class="MyFlyingBox\Service\DimensionService" public="true"/>
 
+        <!-- API Error Translator Service -->
+        <service id="myflyingbox.api_error_translator.service" class="MyFlyingBox\Service\ApiErrorTranslator" public="true"/>
+
         <!-- Quote Service -->
         <service id="myflyingbox.quote.service" class="MyFlyingBox\Service\QuoteService" public="true">
             <argument type="service" id="myflyingbox.api.service"/>
@@ -23,6 +26,7 @@
         <service id="myflyingbox.shipment.service" class="MyFlyingBox\Service\ShipmentService" public="true">
             <argument type="service" id="myflyingbox.api.service"/>
             <argument type="service" id="myflyingbox.dimension.service"/>
+            <argument type="service" id="myflyingbox.api_error_translator.service"/>
             <argument type="service" id="monolog.logger"/>
         </service>
 
