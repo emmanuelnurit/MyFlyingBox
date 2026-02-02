@@ -137,8 +137,9 @@ class CarrierLogoProvider
             $localPath = __DIR__ . '/../images/carriers/' . $filename;
 
             if (file_exists($localPath)) {
-                $moduleUrl = $this->getModuleAssetsUrl();
-                return $moduleUrl . '/images/carriers/' . $filename;
+                // Return SVG as data URI for direct embedding
+                $svgContent = file_get_contents($localPath);
+                return 'data:image/svg+xml;base64,' . base64_encode($svgContent);
             }
         }
 
