@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Thelia\Core\Event\Order\OrderEvent;
 use Thelia\Core\Event\TheliaEvents;
 use Thelia\Model\ModuleQuery;
+use Thelia\Model\OrderStatusQuery;
 
 /**
  * Event listener for order-related events
@@ -34,6 +35,7 @@ class OrderEventListener implements EventSubscriberInterface
         return [
             TheliaEvents::ORDER_SET_DELIVERY_MODULE => ['onOrderSetDeliveryModule', 128],
             TheliaEvents::ORDER_BEFORE_PAYMENT => ['onOrderBeforePayment', 128],
+            TheliaEvents::ORDER_UPDATE_STATUS => ['onOrderUpdateStatus', 128],
         ];
     }
 
@@ -146,5 +148,57 @@ class OrderEventListener implements EventSubscriberInterface
         }
 
         return $module->getCode() === 'MyFlyingBox';
+    }
+
+    /**
+     * Called when order status is updated
+     * Creates a shipment event when order is marked as sent/shipped
+     */
+    public function onOrderUpdateStatus(OrderEvent $event): void
+    {
+        $order = $event->getOrder();
+        $newStatusId = $event->getStatus();
+
+        // Check if this is a MyFlyingBox order
+        if (!$this->isMyFlyingBoxDelivery($order->getDeliveryModuleId())) {
+            return;
+        }
+
+        // Get the shipment for this order
+        $shipment = MyFlyingBoxShipmentQuery::create()
+            ->filterByOrderId($order->getId())
+            ->filterByIsReturn(false)
+            ->findOne();
+
+        if (!$shipment) {
+            $this->logger->debug('[MFB] No shipment found for order ' . $order->getId());
+
+            return;
+        }
+
+        // Check if status changed to "sent" (shipped in Thelia terminology)
+        $sentStatus = OrderStatusQuery::create()
+            ->filterByCode('sent')
+            ->findOne();
+
+        if (!$sentStatus || $newStatusId !== $sentStatus->getId()) {
+            return;
+        }
+
+        $this->logger->info('[MFB] Order ' . $order->getId() . ' status changed to sent, recording in shipment history');
+
+        // Create a shipment event to record this status change
+        $this->shipmentService->createShipmentEvent(
+            $shipment->getId(),
+            'ORDER_STATUS_SENT',
+            'Commande marquee comme expediee dans Thelia',
+            new \DateTime()
+        );
+
+        // Update shipment status to shipped if currently booked
+        if ($shipment->getStatus() === ShipmentService::STATUS_BOOKED) {
+            $this->shipmentService->updateStatus($shipment, ShipmentService::STATUS_SHIPPED);
+            $this->logger->info('[MFB] Shipment ' . $shipment->getId() . ' status updated to shipped');
+        }
     }
 }
