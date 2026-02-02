@@ -147,6 +147,14 @@ class CarrierLogoProvider
     }
 
     /**
+     * Generate fallback SVG for carrier (public wrapper)
+     */
+    public function generateFallbackSvg(string $carrierCode): string
+    {
+        return $this->generateSvgDataUri($this->normalizeCarrierCode($carrierCode));
+    }
+
+    /**
      * Generate an inline SVG data URI with carrier initials
      */
     private function generateSvgDataUri(string $carrierCode): string
