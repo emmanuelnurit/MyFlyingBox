@@ -55,10 +55,9 @@
         <!-- Module Logo Provider -->
         <service id="myflyingbox.module_logo.provider" class="MyFlyingBox\Service\ModuleLogoProvider" public="true"/>
 
-        <!-- Smarty Plugin for Module Logo -->
+        <!-- Smarty Plugin for Module Logo (auto-tagged via SmartyPluginInterface autoconfiguration) -->
         <service id="myflyingbox.smarty.logo" class="MyFlyingBox\Smarty\MfbLogoPlugin">
             <argument type="service" id="myflyingbox.module_logo.provider"/>
-            <tag name="thelia.parser.register_plugin"/>
         </service>
 
         <!-- CLI Commands -->
