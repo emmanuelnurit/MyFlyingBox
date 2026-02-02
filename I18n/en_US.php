@@ -378,4 +378,20 @@ return [
     'MyFlyingBox - Delivery confirmation' => 'MyFlyingBox - Delivery confirmation',
     'Your order {$order_ref} has been shipped' => 'Your order {$order_ref} has been shipped',
     'Your order {$order_ref} has been delivered' => 'Your order {$order_ref} has been delivered',
+
+    // API Error Messages
+    'api_error.payment_country_invalid' => 'The billing country must match either the origin or destination country. Please check the shipper address configuration.',
+    'api_error.payment_error' => 'Payment or billing error. Please check your MyFlyingBox account configuration.',
+    'api_error.order_already_cancelled' => 'This shipment has already been cancelled.',
+    'api_error.order_already_shipped' => 'This shipment has already been picked up and cannot be modified.',
+    'api_error.order_already_delivered' => 'This shipment has already been delivered.',
+    'api_error.invalid_address' => 'The delivery address is invalid. Please check the address details.',
+    'api_error.invalid_shipper' => 'The shipper address is incomplete or invalid. Please check the configuration.',
+    'api_error.invalid_recipient' => 'The recipient address is incomplete or invalid.',
+    'api_error.authentication_failed' => 'Unable to connect to the shipping service. Please check API credentials in the configuration.',
+    'api_error.no_offers_available' => 'No shipping options are available for this destination.',
+    'api_error.offer_expired' => 'The shipping offer has expired. Please refresh the rates.',
+    'api_error.service_unavailable' => 'The shipping service is temporarily unavailable. Please try again later.',
+    'api_error.invalid_parcel' => 'The parcel dimensions or weight are invalid.',
+    'api_error.unknown' => 'An error occurred with the shipping service. Please try again or contact support.',
 ];

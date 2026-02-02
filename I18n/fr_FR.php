@@ -379,4 +379,20 @@ return [
     'MyFlyingBox - Delivery confirmation' => 'MyFlyingBox - Confirmation de livraison',
     'Your order {$order_ref} has been shipped' => 'Votre commande {$order_ref} a été expédiée',
     'Your order {$order_ref} has been delivered' => 'Votre commande {$order_ref} a été livrée',
+
+    // API Error Messages
+    'api_error.payment_country_invalid' => 'Le pays de facturation doit correspondre au pays d\'origine ou de destination. Veuillez vérifier la configuration de l\'adresse expéditeur.',
+    'api_error.payment_error' => 'Erreur de paiement ou de facturation. Veuillez vérifier la configuration du compte MyFlyingBox.',
+    'api_error.order_already_cancelled' => 'Cette expédition a déjà été annulée.',
+    'api_error.order_already_shipped' => 'Cette expédition a déjà été enlevée et ne peut plus être modifiée.',
+    'api_error.order_already_delivered' => 'Cette expédition a déjà été livrée.',
+    'api_error.invalid_address' => 'L\'adresse de livraison est invalide. Veuillez vérifier les informations saisies.',
+    'api_error.invalid_shipper' => 'L\'adresse de l\'expéditeur est incomplète ou invalide. Veuillez vérifier la configuration.',
+    'api_error.invalid_recipient' => 'L\'adresse du destinataire est incomplète ou invalide.',
+    'api_error.authentication_failed' => 'Impossible de se connecter au service de livraison. Veuillez vérifier les identifiants API dans la configuration.',
+    'api_error.no_offers_available' => 'Aucune option de livraison n\'est disponible pour cette destination.',
+    'api_error.offer_expired' => 'L\'offre de livraison a expiré. Veuillez actualiser les tarifs.',
+    'api_error.service_unavailable' => 'Le service de livraison est temporairement indisponible. Veuillez réessayer dans quelques instants.',
+    'api_error.invalid_parcel' => 'Les dimensions ou le poids du colis sont invalides.',
+    'api_error.unknown' => 'Une erreur est survenue avec le service de livraison. Veuillez réessayer ou contacter le support.',
 ];
