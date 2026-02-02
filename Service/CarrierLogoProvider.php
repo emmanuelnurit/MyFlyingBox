@@ -124,27 +124,29 @@ class CarrierLogoProvider
 
     /**
      * Get the URL of a carrier logo
-     * Priority: 1) Local file, 2) Inline SVG fallback
+     * Uses inline SVG data URI for guaranteed cross-server compatibility
      *
      * @param string $carrierCode The carrier code from API
-     * @return string|null The logo URL or null if no logo available
+     * @return string The logo as a data URI
      */
-    public function getLogoUrl(string $carrierCode): ?string
+    public function getLogoUrl(string $carrierCode): string
     {
         $normalizedCode = $this->normalizeCarrierCode($carrierCode);
 
-        // First, check if local logo file exists
+        // Check if local SVG file exists and read it as data URI
         if (isset(self::CARRIER_LOCAL_LOGOS[$normalizedCode])) {
             $filename = self::CARRIER_LOCAL_LOGOS[$normalizedCode];
             $localPath = __DIR__ . '/../images/carriers/' . $filename;
 
             if (file_exists($localPath)) {
-                $moduleUrl = $this->getModuleAssetsUrl();
-                return $moduleUrl . '/images/carriers/' . $filename;
+                $svgContent = file_get_contents($localPath);
+                if ($svgContent !== false) {
+                    return 'data:image/svg+xml;base64,' . base64_encode($svgContent);
+                }
             }
         }
 
-        // Fallback to inline SVG with carrier initials
+        // Fallback to generated SVG with carrier initials
         return $this->generateSvgDataUri($normalizedCode);
     }
 

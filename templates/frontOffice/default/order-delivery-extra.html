@@ -426,39 +426,19 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 10px 18px;
-    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
-    border-radius: 8px;
     flex-shrink: 0;
-    min-width: 100px;
+    min-width: 120px;
+    overflow: hidden;
+    border-radius: 8px;
 }
 
-.mfb-carrier-badge[data-carrier="colissimo"] {
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-}
-
-.mfb-carrier-badge[data-carrier="chronopost"] {
-    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
-}
-
-.mfb-carrier-badge[data-carrier="mondial_relay"] {
-    background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
-}
-
-.mfb-carrier-badge[data-carrier="dhl"] {
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-}
-
-.mfb-carrier-badge[data-carrier="fedex"] {
-    background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
-}
-
-.mfb-carrier-badge[data-carrier="ups"] {
-    background: linear-gradient(135deg, #78350f 0%, #92400e 100%);
-}
-
-.mfb-carrier-badge[data-carrier="dpd"] {
-    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+.mfb-carrier-logo {
+    height: 48px;
+    width: auto;
+    max-width: 160px;
+    object-fit: contain;
+    display: block;
+    border-radius: 6px;
 }
 
 .mfb-carrier-code {
@@ -806,6 +786,11 @@
         min-width: auto;
     }
 
+    .mfb-carrier-logo {
+        height: 36px;
+        max-width: 110px;
+    }
+
     .mfb-service-info {
         flex-basis: 100%;
         order: 2;
@@ -1007,6 +992,10 @@
             var offer = offers[i];
             var relayClass = offer.relay_delivery ? ' is-relay' : '';
 
+            // Check if service_name is meaningful (not just numbers, dots, or very short)
+            var serviceName = offer.service_name || '';
+            var isServiceNameUseful = serviceName.length > 3 && !/^[\d\.\s]+$/.test(serviceName);
+
             html += '<label class="mfb-offer-card' + relayClass + '" data-offer-id="' + offer.id + '">' +
                 '<input type="radio" name="mfb_offer_id" value="' + offer.id + '"' +
                 ' data-service-id="' + (offer.service_id || '') + '"' +
@@ -1019,9 +1008,17 @@
                 '<polyline points="20 6 9 17 4 12"></polyline>' +
                 '</svg></div>' +
                 '<div class="mfb-carrier-badge" data-carrier="' + (offer.carrier_code || '').toLowerCase() + '">' +
-                '<span class="mfb-carrier-code">' + escapeHtml((offer.carrier_code || '').toUpperCase()) + '</span></div>' +
-                '<div class="mfb-service-info">' +
-                '<span class="mfb-service-name">' + escapeHtml(offer.service_name || '') + '</span>';
+                '<img src="' + (offer.carrier_logo || offer.carrier_logo_fallback || '') + '"' +
+                ' alt="' + escapeHtml((offer.carrier_code || '').toUpperCase()) + '"' +
+                ' class="mfb-carrier-logo"' +
+                ' data-fallback="' + (offer.carrier_logo_fallback || '') + '"' +
+                ' onerror="this.onerror=null; this.src=this.dataset.fallback;"></div>' +
+                '<div class="mfb-service-info">';
+
+            // Only show service name if it's meaningful
+            if (isServiceNameUseful) {
+                html += '<span class="mfb-service-name">' + escapeHtml(serviceName) + '</span>';
+            }
 
             if (offer.relay_delivery) {
                 html += '<span class="mfb-badge-relay">' +
@@ -1099,35 +1096,27 @@
         }
     }
 
-    function initMFB() {
-        console.log('MFB: Initializing...');
+    /**
+     * Escape HTML to prevent XSS
+     */
+    function escapeHtml(text) {
+        if (!text) return '';
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
 
-        // Load offers via AJAX (replaces direct transition)
-        loadOffers();
+    // DOM elements - initialized in initMFB when DOM is ready
+    var relayContainer = null;
+    var searchContainer = null;
+    var selectedRelayDiv = null;
+    var relayInfoDiv = null;
+    var relayCodeInput = null;
+    var currentOfferUuid = null;
 
-        var optionsContainer = document.getElementById('myflyingbox-options');
-        console.log('MFB: optionsContainer =', optionsContainer);
-        if (!optionsContainer) {
-            console.log('MFB: No options container found, exiting');
-            return;
-        }
-
-        var relayContainer = document.getElementById('myflyingbox-relay-container');
-        var searchContainer = document.getElementById('mfb-relay-search');
-        var selectedRelayDiv = document.getElementById('mfb-selected-relay');
-        var relayInfoDiv = document.getElementById('mfb-relay-info');
-        var searchInput = document.getElementById('mfb-search-location');
-        var searchBtn = document.getElementById('mfb-search-btn');
-        var changeBtn = document.getElementById('mfb-change-relay');
-        var relayList = document.getElementById('mfb-relay-list');
-        var relayCodeInput = document.getElementById('mfb-relay-code');
-        var mapContainer = document.getElementById('mfb-map-container');
-
-        var map = null;
-        var markers = [];
-        var currentOfferUuid = null;
-
-    // Handle offer selection
+    /**
+     * Handle offer selection
+     */
     function selectOffer(radio) {
         if (!radio) {
             console.log('MFB: No radio found');
@@ -1144,11 +1133,9 @@
         for (var i = 0; i < allCards.length; i++) {
             var item = allCards[i];
             item.classList.remove('selected');
-            // Reset inline styles
             item.style.borderColor = '';
             item.style.background = '';
             item.style.boxShadow = '';
-            // Reset check indicator
             var chk = item.querySelector('.mfb-check-indicator');
             if (chk) {
                 chk.style.background = '';
@@ -1159,12 +1146,10 @@
         // Add to current
         var card = radio.closest('.mfb-offer-card');
         card.classList.add('selected');
-        // Apply inline styles - GREEN theme
         card.style.borderColor = '#22c55e';
         card.style.background = 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)';
         card.style.boxShadow = '0 8px 25px rgba(34, 197, 94, 0.25)';
 
-        // Style the check indicator
         var checkIndicator = card.querySelector('.mfb-check-indicator');
         if (checkIndicator) {
             checkIndicator.style.background = '#22c55e';
@@ -1183,30 +1168,63 @@
         if (relayContainer) {
             if (isRelay) {
                 relayContainer.style.display = 'block';
-                if (!relayCodeInput.value) {
-                    selectedRelayDiv.style.display = 'none';
-                    searchContainer.style.display = 'block';
+                if (relayCodeInput && !relayCodeInput.value) {
+                    if (selectedRelayDiv) selectedRelayDiv.style.display = 'none';
+                    if (searchContainer) searchContainer.style.display = 'block';
                 }
             } else {
                 relayContainer.style.display = 'none';
-                relayCodeInput.value = '';
+                if (relayCodeInput) relayCodeInput.value = '';
             }
         }
     }
 
-    // Note: Click handlers are set up in setupOfferHandlers() after AJAX load
-    // Note: Initial offer selection is handled in loadOffers() after AJAX response
-
-    // Save offer selection to server
+    /**
+     * Save offer selection to server
+     */
     function saveOfferSelection(offerId) {
         fetch('/myflyingbox/offer/save', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ cart_id: cartId, offer_id: offerId })
-        }).catch(function(error) {
-            console.error('Error saving offer:', error);
+            body: JSON.stringify({ offer_id: offerId })
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            console.log('MFB: Offer saved', data);
+        })
+        .catch(function(error) {
+            console.error('MFB: Error saving offer', error);
         });
     }
+
+    function initMFB() {
+        console.log('MFB: Initializing...');
+
+        // Load offers via AJAX (replaces direct transition)
+        loadOffers();
+
+        var optionsContainer = document.getElementById('myflyingbox-options');
+        console.log('MFB: optionsContainer =', optionsContainer);
+        if (!optionsContainer) {
+            console.log('MFB: No options container found, exiting');
+            return;
+        }
+
+        // Initialize outer scope variables with DOM elements
+        relayContainer = document.getElementById('myflyingbox-relay-container');
+        searchContainer = document.getElementById('mfb-relay-search');
+        selectedRelayDiv = document.getElementById('mfb-selected-relay');
+        relayInfoDiv = document.getElementById('mfb-relay-info');
+        relayCodeInput = document.getElementById('mfb-relay-code');
+
+        var searchInput = document.getElementById('mfb-search-location');
+        var searchBtn = document.getElementById('mfb-search-btn');
+        var changeBtn = document.getElementById('mfb-change-relay');
+        var relayList = document.getElementById('mfb-relay-list');
+        var mapContainer = document.getElementById('mfb-map-container');
+
+        var map = null;
+        var markers = [];
 
     // Search handlers
     if (searchBtn) {
@@ -1390,13 +1408,6 @@
         if (markers.length > 0) {
             map.fitBounds(bounds);
         }
-    }
-
-    function escapeHtml(text) {
-        if (!text) return '';
-        var div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
     }
 
     } // end initMFB

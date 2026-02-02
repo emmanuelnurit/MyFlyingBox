@@ -7,6 +7,7 @@ use MyFlyingBox\Model\MyFlyingBoxCartRelayQuery;
 use MyFlyingBox\Model\MyFlyingBoxOfferQuery;
 use MyFlyingBox\Model\MyFlyingBoxQuoteQuery;
 use MyFlyingBox\MyFlyingBox;
+use MyFlyingBox\Service\CarrierLogoProvider;
 use MyFlyingBox\Service\LceApiService;
 use MyFlyingBox\Service\QuoteService;
 use Propel\Runtime\ActiveQuery\Criteria;
@@ -350,6 +351,7 @@ class RelayController extends BaseFrontController
 
             $offers = [];
             $hasRelayOffers = false;
+            $logoProvider = new CarrierLogoProvider();
 
             foreach ($dbOffers as $offer) {
                 $service = $offer->getMyFlyingBoxService();
@@ -365,12 +367,15 @@ class RelayController extends BaseFrontController
                 // Apply price surcharges
                 $price = $this->applyPriceSurcharges($offer->getTotalPriceInCents() / 100);
 
+                $carrierCode = $service->getCarrierCode();
                 $offers[] = [
                     'id' => $offer->getId(),
                     'service_id' => $service->getId(),
                     'service_code' => $service->getCode(),
                     'service_name' => $service->getName(),
-                    'carrier_code' => $service->getCarrierCode(),
+                    'carrier_code' => $carrierCode,
+                    'carrier_logo' => $logoProvider->getLogoUrl($carrierCode),
+                    'carrier_logo_fallback' => $logoProvider->generateFallbackSvg($carrierCode),
                     'price' => $price,
                     'price_formatted' => number_format($price, 2, ',', ' ') . ' €',
                     'delivery_days' => $offer->getDeliveryDays(),
