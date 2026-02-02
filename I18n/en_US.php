@@ -378,4 +378,16 @@ return [
     'MyFlyingBox - Delivery confirmation' => 'MyFlyingBox - Delivery confirmation',
     'Your order {$order_ref} has been shipped' => 'Your order {$order_ref} has been shipped',
     'Your order {$order_ref} has been delivered' => 'Your order {$order_ref} has been delivered',
+
+    // API Error Messages
+    'api_error.order_not_booked' => 'The shipment must be booked before this action can be performed.',
+    'api_error.order_already_cancelled' => 'This shipment has already been cancelled.',
+    'api_error.order_already_shipped' => 'This shipment has already been picked up and cannot be modified.',
+    'api_error.order_already_delivered' => 'This shipment has already been delivered.',
+    'api_error.invalid_address' => 'The delivery address is invalid. Please check the address details.',
+    'api_error.authentication_failed' => 'Unable to connect to the shipping service. Please check API credentials in the configuration.',
+    'api_error.no_offers_available' => 'No shipping options are available for this destination.',
+    'api_error.service_unavailable' => 'The shipping service is temporarily unavailable. Please try again later.',
+    'api_error.invalid_parcel' => 'The parcel dimensions or weight are invalid.',
+    'api_error.unknown' => 'An error occurred with the shipping service. Please try again or contact support.',
 ];

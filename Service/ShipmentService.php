@@ -32,15 +32,18 @@ class ShipmentService
 
     private LceApiService $apiService;
     private DimensionService $dimensionService;
+    private ApiErrorTranslator $apiErrorTranslator;
     private LoggerInterface $logger;
 
     public function __construct(
         LceApiService $apiService,
         DimensionService $dimensionService,
+        ApiErrorTranslator $apiErrorTranslator,
         LoggerInterface $logger
     ) {
         $this->apiService = $apiService;
         $this->dimensionService = $dimensionService;
+        $this->apiErrorTranslator = $apiErrorTranslator;
         $this->logger = $logger;
     }
 
@@ -392,11 +395,15 @@ class ShipmentService
             return ['success' => true, 'error' => null];
 
         } catch (\Exception $e) {
-            $this->logger->error('Failed to book shipment: ' . $e->getMessage(), [
+            $translated = $this->apiErrorTranslator->translate($e->getMessage());
+
+            $this->logger->error('Failed to book shipment: ' . $translated['original'], [
                 'shipment_id' => $shipment->getId(),
+                'translated_key' => $translated['key'],
                 'exception' => $e,
             ]);
-            return ['success' => false, 'error' => $e->getMessage()];
+
+            return ['success' => false, 'error' => $translated['message']];
         }
     }
 
