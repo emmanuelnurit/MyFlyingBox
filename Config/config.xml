@@ -52,6 +52,14 @@
         <!-- Carrier Logo Provider -->
         <service id="myflyingbox.carrier_logo.provider" class="MyFlyingBox\Service\CarrierLogoProvider" public="true"/>
 
+        <!-- Module Logo Provider -->
+        <service id="myflyingbox.module_logo.provider" class="MyFlyingBox\Service\ModuleLogoProvider" public="true"/>
+
+        <!-- Smarty Plugin for Module Logo (auto-tagged via SmartyPluginInterface autoconfiguration) -->
+        <service id="myflyingbox.smarty.logo" class="MyFlyingBox\Smarty\MfbLogoPlugin">
+            <argument type="service" id="myflyingbox.module_logo.provider"/>
+        </service>
+
         <!-- CLI Commands -->
         <service id="myflyingbox.command.sync_tracking" class="MyFlyingBox\Command\SyncTrackingCommand">
             <argument type="service" id="myflyingbox.tracking.service"/>
