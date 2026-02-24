@@ -42,6 +42,12 @@ final class ApiErrorTranslator
         'invalid credentials' => 'api_error.authentication_failed',
         'authentication' => 'api_error.authentication_failed',
 
+        // Relay/delivery location errors
+        'delivery_location' => 'api_error.invalid_delivery_location',
+        'location_code' => 'api_error.invalid_delivery_location',
+        'pickup point' => 'api_error.invalid_delivery_location',
+        'point relais' => 'api_error.invalid_delivery_location',
+
         // Offer/service availability errors
         'no offer' => 'api_error.no_offers_available',
         'no service' => 'api_error.no_offers_available',

@@ -16,6 +16,7 @@ use MyFlyingBox\Model\MyFlyingBoxShipmentEvent;
 use MyFlyingBox\MyFlyingBox;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Psr\Log\LoggerInterface;
+use Thelia\Core\Translation\Translator;
 use Thelia\Model\Order;
 use Thelia\Model\OrderAddress;
 
@@ -403,7 +404,12 @@ class ShipmentService
                 'exception' => $e,
             ]);
 
-            return ['success' => false, 'error' => $translated['message']];
+            return [
+                'success' => false,
+                'error' => $translated['message'],
+                'error_raw' => $translated['original'],
+                'error_key' => $translated['key'],
+            ];
         }
     }
 
@@ -1008,7 +1014,8 @@ class ShipmentService
             // Get the first offer (or match by service code)
             $offers = $quoteData['offers'];
             $selectedOffer = null;
-            $hasRelayCode = !empty($shipment->getRelayDeliveryCode());
+            $relayCode = $shipment->getRelayDeliveryCode();
+            $hasRelayCode = !empty($relayCode) && trim($relayCode) !== '';
 
             $this->logger->info('Quote offers received', [
                 'total_offers' => count($offers),
@@ -1027,7 +1034,16 @@ class ShipmentService
 
                 // Exclude relay services if no relay code
                 if (!$hasRelayCode && $isRelayService) {
-                    $this->logger->debug('Excluded relay offer', [
+                    $this->logger->debug('Excluded relay offer (no relay code)', [
+                        'offer_id' => $offer['id'] ?? 'unknown',
+                        'product_code' => $productCode,
+                    ]);
+                    continue;
+                }
+
+                // Exclude non-relay services if relay code IS present
+                if ($hasRelayCode && !$isRelayService) {
+                    $this->logger->debug('Excluded non-relay offer (relay code present)', [
                         'offer_id' => $offer['id'] ?? 'unknown',
                         'product_code' => $productCode,
                     ]);
@@ -1069,6 +1085,21 @@ class ShipmentService
             }
 
             if ($selectedOffer && !empty($selectedOffer['id'])) {
+                // Validate relay-offer consistency
+                $isSelectedOfferRelay = $selectedOffer['product']['preset_delivery_location'] ?? false;
+                if ($hasRelayCode && !$isSelectedOfferRelay) {
+                    $this->logger->error('Relay-offer mismatch: relay code present but selected offer is not a relay service', [
+                        'offer_id' => $selectedOffer['id'],
+                        'product_code' => $selectedOffer['product']['code'] ?? 'unknown',
+                        'relay_code' => $shipment->getRelayDeliveryCode(),
+                        'shipment_id' => $shipment->getId(),
+                    ]);
+                    return [
+                        'offer_id' => null,
+                        'error' => Translator::getInstance()->trans('api_error.relay_service_mismatch', [], 'myflyingbox'),
+                    ];
+                }
+
                 // Save offer ID for future reference
                 $shipment->setApiOfferUuid($selectedOffer['id']);
                 $shipment->setApiQuoteUuid($quoteData['id'] ?? null);
@@ -1095,9 +1126,13 @@ class ShipmentService
                 $service = MyFlyingBoxServiceQuery::create()->findPk($shipment->getServiceId());
                 $serviceName = $service ? " for service '{$service->getName()}'" : '';
             }
+            $filterReason = $hasRelayCode
+                ? 'Only relay-compatible offers are accepted when a relay code is set.'
+                : 'Relay and return services were excluded.';
+
             return [
                 'offer_id' => null,
-                'error' => "No valid offer found{$serviceName}. " . count($offers) . " offers received but all were filtered out (relay/return services excluded).",
+                'error' => "No valid offer found{$serviceName}. " . count($offers) . " offers received but all were filtered out. {$filterReason}",
             ];
 
         } catch (\Exception $e) {
