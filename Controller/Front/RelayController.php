@@ -99,6 +99,7 @@ class RelayController extends BaseFrontController
         try {
             $query = $request->get('query', '');
             $cartId = $request->get('cart_id');
+            $offerId = $request->get('offer_id'); // Optional: the specific offer selected by customer
 
             if (empty($query) || !$cartId) {
                 return new JsonResponse([
@@ -120,13 +121,30 @@ class RelayController extends BaseFrontController
                 ]);
             }
 
-            // Find a relay offer
-            $relayOffer = MyFlyingBoxOfferQuery::create()
-                ->filterByQuoteId($quote->getId())
-                ->useMyFlyingBoxServiceQuery()
-                    ->filterByRelayDelivery(true)
-                ->endUse()
-                ->findOne();
+            // Find the relay offer to use for location search.
+            // Prefer the offer explicitly selected by the customer (passed as offer_id),
+            // so that relay points are filtered to that carrier's network only
+            // (e.g. Mondial Relay should only show its own pick-up points).
+            $relayOffer = null;
+            if ($offerId) {
+                $relayOffer = MyFlyingBoxOfferQuery::create()
+                    ->filterById($offerId)
+                    ->filterByQuoteId($quote->getId())
+                    ->useMyFlyingBoxServiceQuery()
+                        ->filterByRelayDelivery(true)
+                    ->endUse()
+                    ->findOne();
+            }
+
+            // Fallback: use the first relay offer from the quote when no specific offer was provided
+            if (!$relayOffer) {
+                $relayOffer = MyFlyingBoxOfferQuery::create()
+                    ->filterByQuoteId($quote->getId())
+                    ->useMyFlyingBoxServiceQuery()
+                        ->filterByRelayDelivery(true)
+                    ->endUse()
+                    ->findOne();
+            }
 
             if (!$relayOffer || !$relayOffer->getApiOfferUuid()) {
                 return new JsonResponse([

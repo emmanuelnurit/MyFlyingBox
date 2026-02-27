@@ -61,6 +61,22 @@ final class ApiErrorTranslator
         '(503)' => 'api_error.service_unavailable',
         '(500)' => 'api_error.service_unavailable',
         '(502)' => 'api_error.service_unavailable',
+
+        // French-language API errors (LCE API may return errors in French)
+        // Access/configuration errors (e.g. relay delivery not enabled on account)
+        'aucun droit' => 'api_error.relay_access_denied',
+        'droit d\'accès' => 'api_error.relay_access_denied',
+        'vérification de la configuration' => 'api_error.relay_configuration_error',
+        'configuration' => 'api_error.relay_configuration_error',
+
+        // French order state errors
+        'annulé' => 'api_error.order_already_cancelled',
+        'expédié' => 'api_error.order_already_shipped',
+        'livré' => 'api_error.order_already_delivered',
+
+        // French address errors
+        'adresse' => 'api_error.invalid_address',
+        'code postal' => 'api_error.invalid_address',
     ];
 
     /**

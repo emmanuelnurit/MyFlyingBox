@@ -319,10 +319,20 @@ class ShipmentService
             ];
 
             // Add relay code if present and not empty
+            // Per LCE API v2 docs: the relay/pickup location code goes inside the recipient object
+            // as recipient.location_code - NOT as a top-level delivery_location_code field.
+            // When location_code is specified, the API overrides street/city/state with the pickup point's address.
             $relayCode = $shipment->getRelayDeliveryCode();
             $hasRelayCode = !empty($relayCode) && trim($relayCode) !== '';
             if ($hasRelayCode) {
-                $orderParams['delivery_location_code'] = $relayCode;
+                $orderParams['recipient']['location_code'] = $relayCode;
+
+                $this->logger->info('Booking relay shipment', [
+                    'relay_code' => $relayCode,
+                    'relay_name' => $shipment->getRelayName(),
+                    'relay_city' => $shipment->getRelayCity(),
+                    'shipment_id' => $shipment->getId(),
+                ]);
             }
 
             // Always request a fresh quote when booking
@@ -1027,7 +1037,17 @@ class ShipmentService
 
                 // Exclude relay services if no relay code
                 if (!$hasRelayCode && $isRelayService) {
-                    $this->logger->debug('Excluded relay offer', [
+                    $this->logger->debug('Excluded relay offer (no relay code)', [
+                        'offer_id' => $offer['id'] ?? 'unknown',
+                        'product_code' => $productCode,
+                    ]);
+                    continue;
+                }
+
+                // Exclude non-relay services if a relay code is present
+                // (sending delivery_location_code with a non-relay offer causes an API error)
+                if ($hasRelayCode && !$isRelayService) {
+                    $this->logger->debug('Excluded non-relay offer (relay code present)', [
                         'offer_id' => $offer['id'] ?? 'unknown',
                         'product_code' => $productCode,
                     ]);
@@ -1063,7 +1083,7 @@ class ShipmentService
                 }
             }
 
-            // Fallback to first non-relay offer
+            // Fallback to first filtered offer (relay if relay code present, non-relay otherwise)
             if (!$selectedOffer && !empty($filteredOffers)) {
                 $selectedOffer = $filteredOffers[0];
             }
