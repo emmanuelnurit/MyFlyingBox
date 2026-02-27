@@ -393,5 +393,9 @@ return [
     'api_error.offer_expired' => 'The shipping offer has expired. Please refresh the rates.',
     'api_error.service_unavailable' => 'The shipping service is temporarily unavailable. Please try again later.',
     'api_error.invalid_parcel' => 'The parcel dimensions or weight are invalid.',
+    'api_error.invalid_delivery_location' => 'The relay/pickup point code is invalid or does not match any available delivery location. Please check the selected pickup point.',
+    'api_error.relay_service_mismatch' => 'The selected carrier service does not support relay/pickup point delivery. Please change the carrier service.',
     'api_error.unknown' => 'An error occurred with the shipping service. Please try again or contact support.',
+    'api_error.relay_access_denied' => 'Relay point delivery is not enabled on your MyFlyingBox account. Please contact MyFlyingBox support to activate this feature.',
+    'api_error.relay_configuration_error' => 'Relay delivery configuration error. Please verify that relay delivery is correctly configured in your MyFlyingBox account settings.',
 ];

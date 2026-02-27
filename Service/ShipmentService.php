@@ -6,6 +6,7 @@ use MyFlyingBox\Model\MyFlyingBoxCartRelay;
 use MyFlyingBox\Model\MyFlyingBoxCartRelayQuery;
 use MyFlyingBox\Model\MyFlyingBoxParcel;
 use MyFlyingBox\Model\MyFlyingBoxParcelQuery;
+use MyFlyingBox\Model\MyFlyingBoxQuote;
 use MyFlyingBox\Model\MyFlyingBoxQuoteQuery;
 use MyFlyingBox\Model\MyFlyingBoxOfferQuery;
 use MyFlyingBox\Model\MyFlyingBoxService;
@@ -16,6 +17,7 @@ use MyFlyingBox\Model\MyFlyingBoxShipmentEvent;
 use MyFlyingBox\MyFlyingBox;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Psr\Log\LoggerInterface;
+use Thelia\Core\Translation\Translator;
 use Thelia\Model\Order;
 use Thelia\Model\OrderAddress;
 
@@ -60,12 +62,6 @@ class ShipmentService
                 return null;
             }
 
-            // Get service
-            $service = null;
-            if ($serviceId) {
-                $service = MyFlyingBoxServiceQuery::create()->findPk($serviceId);
-            }
-
             // Get relay if selected
             $relay = null;
             if ($order->getCartId()) {
@@ -76,6 +72,7 @@ class ShipmentService
 
             // Get quote UUID from cart if available
             $quoteUuid = null;
+            $quote = null;
             if ($order->getCartId()) {
                 $quote = MyFlyingBoxQuoteQuery::create()
                     ->filterByCartId($order->getCartId())
@@ -84,6 +81,27 @@ class ShipmentService
                 if ($quote) {
                     $quoteUuid = $quote->getApiQuoteUuid();
                 }
+            }
+
+            // Recover serviceId from quote offers when session-based value is missing
+            if (!$serviceId && $quote) {
+                $bestOffer = $this->findBestOfferFromQuote($quote, $relay);
+                if ($bestOffer) {
+                    $serviceId = $bestOffer->getServiceId();
+                    $offerUuid = $bestOffer->getApiOfferUuid();
+                    $this->logger->info('Recovered serviceId from quote offers', [
+                        'service_id' => $serviceId,
+                        'offer_uuid' => $offerUuid,
+                        'has_relay' => $relay !== null,
+                        'order_id' => $order->getId(),
+                    ]);
+                }
+            }
+
+            // Get service
+            $service = null;
+            if ($serviceId) {
+                $service = MyFlyingBoxServiceQuery::create()->findPk($serviceId);
             }
 
             // Create shipment
@@ -135,6 +153,25 @@ class ShipmentService
             ]);
             return null;
         }
+    }
+
+    /**
+     * Find the best matching offer from a quote based on relay selection.
+     *
+     * When a relay is selected, returns the cheapest active relay offer.
+     * Otherwise, returns the cheapest active non-relay offer.
+     */
+    private function findBestOfferFromQuote(MyFlyingBoxQuote $quote, ?MyFlyingBoxCartRelay $relay): ?\MyFlyingBox\Model\MyFlyingBoxOffer
+    {
+        $query = MyFlyingBoxOfferQuery::create()
+            ->filterByQuoteId($quote->getId())
+            ->useMyFlyingBoxServiceQuery()
+                ->filterByActive(true)
+                ->filterByRelayDelivery($relay !== null)
+            ->endUse()
+            ->orderByTotalPriceInCents(Criteria::ASC);
+
+        return $query->findOne();
     }
 
     /**
@@ -319,10 +356,20 @@ class ShipmentService
             ];
 
             // Add relay code if present and not empty
+            // Per LCE API v2 docs: the relay/pickup location code goes inside the recipient object
+            // as recipient.location_code - NOT as a top-level delivery_location_code field.
+            // When location_code is specified, the API overrides street/city/state with the pickup point's address.
             $relayCode = $shipment->getRelayDeliveryCode();
             $hasRelayCode = !empty($relayCode) && trim($relayCode) !== '';
             if ($hasRelayCode) {
-                $orderParams['delivery_location_code'] = $relayCode;
+                $orderParams['recipient']['location_code'] = $relayCode;
+
+                $this->logger->info('Booking relay shipment', [
+                    'relay_code' => $relayCode,
+                    'relay_name' => $shipment->getRelayName(),
+                    'relay_city' => $shipment->getRelayCity(),
+                    'shipment_id' => $shipment->getId(),
+                ]);
             }
 
             // Always request a fresh quote when booking
@@ -403,7 +450,12 @@ class ShipmentService
                 'exception' => $e,
             ]);
 
-            return ['success' => false, 'error' => $translated['message']];
+            return [
+                'success' => false,
+                'error' => $translated['message'],
+                'error_raw' => $translated['original'],
+                'error_key' => $translated['key'],
+            ];
         }
     }
 
@@ -1008,7 +1060,8 @@ class ShipmentService
             // Get the first offer (or match by service code)
             $offers = $quoteData['offers'];
             $selectedOffer = null;
-            $hasRelayCode = !empty($shipment->getRelayDeliveryCode());
+            $relayCode = $shipment->getRelayDeliveryCode();
+            $hasRelayCode = !empty($relayCode) && trim($relayCode) !== '';
 
             $this->logger->info('Quote offers received', [
                 'total_offers' => count($offers),
@@ -1027,7 +1080,16 @@ class ShipmentService
 
                 // Exclude relay services if no relay code
                 if (!$hasRelayCode && $isRelayService) {
-                    $this->logger->debug('Excluded relay offer', [
+                    $this->logger->debug('Excluded relay offer (no relay code)', [
+                        'offer_id' => $offer['id'] ?? 'unknown',
+                        'product_code' => $productCode,
+                    ]);
+                    continue;
+                }
+
+                // Exclude non-relay services if relay code IS present
+                if ($hasRelayCode && !$isRelayService) {
+                    $this->logger->debug('Excluded non-relay offer (relay code present)', [
                         'offer_id' => $offer['id'] ?? 'unknown',
                         'product_code' => $productCode,
                     ]);
@@ -1063,12 +1125,27 @@ class ShipmentService
                 }
             }
 
-            // Fallback to first non-relay offer
+            // Fallback to first filtered offer (relay if relay code present, non-relay otherwise)
             if (!$selectedOffer && !empty($filteredOffers)) {
                 $selectedOffer = $filteredOffers[0];
             }
 
             if ($selectedOffer && !empty($selectedOffer['id'])) {
+                // Validate relay-offer consistency
+                $isSelectedOfferRelay = $selectedOffer['product']['preset_delivery_location'] ?? false;
+                if ($hasRelayCode && !$isSelectedOfferRelay) {
+                    $this->logger->error('Relay-offer mismatch: relay code present but selected offer is not a relay service', [
+                        'offer_id' => $selectedOffer['id'],
+                        'product_code' => $selectedOffer['product']['code'] ?? 'unknown',
+                        'relay_code' => $shipment->getRelayDeliveryCode(),
+                        'shipment_id' => $shipment->getId(),
+                    ]);
+                    return [
+                        'offer_id' => null,
+                        'error' => Translator::getInstance()->trans('api_error.relay_service_mismatch', [], 'myflyingbox'),
+                    ];
+                }
+
                 // Save offer ID for future reference
                 $shipment->setApiOfferUuid($selectedOffer['id']);
                 $shipment->setApiQuoteUuid($quoteData['id'] ?? null);
@@ -1095,9 +1172,13 @@ class ShipmentService
                 $service = MyFlyingBoxServiceQuery::create()->findPk($shipment->getServiceId());
                 $serviceName = $service ? " for service '{$service->getName()}'" : '';
             }
+            $filterReason = $hasRelayCode
+                ? 'Only relay-compatible offers are accepted when a relay code is set.'
+                : 'Relay and return services were excluded.';
+
             return [
                 'offer_id' => null,
-                'error' => "No valid offer found{$serviceName}. " . count($offers) . " offers received but all were filtered out (relay/return services excluded).",
+                'error' => "No valid offer found{$serviceName}. " . count($offers) . " offers received but all were filtered out. {$filterReason}",
             ];
 
         } catch (\Exception $e) {

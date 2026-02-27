@@ -2,6 +2,7 @@
 
 namespace MyFlyingBox\Hook;
 
+use MyFlyingBox\Model\MyFlyingBoxCartRelayQuery;
 use MyFlyingBox\Model\MyFlyingBoxOfferQuery;
 use MyFlyingBox\Model\MyFlyingBoxParcelQuery;
 use MyFlyingBox\Model\MyFlyingBoxQuoteQuery;
@@ -66,14 +67,34 @@ class BackHook extends BaseHook
                 ->findOne();
 
             if ($quote) {
-                // Get the first offer (usually the one selected or cheapest)
-                $offer = MyFlyingBoxOfferQuery::create()
-                    ->filterByQuoteId($quote->getId())
-                    ->orderByTotalPriceInCents(Criteria::ASC)
+                // If the customer chose a relay point, pre-select the relay service
+                // so the admin doesn't accidentally book with a non-relay service
+                $cartRelay = MyFlyingBoxCartRelayQuery::create()
+                    ->filterByCartId($order->getCartId())
                     ->findOne();
 
-                if ($offer) {
-                    $selectedServiceId = $offer->getServiceId();
+                if ($cartRelay && $cartRelay->getRelayCode()) {
+                    // Pre-select the relay service for this quote
+                    $relayOffer = MyFlyingBoxOfferQuery::create()
+                        ->filterByQuoteId($quote->getId())
+                        ->useMyFlyingBoxServiceQuery()
+                            ->filterByRelayDelivery(true)
+                        ->endUse()
+                        ->findOne();
+
+                    if ($relayOffer) {
+                        $selectedServiceId = $relayOffer->getServiceId();
+                    }
+                } else {
+                    // No relay: pre-select the cheapest available service
+                    $offer = MyFlyingBoxOfferQuery::create()
+                        ->filterByQuoteId($quote->getId())
+                        ->orderByTotalPriceInCents(Criteria::ASC)
+                        ->findOne();
+
+                    if ($offer) {
+                        $selectedServiceId = $offer->getServiceId();
+                    }
                 }
             }
         }

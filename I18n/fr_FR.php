@@ -394,5 +394,9 @@ return [
     'api_error.offer_expired' => 'L\'offre de livraison a expiré. Veuillez actualiser les tarifs.',
     'api_error.service_unavailable' => 'Le service de livraison est temporairement indisponible. Veuillez réessayer dans quelques instants.',
     'api_error.invalid_parcel' => 'Les dimensions ou le poids du colis sont invalides.',
+    'api_error.invalid_delivery_location' => 'Le code du point relais est invalide ou ne correspond à aucun point de livraison disponible. Vérifiez le point relais sélectionné.',
+    'api_error.relay_service_mismatch' => 'Le service sélectionné ne supporte pas la livraison en point relais. Veuillez changer de service transporteur.',
     'api_error.unknown' => 'Une erreur est survenue avec le service de livraison. Veuillez réessayer ou contacter le support.',
+    'api_error.relay_access_denied' => 'La livraison en point relais n\'est pas activée sur votre compte MyFlyingBox. Veuillez contacter le support MyFlyingBox pour activer cette fonctionnalité.',
+    'api_error.relay_configuration_error' => 'Erreur de configuration de la livraison en point relais. Veuillez vérifier que la livraison en point relais est correctement configurée dans votre compte MyFlyingBox.',
 ];

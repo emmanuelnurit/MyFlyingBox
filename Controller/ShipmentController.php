@@ -88,6 +88,7 @@ class ShipmentController extends BaseAdminController
                 return new JsonResponse([
                     'success' => false,
                     'message' => $result['error'] ?? 'Failed to book shipment',
+                    'error_detail' => $result['error_raw'] ?? null,
                 ]);
             }
 
