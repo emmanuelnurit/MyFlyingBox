@@ -209,7 +209,7 @@
                         {/if}
 
                         {if $shipment->getStatus() == 'booked'}
-                            <button type="button" class="mfb-action-btn btn-success mfb-action-tracking" data-shipment-id="{$shipment->getId()}">
+                            <button type="button" class="mfb-action-btn btn-success mfb-action-ship" data-shipment-id="{$shipment->getId()}">
                                 <i class="fa fa-truck"></i>
                                 <span>{intl l="Mark as Shipped" d="myflyingbox"}</span>
                             </button>

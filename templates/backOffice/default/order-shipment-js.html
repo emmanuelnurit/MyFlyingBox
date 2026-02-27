@@ -213,6 +213,52 @@ showConfirmModal(
         hideLoading($btn);
     });
 
+    // Mark as shipped
+    $container.on('click', '.mfb-action-ship', function() {
+        var $btn = $(this);
+        var shipmentId = $btn.data('shipment-id');
+
+        showConfirmModal(
+            '{intl l="Mark as Shipped" d="myflyingbox"|escape:"javascript"}',
+            '{intl l="Are you sure you want to mark this shipment as shipped?" d="myflyingbox"|escape:"javascript"}',
+            function() {
+                showLoading($btn);
+
+                $.ajax({
+                    url: '{url path="/admin/module/myflyingbox/shipment/status"}',
+                    method: 'POST',
+                    data: { shipment_id: shipmentId, status: 'shipped' },
+                    dataType: 'json'
+                })
+                .done(function(response) {
+                    if (response.success) {
+                        showMessage('success', '{intl l="Shipment marked as shipped!" d="myflyingbox"|escape:"javascript"}');
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        showMessage('danger', response.message || '{intl l="Failed to update shipment status" d="myflyingbox"|escape:"javascript"}');
+                    }
+                })
+                .fail(function(xhr) {
+                    var msg = '{intl l="An error occurred" d="myflyingbox"|escape:"javascript"}';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg = xhr.responseJSON.message;
+                    }
+                    showMessage('danger', msg);
+                })
+                .always(function() {
+                    hideLoading($btn);
+                });
+            },
+            {
+                type: 'info',
+                confirmText: '{intl l="Confirm" d="myflyingbox"|escape:"javascript"}',
+                confirmClass: 'btn-success'
+            }
+        );
+    });
+
     // Update tracking
     $container.on('click', '.mfb-action-tracking', function() {
         var $btn = $(this);
