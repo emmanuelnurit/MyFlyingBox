@@ -1186,7 +1186,7 @@
         fetch('/myflyingbox/offer/save', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ offer_id: offerId })
+            body: JSON.stringify({ offer_id: offerId, cart_id: cartId })
         })
         .then(function(response) { return response.json(); })
         .then(function(data) {
@@ -1257,7 +1257,15 @@
     function searchRelayPoints(query) {
         relayList.innerHTML = '<div class="mfb-loading">{intl l="Recherche en cours..." d="myflyingbox" js=1}</div>';
 
-        fetch('/myflyingbox/relay-points?query=' + encodeURIComponent(query) + '&cart_id=' + cartId)
+        // Pass the currently selected offer ID so the API returns relay points
+        // from the correct carrier's network (e.g. only Mondial Relay pick-up points)
+        var relaySearchUrl = '/myflyingbox/relay-points?query=' + encodeURIComponent(query) + '&cart_id=' + cartId;
+        var selectedRadio = document.querySelector('.mfb-offer-radio:checked');
+        if (selectedRadio && selectedRadio.value) {
+            relaySearchUrl += '&offer_id=' + encodeURIComponent(selectedRadio.value);
+        }
+
+        fetch(relaySearchUrl)
             .then(function(response) { return response.json(); })
             .then(function(data) {
                 if (data.success && data.relays && data.relays.length > 0) {

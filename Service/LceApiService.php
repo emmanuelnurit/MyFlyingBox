@@ -127,14 +127,7 @@ class LceApiService
 
         // Handle API failure status (may return HTTP 200 but with status: failure)
         if (isset($decoded['status']) && $decoded['status'] === 'failure') {
-            $errorMessage = 'Unknown API error';
-            if (isset($decoded['error'])) {
-                if (is_array($decoded['error'])) {
-                    $errorMessage = $decoded['error']['message'] ?? $decoded['error']['type'] ?? 'Unknown error';
-                } else {
-                    $errorMessage = $decoded['error'];
-                }
-            }
+            $errorMessage = $this->extractErrorMessage($decoded);
 
             $this->logger->error('LCE API returned failure status', [
                 'http_code' => $httpCode,
@@ -147,17 +140,7 @@ class LceApiService
 
         // Handle HTTP errors
         if ($httpCode >= 400) {
-            // API v2 error format: {"status":"failure","error":{"type":"...","message":"..."}}
-            $errorMessage = 'Unknown API error';
-            if (isset($decoded['error'])) {
-                if (is_array($decoded['error'])) {
-                    $errorMessage = $decoded['error']['message'] ?? $decoded['error']['type'] ?? 'Unknown error';
-                } else {
-                    $errorMessage = $decoded['error'];
-                }
-            } elseif (isset($decoded['message'])) {
-                $errorMessage = $decoded['message'];
-            }
+            $errorMessage = $this->extractErrorMessage($decoded);
 
             $this->logger->error('LCE API HTTP error', [
                 'http_code' => $httpCode,
@@ -169,6 +152,41 @@ class LceApiService
         }
 
         return $decoded ?? [];
+    }
+
+    /**
+     * Extract a meaningful error message from API response
+     *
+     * The LCE API returns errors in this format:
+     * {"error": {"type": "...", "message": "...", "details": ["..."]}}
+     *
+     * The details array often contains the actual specific error,
+     * while message is generic (e.g., "Order not booked.").
+     */
+    private function extractErrorMessage(?array $decoded): string
+    {
+        if (!isset($decoded['error'])) {
+            return $decoded['message'] ?? 'Unknown API error';
+        }
+
+        $error = $decoded['error'];
+
+        if (!is_array($error)) {
+            return $error;
+        }
+
+        // If details are available, use the first detail as it's more specific
+        if (!empty($error['details']) && is_array($error['details'])) {
+            $firstDetail = $error['details'][0];
+            // Extract just the meaningful part if it follows the pattern "CODE : message"
+            if (is_string($firstDetail) && str_contains($firstDetail, ' : ')) {
+                return $firstDetail;
+            }
+            return $firstDetail;
+        }
+
+        // Fall back to message or type
+        return $error['message'] ?? $error['type'] ?? 'Unknown error';
     }
 
     /**
