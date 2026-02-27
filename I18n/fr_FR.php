@@ -397,4 +397,6 @@ return [
     'api_error.invalid_delivery_location' => 'Le code du point relais est invalide ou ne correspond à aucun point de livraison disponible. Vérifiez le point relais sélectionné.',
     'api_error.relay_service_mismatch' => 'Le service sélectionné ne supporte pas la livraison en point relais. Veuillez changer de service transporteur.',
     'api_error.unknown' => 'Une erreur est survenue avec le service de livraison. Veuillez réessayer ou contacter le support.',
+    'api_error.relay_access_denied' => 'La livraison en point relais n\'est pas activée sur votre compte MyFlyingBox. Veuillez contacter le support MyFlyingBox pour activer cette fonctionnalité.',
+    'api_error.relay_configuration_error' => 'Erreur de configuration de la livraison en point relais. Veuillez vérifier que la livraison en point relais est correctement configurée dans votre compte MyFlyingBox.',
 ];
