@@ -962,6 +962,13 @@
                             displaySelectedRelay(data.selected_relay);
                         }
 
+                        // Pre-fill search input with delivery address postal code
+                        var searchInput = document.getElementById('mfb-search-location');
+                        if (searchInput && data.delivery_postal_code && !searchInput.value.trim()) {
+                            searchInput.value = data.delivery_postal_code;
+                            console.log('MFB: Pre-filled search with delivery postal code:', data.delivery_postal_code);
+                        }
+
                         // Auto-select first offer or previously selected
                         if (selectedOfferId) {
                             selectOfferById(selectedOfferId);
@@ -1112,6 +1119,10 @@
     var selectedRelayDiv = null;
     var relayInfoDiv = null;
     var relayCodeInput = null;
+    var relayList = null;
+    var mapContainer = null;
+    var map = null;
+    var markers = [];
     var currentOfferUuid = null;
 
     /**
@@ -1168,9 +1179,26 @@
         if (relayContainer) {
             if (isRelay) {
                 relayContainer.style.display = 'block';
+
+                // Reset relay selection when switching between relay carriers
+                if (relayCodeInput && relayCodeInput.value) {
+                    relayCodeInput.value = '';
+                    if (selectedRelayDiv) selectedRelayDiv.style.display = 'none';
+                    if (searchContainer) searchContainer.style.display = 'block';
+                }
+
                 if (relayCodeInput && !relayCodeInput.value) {
                     if (selectedRelayDiv) selectedRelayDiv.style.display = 'none';
                     if (searchContainer) searchContainer.style.display = 'block';
+
+                    // Auto-search relay points if search field has a value (pre-filled or user-entered)
+                    var searchInput = document.getElementById('mfb-search-location');
+                    if (searchInput && searchInput.value.trim().length >= 2) {
+                        console.log('MFB: Auto-searching relay points with:', searchInput.value.trim());
+                        setTimeout(function() {
+                            searchRelayPoints(searchInput.value.trim());
+                        }, 100);
+                    }
                 }
             } else {
                 relayContainer.style.display = 'none';
@@ -1197,64 +1225,11 @@
         });
     }
 
-    function initMFB() {
-        console.log('MFB: Initializing...');
-
-        // Load offers via AJAX (replaces direct transition)
-        loadOffers();
-
-        var optionsContainer = document.getElementById('myflyingbox-options');
-        console.log('MFB: optionsContainer =', optionsContainer);
-        if (!optionsContainer) {
-            console.log('MFB: No options container found, exiting');
-            return;
-        }
-
-        // Initialize outer scope variables with DOM elements
-        relayContainer = document.getElementById('myflyingbox-relay-container');
-        searchContainer = document.getElementById('mfb-relay-search');
-        selectedRelayDiv = document.getElementById('mfb-selected-relay');
-        relayInfoDiv = document.getElementById('mfb-relay-info');
-        relayCodeInput = document.getElementById('mfb-relay-code');
-
-        var searchInput = document.getElementById('mfb-search-location');
-        var searchBtn = document.getElementById('mfb-search-btn');
-        var changeBtn = document.getElementById('mfb-change-relay');
-        var relayList = document.getElementById('mfb-relay-list');
-        var mapContainer = document.getElementById('mfb-map-container');
-
-        var map = null;
-        var markers = [];
-
-    // Search handlers
-    if (searchBtn) {
-        searchBtn.addEventListener('click', function() {
-            var query = searchInput.value.trim();
-            if (query.length < 2) {
-                alert('{intl l="Veuillez saisir au moins 2 caractères" d="myflyingbox" js=1}');
-                return;
-            }
-            searchRelayPoints(query);
-        });
-    }
-
-    if (searchInput) {
-        searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                searchBtn.click();
-            }
-        });
-    }
-
-    if (changeBtn) {
-        changeBtn.addEventListener('click', function() {
-            selectedRelayDiv.style.display = 'none';
-            searchContainer.style.display = 'block';
-        });
-    }
-
+    /**
+     * Search relay points via API
+     */
     function searchRelayPoints(query) {
+        if (!relayList) return;
         relayList.innerHTML = '<div class="mfb-loading">{intl l="Recherche en cours..." d="myflyingbox" js=1}</div>';
 
         // Pass the currently selected offer ID so the API returns relay points
@@ -1271,7 +1246,6 @@
                 if (data.success && data.relays && data.relays.length > 0) {
                     displayRelayPoints(data.relays);
                 } else {
-                    var errorMsg = data.message || '{intl l="Aucun point relais trouvé" d="myflyingbox" js=1}';
                     relayList.innerHTML = '<div style="padding: 24px; text-align: center; color: #64748b; background: #f8fafc; border-radius: 12px;">' +
                         '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 12px; display: block; color: #94a3b8;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>' +
                         '<p style="margin: 0 0 12px; font-weight: 600; color: #475569;">{intl l="Recherche de points relais indisponible" d="myflyingbox" js=1}</p>' +
@@ -1291,14 +1265,15 @@
     }
 
     function displayRelayPoints(relays) {
+        if (!relayList) return;
         relayList.innerHTML = '';
 
         relays.forEach(function(relay, index) {
-            const item = document.createElement('div');
+            var item = document.createElement('div');
             item.className = 'mfb-relay-item';
             item.dataset.code = relay.code;
 
-            let html = '<div class="relay-name">' + escapeHtml(relay.name) + '</div>';
+            var html = '<div class="relay-name">' + escapeHtml(relay.name) + '</div>';
             html += '<div class="relay-address">' + escapeHtml(relay.street) + '<br>' + escapeHtml(relay.postal_code) + ' ' + escapeHtml(relay.city) + '</div>';
             if (relay.distance) {
                 html += '<div class="relay-distance"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> ' + relay.distance + ' km</div>';
@@ -1352,7 +1327,7 @@
 
     function initMap(relays) {
         if (!window.google || !window.google.maps) {
-            const script = document.createElement('script');
+            var script = document.createElement('script');
             script.src = 'https://maps.googleapis.com/maps/api/js?key=' + googleMapsApiKey + '&callback=mfbInitMapCallback';
             script.async = true;
             window.mfbInitMapCallback = function() { createMap(relays); };
@@ -1367,7 +1342,7 @@
         if (!mapContainer) return;
         mapContainer.style.display = 'block';
 
-        const bounds = new google.maps.LatLngBounds();
+        var bounds = new google.maps.LatLngBounds();
         map = new google.maps.Map(document.getElementById('mfb-map'), {
             zoom: 12,
             mapTypeControl: false,
@@ -1380,10 +1355,10 @@
 
         relays.forEach(function(relay, index) {
             if (relay.latitude && relay.longitude) {
-                const position = new google.maps.LatLng(parseFloat(relay.latitude), parseFloat(relay.longitude));
+                var position = new google.maps.LatLng(parseFloat(relay.latitude), parseFloat(relay.longitude));
                 bounds.extend(position);
 
-                const marker = new google.maps.Marker({
+                var marker = new google.maps.Marker({
                     position: position,
                     map: map,
                     title: relay.name,
@@ -1416,6 +1391,60 @@
         if (markers.length > 0) {
             map.fitBounds(bounds);
         }
+    }
+
+    function initMFB() {
+        console.log('MFB: Initializing...');
+
+        // Load offers via AJAX (replaces direct transition)
+        loadOffers();
+
+        var optionsContainer = document.getElementById('myflyingbox-options');
+        console.log('MFB: optionsContainer =', optionsContainer);
+        if (!optionsContainer) {
+            console.log('MFB: No options container found, exiting');
+            return;
+        }
+
+        // Initialize outer scope variables with DOM elements
+        relayContainer = document.getElementById('myflyingbox-relay-container');
+        searchContainer = document.getElementById('mfb-relay-search');
+        selectedRelayDiv = document.getElementById('mfb-selected-relay');
+        relayInfoDiv = document.getElementById('mfb-relay-info');
+        relayCodeInput = document.getElementById('mfb-relay-code');
+        relayList = document.getElementById('mfb-relay-list');
+        mapContainer = document.getElementById('mfb-map-container');
+
+        var searchInput = document.getElementById('mfb-search-location');
+        var searchBtn = document.getElementById('mfb-search-btn');
+        var changeBtn = document.getElementById('mfb-change-relay');
+
+    // Search handlers
+    if (searchBtn) {
+        searchBtn.addEventListener('click', function() {
+            var query = searchInput.value.trim();
+            if (query.length < 2) {
+                alert('{intl l="Veuillez saisir au moins 2 caractères" d="myflyingbox" js=1}');
+                return;
+            }
+            searchRelayPoints(query);
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchBtn.click();
+            }
+        });
+    }
+
+    if (changeBtn) {
+        changeBtn.addEventListener('click', function() {
+            selectedRelayDiv.style.display = 'none';
+            searchContainer.style.display = 'block';
+        });
     }
 
     } // end initMFB
