@@ -4,10 +4,12 @@ namespace MyFlyingBox\Controller\Front;
 
 use MyFlyingBox\Model\MyFlyingBoxCartRelay;
 use MyFlyingBox\Model\MyFlyingBoxCartRelayQuery;
+use MyFlyingBox\Model\MyFlyingBoxOffer;
 use MyFlyingBox\Model\MyFlyingBoxOfferQuery;
 use MyFlyingBox\Model\MyFlyingBoxQuoteQuery;
 use MyFlyingBox\MyFlyingBox;
 use MyFlyingBox\Service\CarrierLogoProvider;
+use MyFlyingBox\Service\DimensionService;
 use MyFlyingBox\Service\LceApiService;
 use MyFlyingBox\Service\QuoteService;
 use Propel\Runtime\ActiveQuery\Criteria;
@@ -94,7 +96,12 @@ class RelayController extends BaseFrontController
     /**
      * Get relay points for a given location
      */
-    public function getRelayPointsAction(Request $request, LceApiService $apiService): JsonResponse
+    public function getRelayPointsAction(
+        Request $request,
+        LceApiService $apiService,
+        DimensionService $dimensionService,
+        EventDispatcherInterface $dispatcher
+    ): JsonResponse
     {
         try {
             $query = $request->get('query', '');
@@ -185,10 +192,26 @@ class RelayController extends BaseFrontController
                 $params['postal_code'] = $postalCode;
             }
 
-            $response = $apiService->getDeliveryLocations(
-                $relayOffer->getApiOfferUuid(),
-                $params
-            );
+            // Check if user searches in a different area than the offer's delivery address
+            $offerUuid = $relayOffer->getApiOfferUuid();
+            if (!empty($postalCode)) {
+                $quotePostalCode = null;
+                if ($quote->getAddressId()) {
+                    $quoteAddress = AddressQuery::create()->findPk($quote->getAddressId());
+                    $quotePostalCode = $quoteAddress?->getZipcode();
+                }
+                if ($quotePostalCode && $quotePostalCode !== $postalCode) {
+                    $tempUuid = $this->getTemporaryRelayOfferUuid(
+                        $apiService, $dimensionService, $dispatcher,
+                        $relayOffer, $postalCode, $countryCode
+                    );
+                    if ($tempUuid) {
+                        $offerUuid = $tempUuid;
+                    }
+                }
+            }
+
+            $response = $apiService->getDeliveryLocations($offerUuid, $params);
 
             // API returns data in 'data' key
             $locations = $response['data'] ?? $response['locations'] ?? [];
@@ -556,6 +579,56 @@ class RelayController extends BaseFrontController
                 'message' => 'Error fetching estimate: ' . $e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Create a temporary API quote to get an offer UUID for relay search in a different area.
+     * The quote is NOT saved to database - it's used only to get a valid offer UUID
+     * for the LCE available_delivery_locations endpoint.
+     */
+    private function getTemporaryRelayOfferUuid(
+        LceApiService $apiService,
+        DimensionService $dimensionService,
+        EventDispatcherInterface $dispatcher,
+        MyFlyingBoxOffer $relayOffer,
+        string $postalCode,
+        string $countryCode
+    ): ?string {
+        try {
+            $cart = $this->getSession()->getSessionCart($dispatcher);
+
+            $quoteParams = [
+                'shipper' => [
+                    'city' => MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_CITY, ''),
+                    'postal_code' => MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_POSTAL_CODE, ''),
+                    'country' => MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_COUNTRY, 'FR'),
+                ],
+                'recipient' => [
+                    'city' => '',
+                    'postal_code' => $postalCode,
+                    'country' => $countryCode,
+                    'is_a_company' => false,
+                ],
+                'parcels' => $dimensionService->getParcelDataFromCart($cart),
+            ];
+
+            // Filter to only the relay carrier's product code for faster response
+            $service = $relayOffer->getMyFlyingBoxService();
+            if ($service) {
+                $quoteParams['product_codes'] = [$service->getCode()];
+            }
+
+            $apiResponse = $apiService->requestQuote($quoteParams);
+            $quoteData = $apiResponse['data'] ?? $apiResponse['quote'] ?? null;
+
+            if (!empty($quoteData['offers'])) {
+                return $quoteData['offers'][0]['id'] ?? null;
+            }
+        } catch (\Exception $e) {
+            // Silently fail - will use original offer UUID as fallback
+        }
+
+        return null;
     }
 
     /**
