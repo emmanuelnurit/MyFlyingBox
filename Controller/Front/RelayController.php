@@ -17,6 +17,8 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Thelia\Controller\Front\BaseFrontController;
 use Thelia\Model\AddressQuery;
 use Thelia\Model\CountryQuery;
+use Thelia\Model\TaxRuleQuery;
+use Thelia\TaxEngine\Calculator;
 
 /**
  * Front-office controller for relay point selection and offer management
@@ -526,6 +528,17 @@ class RelayController extends BaseFrontController
 
             $minPrice = min($prices);
             $carriersCount = count($prices);
+
+            // Apply TVA to min price (same logic as buildOrderPostage in getPostage)
+            $taxRuleId = MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_TAX_RULE_ID);
+            if ($taxRuleId) {
+                $taxRule = TaxRuleQuery::create()->findPk($taxRuleId);
+                if ($taxRule) {
+                    $calculator = new Calculator();
+                    $calculator->loadTaxRuleWithoutProduct($taxRule, $country);
+                    $minPrice = round($calculator->getTaxedPrice($minPrice), 2);
+                }
+            }
 
             // Build carriers label
             if ($carriersCount === 1) {

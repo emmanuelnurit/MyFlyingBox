@@ -61,7 +61,7 @@ class QuoteService
                 ->orderByCreatedAt(Criteria::DESC)
                 ->findOne();
 
-            if ($existingQuote && $this->isQuoteValid($existingQuote)) {
+            if ($existingQuote && $this->isQuoteValid($existingQuote, $cart)) {
                 return $existingQuote;
             }
         } catch (\Exception $e) {
@@ -74,16 +74,27 @@ class QuoteService
     }
 
     /**
-     * Check if a quote is still valid (not expired)
+     * Check if a quote is still valid (not expired and cart not modified since)
      */
-    private function isQuoteValid(MyFlyingBoxQuote $quote): bool
+    private function isQuoteValid(MyFlyingBoxQuote $quote, Cart $cart): bool
     {
         $createdAt = $quote->getCreatedAt();
         if (!$createdAt) {
             return false;
         }
 
-        return (time() - $createdAt->getTimestamp()) < self::QUOTE_VALIDITY_SECONDS;
+        // Quote expired by time (30 min)
+        if ((time() - $createdAt->getTimestamp()) >= self::QUOTE_VALIDITY_SECONDS) {
+            return false;
+        }
+
+        // Quote stale if cart was modified after quote creation
+        $cartUpdatedAt = $cart->getUpdatedAt();
+        if ($cartUpdatedAt && $cartUpdatedAt->getTimestamp() > $createdAt->getTimestamp()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -365,6 +376,9 @@ class QuoteService
         try {
             $offer = MyFlyingBoxOfferQuery::create()
                 ->filterByQuoteId($quote->getId())
+                ->useMyFlyingBoxServiceQuery()
+                    ->filterByActive(true)
+                ->endUse()
                 ->orderByTotalPriceInCents(Criteria::ASC)
                 ->findOne();
 
