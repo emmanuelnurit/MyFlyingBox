@@ -1180,6 +1180,13 @@
                 if (relayCodeInput && !relayCodeInput.value) {
                     if (selectedRelayDiv) selectedRelayDiv.style.display = 'none';
                     if (searchContainer) searchContainer.style.display = 'block';
+
+                    // Lancer automatiquement la recherche de relais si un code postal est disponible
+                    var searchInput = document.getElementById('mfb-search-location');
+                    if (searchInput && searchInput.value.trim().length >= 2) {
+                        console.log('MFB: Auto-searching relay points for new offer');
+                        searchRelayPoints(searchInput.value.trim());
+                    }
                 }
             } else {
                 relayContainer.style.display = 'none';
