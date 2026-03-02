@@ -1174,9 +1174,22 @@
         var isRelay = radio.getAttribute('data-relay-delivery') === '1';
         currentOfferUuid = radio.getAttribute('data-api-uuid');
 
+        // Détecter changement d'offre (changement de transporteur)
+        var offerChanged = selectedOfferId && selectedOfferId != radio.value;
+
         if (relayContainer) {
             if (isRelay) {
                 relayContainer.style.display = 'block';
+
+                // Si changement d'offre, réinitialiser la sélection de relais
+                if (offerChanged && relayCodeInput) {
+                    console.log('MFB: Offer changed, resetting relay selection');
+                    relayCodeInput.value = '';
+                    if (selectedRelayDiv) selectedRelayDiv.style.display = 'none';
+                    if (searchContainer) searchContainer.style.display = 'block';
+                }
+
+                // Afficher le formulaire de recherche si pas de relais sélectionné
                 if (relayCodeInput && !relayCodeInput.value) {
                     if (selectedRelayDiv) selectedRelayDiv.style.display = 'none';
                     if (searchContainer) searchContainer.style.display = 'block';
@@ -1193,6 +1206,9 @@
                 if (relayCodeInput) relayCodeInput.value = '';
             }
         }
+
+        // Mettre à jour l'ID de l'offre sélectionnée
+        selectedOfferId = radio.value;
     }
 
     /**
