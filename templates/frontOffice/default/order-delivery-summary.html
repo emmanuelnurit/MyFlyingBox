@@ -47,9 +47,18 @@
                 </div>
             </div>
             {elseif $selected_offer.is_relay && !$selected_relay}
-            <div class="mfb-relay-warning">
-                <i class="fa fa-exclamation-triangle"></i>
-                {intl l="Aucun point relais sélectionné" d="myflyingbox"}
+            <div class="mfb-relay-warning-block">
+                <div class="mfb-relay-warning-icon">
+                    <i class="fa fa-exclamation-triangle fa-2x"></i>
+                </div>
+                <div class="mfb-relay-warning-content">
+                    <strong>{intl l="Point relais non sélectionné" d="myflyingbox"}</strong>
+                    <p>{intl l="Vous devez sélectionner un point relais pour cette méthode de livraison." d="myflyingbox"}</p>
+                    <a href="{url path="/order/delivery"}" class="mfb-btn-select-relay">
+                        <i class="fa fa-map-marker"></i>
+                        {intl l="Sélectionner un point relais" d="myflyingbox"}
+                    </a>
+                </div>
             </div>
             {/if}
         </div>
@@ -177,16 +186,58 @@
     line-height: 1.5;
 }
 
-.mfb-relay-warning {
+.mfb-relay-warning-block {
     margin-top: 15px;
-    padding: 10px;
-    background: #fff3e0;
-    border-radius: 6px;
-    color: #e65100;
-    font-size: 0.9rem;
+    padding: 15px;
+    background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+    border: 2px solid #f97316;
+    border-radius: 8px;
     display: flex;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.mfb-relay-warning-icon {
+    color: #ea580c;
+    flex-shrink: 0;
+    padding-top: 2px;
+}
+
+.mfb-relay-warning-content {
+    flex: 1;
+}
+
+.mfb-relay-warning-content strong {
+    display: block;
+    color: #c2410c;
+    font-size: 1rem;
+    margin-bottom: 4px;
+}
+
+.mfb-relay-warning-content p {
+    margin: 0 0 10px;
+    color: #9a3412;
+    font-size: 0.9rem;
+}
+
+.mfb-btn-select-relay {
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    padding: 8px 16px;
+    background: #f97316;
+    color: white !important;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+.mfb-btn-select-relay:hover {
+    background: #ea580c;
+    text-decoration: none;
+    color: white !important;
 }
 
 .mfb-summary-footer {
