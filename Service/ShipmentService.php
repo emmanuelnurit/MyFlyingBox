@@ -1146,12 +1146,32 @@ class ShipmentService
             $serviceName = '';
             if ($shipment->getServiceId()) {
                 $service = MyFlyingBoxServiceQuery::create()->findPk($shipment->getServiceId());
-                $serviceName = $service ? " for service '{$service->getName()}'" : '';
+                $serviceName = $service ? $service->getName() : '';
             }
-            return [
-                'offer_id' => null,
-                'error' => "No valid offer found{$serviceName}. " . count($offers) . " offers received but all were filtered out (relay/return services excluded).",
-            ];
+
+            // Differentiate error message based on context
+            if ($hasRelayCode) {
+                $availableCarriers = array_unique(array_map(
+                    fn(array $o) => $o['product']['carrier_code'] ?? 'unknown',
+                    $offers
+                ));
+                $error = sprintf(
+                    "Aucune offre de livraison en point relais disponible pour cette route. "
+                    . "Le transporteur relay%s n'est pas propose par l'API pour ce trajet. "
+                    . "Transporteurs disponibles : %s. "
+                    . "Verifiez la configuration API (staging vs production).",
+                    $serviceName ? " ({$serviceName})" : '',
+                    implode(', ', $availableCarriers)
+                );
+            } else {
+                $error = sprintf(
+                    "No valid offer found%s. %d offers received but all were filtered out (relay/return services excluded).",
+                    $serviceName ? " for service '{$serviceName}'" : '',
+                    count($offers)
+                );
+            }
+
+            return ['offer_id' => null, 'error' => $error];
 
         } catch (\Exception $e) {
             $this->logger->error('Failed to get offer from quote: ' . $e->getMessage());
