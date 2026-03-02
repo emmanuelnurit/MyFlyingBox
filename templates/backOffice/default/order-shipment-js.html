@@ -177,7 +177,14 @@ showConfirmModal(
                             location.reload();
                         }, 1000);
                     } else {
-                        showMessage('danger', response.message || '{intl l="Failed to book shipment" d="myflyingbox"|escape:"javascript"}');
+                        var errorHtml = response.message || '{intl l="Failed to book shipment" d="myflyingbox"|escape:"javascript"}';
+                        if (response.error_detail && response.error_detail !== response.message) {
+                            errorHtml += '<br><small class="text-muted" style="font-size: 0.85em;">'
+                                + '<i class="fa fa-code"></i> API : '
+                                + $('<span>').text(response.error_detail).html()
+                                + '</small>';
+                        }
+                        showMessage('danger', errorHtml);
                     }
                 })
                 .fail(function(xhr) {

@@ -17,6 +17,7 @@ use MyFlyingBox\Model\MyFlyingBoxShipmentEvent;
 use MyFlyingBox\MyFlyingBox;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Psr\Log\LoggerInterface;
+use Thelia\Core\Translation\Translator;
 use Thelia\Model\Order;
 use Thelia\Model\OrderAddress;
 
@@ -449,7 +450,12 @@ class ShipmentService
                 'exception' => $e,
             ]);
 
-            return ['success' => false, 'error' => $translated['message']];
+            return [
+                'success' => false,
+                'error' => $translated['message'],
+                'error_raw' => $translated['original'],
+                'error_key' => $translated['key'],
+            ];
         }
     }
 
@@ -1054,7 +1060,8 @@ class ShipmentService
             // Get the first offer (or match by service code)
             $offers = $quoteData['offers'];
             $selectedOffer = null;
-            $hasRelayCode = !empty($shipment->getRelayDeliveryCode());
+            $relayCode = $shipment->getRelayDeliveryCode();
+            $hasRelayCode = !empty($relayCode) && trim($relayCode) !== '';
 
             $this->logger->info('Quote offers received', [
                 'total_offers' => count($offers),
@@ -1145,6 +1152,21 @@ class ShipmentService
             }
 
             if ($selectedOffer && !empty($selectedOffer['id'])) {
+                // Validate relay-offer consistency
+                $isSelectedOfferRelay = $selectedOffer['product']['preset_delivery_location'] ?? false;
+                if ($hasRelayCode && !$isSelectedOfferRelay) {
+                    $this->logger->error('Relay-offer mismatch: relay code present but selected offer is not a relay service', [
+                        'offer_id' => $selectedOffer['id'],
+                        'product_code' => $selectedOffer['product']['code'] ?? 'unknown',
+                        'relay_code' => $shipment->getRelayDeliveryCode(),
+                        'shipment_id' => $shipment->getId(),
+                    ]);
+                    return [
+                        'offer_id' => null,
+                        'error' => Translator::getInstance()->trans('api_error.relay_service_mismatch', [], 'myflyingbox'),
+                    ];
+                }
+
                 // Save offer ID for future reference
                 $shipment->setApiOfferUuid($selectedOffer['id']);
                 $shipment->setApiQuoteUuid($quoteData['id'] ?? null);

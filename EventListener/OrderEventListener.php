@@ -2,6 +2,7 @@
 
 namespace MyFlyingBox\EventListener;
 
+use MyFlyingBox\Model\MyFlyingBoxCartRelayQuery;
 use MyFlyingBox\Model\MyFlyingBoxOfferQuery;
 use MyFlyingBox\Model\MyFlyingBoxShipmentQuery;
 use MyFlyingBox\MyFlyingBox;
@@ -112,6 +113,9 @@ class OrderEventListener implements EventSubscriberInterface
                     $offerUuid = $offer->getApiOfferUuid();
                     $this->logger->info('[MFB] Offer found: serviceId=' . $serviceId . ', offerUuid=' . $offerUuid);
 
+                    // Validate relay selection if required
+                    $this->validateRelaySelection($order->getCartId(), $offer);
+
                     // Clear selection from session after use
                     $session->remove('mfb_selected_offer_id');
                 } else {
@@ -200,5 +204,35 @@ class OrderEventListener implements EventSubscriberInterface
             $this->shipmentService->updateStatus($shipment, ShipmentService::STATUS_SHIPPED);
             $this->logger->info('[MFB] Shipment ' . $shipment->getId() . ' status updated to shipped');
         }
+    }
+
+    /**
+     * Validate relay selection for relay delivery offers
+     *
+     * @param int $cartId Cart identifier
+     * @param \MyFlyingBox\Model\MyFlyingBoxOffer $offer Selected offer
+     * @throws \Exception if relay required but not selected
+     */
+    private function validateRelaySelection(int $cartId, \MyFlyingBox\Model\MyFlyingBoxOffer $offer): void
+    {
+        $service = $offer->getMyFlyingBoxService();
+
+        if (!$service || !$service->getRelayDelivery()) {
+            // Not a relay offer, no validation needed
+            return;
+        }
+
+        $this->logger->info('[MFB] Relay delivery required, validating relay selection');
+
+        $cartRelay = MyFlyingBoxCartRelayQuery::create()
+            ->filterByCartId($cartId)
+            ->findOne();
+
+        if (!$cartRelay || !$cartRelay->getRelayCode()) {
+            $this->logger->error('[MFB] Relay required but not selected for cart ' . $cartId);
+            throw new \Exception('Veuillez sélectionner un point relais pour cette livraison.');
+        }
+
+        $this->logger->info('[MFB] Relay validation passed: ' . $cartRelay->getRelayCode());
     }
 }

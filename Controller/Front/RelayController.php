@@ -174,6 +174,14 @@ class RelayController extends BaseFrontController
                 }
             }
 
+            // Validate postal code matches country (basic check for French postal codes)
+            if (!empty($postalCode) && strlen($postalCode) === 5 && $countryCode !== 'FR') {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Code postal invalide pour le pays de livraison sélectionné.',
+                ]);
+            }
+
             // Get delivery locations from API
             $params = [
                 'street' => '',
@@ -300,6 +308,21 @@ class RelayController extends BaseFrontController
      * Get offers for a cart with relay_delivery information
      * This API is used by frontend to load shipping options asynchronously
      * Supports optional quote creation via create_quote=1 parameter
+     *
+     * @param Request $request
+     * @param EventDispatcherInterface $dispatcher
+     * @param QuoteService $quoteService
+     *
+     * @return JsonResponse {
+     *   success: bool,
+     *   offers: array,
+     *   offers_count: int,
+     *   has_relay_offers: bool,
+     *   selected_offer_id: int|null,
+     *   selected_relay: array|null,
+     *   delivery_postal_code: string,  // Code postal de l'adresse de livraison (NEW)
+     *   delivery_country: string        // Code pays ISO (FR, BE, etc.) (NEW)
+     * }
      */
     public function getOffersAction(
         Request $request,
@@ -436,6 +459,7 @@ class RelayController extends BaseFrontController
                 'selected_offer_id' => $selectedOfferId,
                 'selected_relay' => $selectedRelay,
                 'delivery_postal_code' => $deliveryPostalCode,
+                'delivery_country' => $country?->getIsoalpha2() ?? 'FR',
             ]);
 
         } catch (\Exception $e) {

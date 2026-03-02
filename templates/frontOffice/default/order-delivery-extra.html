@@ -865,12 +865,23 @@
                             displaySelectedRelay(data.selected_relay);
                         }
 
-                        // Pré-remplir le champ de recherche avec le code postal de l'adresse
-                        if (data.delivery_postal_code && !data.selected_relay) {
-                            var searchInput = document.getElementById('mfb-search-location');
-                            if (searchInput && !searchInput.value) {
-                                searchInput.value = data.delivery_postal_code;
-                                console.log('MFB: Pre-filled postal code:', data.delivery_postal_code);
+                        // Prefill postal code from delivery address
+                        var deliveryPostalCode = data.delivery_postal_code || '';
+                        var deliveryCountry = data.delivery_country || 'FR';
+                        var searchInput = document.getElementById('mfb-search-location');
+
+                        if (searchInput && deliveryPostalCode) {
+                            searchInput.value = deliveryPostalCode;
+                            searchInput.dataset.country = deliveryCountry;
+                            console.log('MFB: Prefilled postal code:', deliveryPostalCode, 'Country:', deliveryCountry);
+
+                            // Auto-trigger search if relay offer already selected and no relay chosen yet
+                            if (data.selected_offer_id && data.has_relay_offers && !data.selected_relay) {
+                                console.log('MFB: Auto-triggering relay search');
+                                setTimeout(function() {
+                                    var searchBtn = document.getElementById('mfb-search-btn');
+                                    if (searchBtn) searchBtn.click();
+                                }, 800);
                             }
                         }
 
@@ -1024,6 +1035,23 @@
         var div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    /**
+     * Debounce utility - delays function execution until after wait period
+     * Parameters: func (Function to debounce), delay (Delay in milliseconds)
+     * Returns: Debounced function
+     */
+    function debounce(func, delay) {
+        var timeoutId;
+        return function() {
+            var context = this;
+            var args = arguments;
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(function() {
+                func.apply(context, args);
+            }, delay);
+        };
     }
 
     // DOM elements - initialized in initMFB when DOM is ready
@@ -1180,6 +1208,14 @@
         selectedOfferId = radio.value;
 
         // Update submit button state based on relay requirement
+        updateSubmitButtonState();
+    }
+
+    /**
+     * Validate relay selection and update submit button state
+     * Alias for updateSubmitButtonState for backward compatibility
+     */
+    function validateRelaySelection() {
         updateSubmitButtonState();
     }
 
@@ -1426,6 +1462,31 @@
                 searchBtn.click();
             }
         });
+
+        // Auto-search on input change with debounce
+        var debouncedSearch = debounce(function() {
+            var query = searchInput.value.trim();
+
+            // Minimum 3 characters to search
+            if (query.length < 3) return;
+
+            // Validate postal code format if French
+            var country = searchInput.dataset.country || 'FR';
+            var postalCodeMatch = query.match(/\d{5}/);
+            var postalCode = postalCodeMatch ? postalCodeMatch[0] : '';
+
+            if (country === 'FR' && postalCode && postalCode.length === 5) {
+                console.log('MFB: Auto-searching relay points for:', query);
+                searchRelayPoints(query);
+            } else if (query.length >= 5) {
+                // Search by city name or other postal codes
+                console.log('MFB: Auto-searching relay points for:', query);
+                searchRelayPoints(query);
+            }
+        }, 500);
+
+        searchInput.addEventListener('input', debouncedSearch);
+        console.log('MFB: Debounced input listener attached');
     }
 
     if (changeBtn) {
