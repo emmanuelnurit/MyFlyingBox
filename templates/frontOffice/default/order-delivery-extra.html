@@ -962,6 +962,26 @@
                             displaySelectedRelay(data.selected_relay);
                         }
 
+                        // Prefill postal code from delivery address
+                        var deliveryPostalCode = data.delivery_postal_code || '';
+                        var deliveryCountry = data.delivery_country || 'FR';
+                        var searchInput = document.getElementById('mfb-search-location');
+
+                        if (searchInput && deliveryPostalCode) {
+                            searchInput.value = deliveryPostalCode;
+                            searchInput.dataset.country = deliveryCountry;
+                            console.log('MFB: Prefilled postal code:', deliveryPostalCode, 'Country:', deliveryCountry);
+
+                            // Auto-trigger search if relay offer already selected and no relay chosen yet
+                            if (data.selected_offer_id && data.has_relay_offers && !data.selected_relay) {
+                                console.log('MFB: Auto-triggering relay search');
+                                setTimeout(function() {
+                                    var searchBtn = document.getElementById('mfb-search-btn');
+                                    if (searchBtn) searchBtn.click();
+                                }, 800);
+                            }
+                        }
+
                         // Auto-select first offer or previously selected
                         if (selectedOfferId) {
                             selectOfferById(selectedOfferId);
@@ -1106,6 +1126,24 @@
         return div.innerHTML;
     }
 
+    /**
+     * Debounce utility - delays function execution until after wait period
+     * @param {Function} func - Function to debounce
+     * @param {number} delay - Delay in milliseconds
+     * @returns {Function} Debounced function
+     */
+    function debounce(func, delay) {
+        var timeoutId;
+        return function() {
+            var context = this;
+            var args = arguments;
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(function() {
+                func.apply(context, args);
+            }, delay);
+        };
+    }
+
     // DOM elements - initialized in initMFB when DOM is ready
     var relayContainer = null;
     var searchContainer = null;
@@ -1177,6 +1215,46 @@
                 if (relayCodeInput) relayCodeInput.value = '';
             }
         }
+
+        // Validate relay selection
+        validateRelaySelection();
+    }
+
+    /**
+     * Validate relay selection and update submit button state
+     */
+    function validateRelaySelection() {
+        // Try multiple selectors to find submit button (Thelia core template)
+        var submitBtn = document.querySelector('button[value="validate_delivery"]') ||
+                        document.querySelector('form[name="order_delivery"] button[type="submit"]') ||
+                        document.querySelector('.checkout-delivery button[type="submit"]');
+
+        if (!submitBtn) {
+            console.log('MFB: Submit button not found, validation will be backend-only');
+            return;
+        }
+
+        var selectedRadio = document.querySelector('.mfb-offer-radio:checked');
+        var isRelay = selectedRadio && selectedRadio.getAttribute('data-relay-delivery') === '1';
+        var hasRelay = relayCodeInput && relayCodeInput.value;
+
+        if (isRelay && !hasRelay) {
+            // Relay required but not selected - disable button
+            submitBtn.disabled = true;
+            submitBtn.title = 'Veuillez sélectionner un point relais';
+            submitBtn.style.opacity = '0.5';
+            submitBtn.style.cursor = 'not-allowed';
+
+            console.log('MFB: Submit button disabled - relay required but not selected');
+        } else {
+            // Valid state - enable button
+            submitBtn.disabled = false;
+            submitBtn.title = '';
+            submitBtn.style.opacity = '';
+            submitBtn.style.cursor = '';
+
+            console.log('MFB: Submit button enabled');
+        }
     }
 
     /**
@@ -1245,6 +1323,31 @@
                 searchBtn.click();
             }
         });
+
+        // Auto-search on input change with debounce
+        var debouncedSearch = debounce(function() {
+            var query = searchInput.value.trim();
+
+            // Minimum 3 characters to search
+            if (query.length < 3) return;
+
+            // Validate postal code format if French
+            var country = searchInput.dataset.country || 'FR';
+            var postalCodeMatch = query.match(/\d{5}/);
+            var postalCode = postalCodeMatch ? postalCodeMatch[0] : '';
+
+            if (country === 'FR' && postalCode && postalCode.length === 5) {
+                console.log('MFB: Auto-searching relay points for:', query);
+                searchRelayPoints(query);
+            } else if (query.length >= 5) {
+                // Search by city name or other postal codes
+                console.log('MFB: Auto-searching relay points for:', query);
+                searchRelayPoints(query);
+            }
+        }, 500);
+
+        searchInput.addEventListener('input', debouncedSearch);
+        console.log('MFB: Debounced input listener attached');
     }
 
     if (changeBtn) {
@@ -1332,6 +1435,9 @@
                     escapeHtml(relay.postal_code) + ' ' + escapeHtml(relay.city);
                 selectedRelayDiv.style.display = 'flex';
                 searchContainer.style.display = 'none';
+
+                // Validate relay selection
+                validateRelaySelection();
             } else {
                 alert(data.message || '{intl l="Erreur lors de la sélection" d="myflyingbox" js=1}');
             }
