@@ -330,10 +330,16 @@ class RelayController extends BaseFrontController
             // Get delivery address and country
             $address = null;
             $country = null;
+            $deliveryPostalCode = null;
 
             if ($addressId) {
                 $address = AddressQuery::create()->findPk($addressId);
                 $country = $address?->getCountry();
+
+                // Extraire le code postal pour pré-remplir la recherche de relais
+                if ($address) {
+                    $deliveryPostalCode = $address->getZipcode();
+                }
             }
 
             // Fallback to default country
@@ -429,6 +435,7 @@ class RelayController extends BaseFrontController
                 'has_relay_offers' => $hasRelayOffers,
                 'selected_offer_id' => $selectedOfferId,
                 'selected_relay' => $selectedRelay,
+                'delivery_postal_code' => $deliveryPostalCode,
             ]);
 
         } catch (\Exception $e) {

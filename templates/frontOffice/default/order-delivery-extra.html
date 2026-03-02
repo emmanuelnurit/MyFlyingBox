@@ -865,12 +865,24 @@
                             displaySelectedRelay(data.selected_relay);
                         }
 
+                        // Pré-remplir le champ de recherche avec le code postal de l'adresse
+                        if (data.delivery_postal_code && !data.selected_relay) {
+                            var searchInput = document.getElementById('mfb-search-location');
+                            if (searchInput && !searchInput.value) {
+                                searchInput.value = data.delivery_postal_code;
+                                console.log('MFB: Pre-filled postal code:', data.delivery_postal_code);
+                            }
+                        }
+
                         // Auto-select first offer or previously selected
                         if (selectedOfferId) {
                             selectOfferById(selectedOfferId);
                         } else if (data.offers.length > 0) {
                             selectOfferById(data.offers[0].id);
                         }
+
+                        // Safety: ensure button state is correct after initial load
+                        setTimeout(updateSubmitButtonState, 100);
                     }, 500);
                 } else {
                     console.log('MFB: No offers available');
@@ -1020,7 +1032,62 @@
     var selectedRelayDiv = null;
     var relayInfoDiv = null;
     var relayCodeInput = null;
+    var relayList = null;
+    var mapContainer = null;
+    var map = null;
+    var markers = [];
     var currentOfferUuid = null;
+
+    /**
+     * Enable/disable the form submit button based on relay selection state.
+     */
+    function updateSubmitButtonState() {
+        var form = document.getElementById('form-cart-delivery');
+        if (!form) return;
+
+        var submitBtn = form.querySelector('button[type="submit"]');
+        if (!submitBtn) return;
+
+        var warningId = 'mfb-relay-submit-warning';
+        var warning = document.getElementById(warningId);
+
+        var selectedRadio = document.querySelector('.mfb-offer-radio:checked');
+        if (!selectedRadio) {
+            if (warning) warning.style.display = 'none';
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = '';
+            submitBtn.style.cursor = '';
+            return;
+        }
+
+        var isRelay = selectedRadio.getAttribute('data-relay-delivery') === '1';
+        var relayCode = document.getElementById('mfb-relay-code');
+        var hasRelayCode = relayCode && relayCode.value.trim() !== '';
+
+        if (isRelay && !hasRelayCode) {
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.5';
+            submitBtn.style.cursor = 'not-allowed';
+
+            if (!warning) {
+                warning = document.createElement('div');
+                warning.id = warningId;
+                warning.style.cssText = 'margin-top: 12px; padding: 12px 16px; background: #fef3c7; border: 2px solid #fbbf24; border-radius: 10px; color: #92400e; font-size: 0.95rem; font-weight: 500; display: flex; align-items: center; gap: 10px;';
+                warning.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>' +
+                    '<span>{intl l="Veuillez sélectionner un point relais avant de continuer." d="myflyingbox" js=1}</span>';
+                var relaySection = document.getElementById('myflyingbox-relay-container');
+                if (relaySection) {
+                    relaySection.parentNode.insertBefore(warning, relaySection.nextSibling);
+                }
+            }
+            warning.style.display = 'flex';
+        } else {
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = '';
+            submitBtn.style.cursor = '';
+            if (warning) warning.style.display = 'none';
+        }
+    }
 
     /**
      * Handle offer selection
@@ -1073,18 +1140,47 @@
         var isRelay = radio.getAttribute('data-relay-delivery') === '1';
         currentOfferUuid = radio.getAttribute('data-api-uuid');
 
+        // Détecter changement d'offre (changement de transporteur)
+        var offerChanged = selectedOfferId && selectedOfferId != radio.value;
+
         if (relayContainer) {
             if (isRelay) {
                 relayContainer.style.display = 'block';
+
+                // Si changement d'offre, réinitialiser la sélection de relais
+                if (offerChanged && relayCodeInput) {
+                    console.log('MFB: Offer changed, resetting relay selection');
+                    relayCodeInput.value = '';
+                    if (selectedRelayDiv) selectedRelayDiv.style.display = 'none';
+                    if (searchContainer) searchContainer.style.display = 'block';
+                }
+
+                // Afficher le formulaire de recherche si pas de relais sélectionné
                 if (relayCodeInput && !relayCodeInput.value) {
                     if (selectedRelayDiv) selectedRelayDiv.style.display = 'none';
                     if (searchContainer) searchContainer.style.display = 'block';
+
+                    // Lancer automatiquement la recherche de relais si un code postal est disponible
+                    var searchInput = document.getElementById('mfb-search-location');
+                    if (searchInput && searchInput.value.trim().length >= 2) {
+                        console.log('MFB: Auto-searching relay points for new offer');
+                        // setTimeout ensures searchRelayPoints is defined (async execution)
+                        setTimeout(function() {
+                            searchRelayPoints(searchInput.value.trim());
+                        }, 0);
+                    }
                 }
             } else {
                 relayContainer.style.display = 'none';
                 if (relayCodeInput) relayCodeInput.value = '';
             }
         }
+
+        // Mettre à jour l'ID de l'offre sélectionnée
+        selectedOfferId = radio.value;
+
+        // Update submit button state based on relay requirement
+        updateSubmitButtonState();
     }
 
     /**
@@ -1105,63 +1201,9 @@
         });
     }
 
-    function initMFB() {
-        console.log('MFB: Initializing...');
-
-        // Load offers via AJAX (replaces direct transition)
-        loadOffers();
-
-        var optionsContainer = document.getElementById('myflyingbox-options');
-        console.log('MFB: optionsContainer =', optionsContainer);
-        if (!optionsContainer) {
-            console.log('MFB: No options container found, exiting');
-            return;
-        }
-
-        // Initialize outer scope variables with DOM elements
-        relayContainer = document.getElementById('myflyingbox-relay-container');
-        searchContainer = document.getElementById('mfb-relay-search');
-        selectedRelayDiv = document.getElementById('mfb-selected-relay');
-        relayInfoDiv = document.getElementById('mfb-relay-info');
-        relayCodeInput = document.getElementById('mfb-relay-code');
-
-        var searchInput = document.getElementById('mfb-search-location');
-        var searchBtn = document.getElementById('mfb-search-btn');
-        var changeBtn = document.getElementById('mfb-change-relay');
-        var relayList = document.getElementById('mfb-relay-list');
-        var mapContainer = document.getElementById('mfb-map-container');
-
-        var map = null;
-        var markers = [];
-
-    // Search handlers
-    if (searchBtn) {
-        searchBtn.addEventListener('click', function() {
-            var query = searchInput.value.trim();
-            if (query.length < 2) {
-                alert('{intl l="Veuillez saisir au moins 2 caractères" d="myflyingbox" js=1}');
-                return;
-            }
-            searchRelayPoints(query);
-        });
-    }
-
-    if (searchInput) {
-        searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                searchBtn.click();
-            }
-        });
-    }
-
-    if (changeBtn) {
-        changeBtn.addEventListener('click', function() {
-            selectedRelayDiv.style.display = 'none';
-            searchContainer.style.display = 'block';
-        });
-    }
-
+    /**
+     * Search relay points (moved to IIFE scope for accessibility)
+     */
     function searchRelayPoints(query) {
         relayList.innerHTML = '<div class="mfb-loading">{intl l="Recherche en cours..." d="myflyingbox" js=1}</div>';
 
@@ -1198,6 +1240,9 @@
             });
     }
 
+    /**
+     * Display relay points list (moved to IIFE scope for accessibility)
+     */
     function displayRelayPoints(relays) {
         relayList.innerHTML = '';
 
@@ -1225,6 +1270,9 @@
         }
     }
 
+    /**
+     * Select a relay point (moved to IIFE scope for accessibility)
+     */
     function selectRelay(relay) {
         fetch('/myflyingbox/relay/save', {
             method: 'POST',
@@ -1248,6 +1296,7 @@
                     escapeHtml(relay.postal_code) + ' ' + escapeHtml(relay.city);
                 selectedRelayDiv.style.display = 'flex';
                 searchContainer.style.display = 'none';
+                updateSubmitButtonState();
             } else {
                 alert(data.message || '{intl l="Erreur lors de la sélection" d="myflyingbox" js=1}');
             }
@@ -1258,6 +1307,9 @@
         });
     }
 
+    /**
+     * Initialize Google Maps (moved to IIFE scope for accessibility)
+     */
     function initMap(relays) {
         if (!window.google || !window.google.maps) {
             const script = document.createElement('script');
@@ -1271,6 +1323,9 @@
         }
     }
 
+    /**
+     * Create Google Maps instance (moved to IIFE scope for accessibility)
+     */
     function createMap(relays) {
         if (!mapContainer) return;
         mapContainer.style.display = 'block';
@@ -1324,6 +1379,62 @@
         if (markers.length > 0) {
             map.fitBounds(bounds);
         }
+    }
+
+    function initMFB() {
+        console.log('MFB: Initializing...');
+
+        // Load offers via AJAX (replaces direct transition)
+        loadOffers();
+
+        var optionsContainer = document.getElementById('myflyingbox-options');
+        console.log('MFB: optionsContainer =', optionsContainer);
+        if (!optionsContainer) {
+            console.log('MFB: No options container found, exiting');
+            return;
+        }
+
+        // Initialize outer scope variables with DOM elements
+        relayContainer = document.getElementById('myflyingbox-relay-container');
+        searchContainer = document.getElementById('mfb-relay-search');
+        selectedRelayDiv = document.getElementById('mfb-selected-relay');
+        relayInfoDiv = document.getElementById('mfb-relay-info');
+        relayCodeInput = document.getElementById('mfb-relay-code');
+
+        var searchInput = document.getElementById('mfb-search-location');
+        var searchBtn = document.getElementById('mfb-search-btn');
+        var changeBtn = document.getElementById('mfb-change-relay');
+        relayList = document.getElementById('mfb-relay-list');
+        mapContainer = document.getElementById('mfb-map-container');
+
+    // Search handlers
+    if (searchBtn) {
+        searchBtn.addEventListener('click', function() {
+            var query = searchInput.value.trim();
+            if (query.length < 2) {
+                alert('{intl l="Veuillez saisir au moins 2 caractères" d="myflyingbox" js=1}');
+                return;
+            }
+            searchRelayPoints(query);
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchBtn.click();
+            }
+        });
+    }
+
+    if (changeBtn) {
+        changeBtn.addEventListener('click', function() {
+            selectedRelayDiv.style.display = 'none';
+            searchContainer.style.display = 'block';
+            if (relayCodeInput) relayCodeInput.value = '';
+            updateSubmitButtonState();
+        });
     }
 
     } // end initMFB
