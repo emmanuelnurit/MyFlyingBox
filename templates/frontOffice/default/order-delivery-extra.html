@@ -962,6 +962,15 @@
                             displaySelectedRelay(data.selected_relay);
                         }
 
+                        // Pré-remplir le champ de recherche avec le code postal de l'adresse
+                        if (data.delivery_postal_code && !data.selected_relay) {
+                            var searchInput = document.getElementById('mfb-search-location');
+                            if (searchInput && !searchInput.value) {
+                                searchInput.value = data.delivery_postal_code;
+                                console.log('MFB: Pre-filled postal code:', data.delivery_postal_code);
+                            }
+                        }
+
                         // Auto-select first offer or previously selected
                         if (selectedOfferId) {
                             selectOfferById(selectedOfferId);
