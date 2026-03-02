@@ -1121,6 +1121,10 @@
     var selectedRelayDiv = null;
     var relayInfoDiv = null;
     var relayCodeInput = null;
+    var relayList = null;
+    var mapContainer = null;
+    var map = null;
+    var markers = [];
     var currentOfferUuid = null;
 
     /**
@@ -1232,63 +1236,9 @@
         });
     }
 
-    function initMFB() {
-        console.log('MFB: Initializing...');
-
-        // Load offers via AJAX (replaces direct transition)
-        loadOffers();
-
-        var optionsContainer = document.getElementById('myflyingbox-options');
-        console.log('MFB: optionsContainer =', optionsContainer);
-        if (!optionsContainer) {
-            console.log('MFB: No options container found, exiting');
-            return;
-        }
-
-        // Initialize outer scope variables with DOM elements
-        relayContainer = document.getElementById('myflyingbox-relay-container');
-        searchContainer = document.getElementById('mfb-relay-search');
-        selectedRelayDiv = document.getElementById('mfb-selected-relay');
-        relayInfoDiv = document.getElementById('mfb-relay-info');
-        relayCodeInput = document.getElementById('mfb-relay-code');
-
-        var searchInput = document.getElementById('mfb-search-location');
-        var searchBtn = document.getElementById('mfb-search-btn');
-        var changeBtn = document.getElementById('mfb-change-relay');
-        var relayList = document.getElementById('mfb-relay-list');
-        var mapContainer = document.getElementById('mfb-map-container');
-
-        var map = null;
-        var markers = [];
-
-    // Search handlers
-    if (searchBtn) {
-        searchBtn.addEventListener('click', function() {
-            var query = searchInput.value.trim();
-            if (query.length < 2) {
-                alert('{intl l="Veuillez saisir au moins 2 caractères" d="myflyingbox" js=1}');
-                return;
-            }
-            searchRelayPoints(query);
-        });
-    }
-
-    if (searchInput) {
-        searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                searchBtn.click();
-            }
-        });
-    }
-
-    if (changeBtn) {
-        changeBtn.addEventListener('click', function() {
-            selectedRelayDiv.style.display = 'none';
-            searchContainer.style.display = 'block';
-        });
-    }
-
+    /**
+     * Search relay points (moved to IIFE scope for accessibility)
+     */
     function searchRelayPoints(query) {
         relayList.innerHTML = '<div class="mfb-loading">{intl l="Recherche en cours..." d="myflyingbox" js=1}</div>';
 
@@ -1325,6 +1275,9 @@
             });
     }
 
+    /**
+     * Display relay points list (moved to IIFE scope for accessibility)
+     */
     function displayRelayPoints(relays) {
         relayList.innerHTML = '';
 
@@ -1352,6 +1305,9 @@
         }
     }
 
+    /**
+     * Select a relay point (moved to IIFE scope for accessibility)
+     */
     function selectRelay(relay) {
         fetch('/myflyingbox/relay/save', {
             method: 'POST',
@@ -1385,6 +1341,9 @@
         });
     }
 
+    /**
+     * Initialize Google Maps (moved to IIFE scope for accessibility)
+     */
     function initMap(relays) {
         if (!window.google || !window.google.maps) {
             const script = document.createElement('script');
@@ -1398,6 +1357,9 @@
         }
     }
 
+    /**
+     * Create Google Maps instance (moved to IIFE scope for accessibility)
+     */
     function createMap(relays) {
         if (!mapContainer) return;
         mapContainer.style.display = 'block';
@@ -1451,6 +1413,60 @@
         if (markers.length > 0) {
             map.fitBounds(bounds);
         }
+    }
+
+    function initMFB() {
+        console.log('MFB: Initializing...');
+
+        // Load offers via AJAX (replaces direct transition)
+        loadOffers();
+
+        var optionsContainer = document.getElementById('myflyingbox-options');
+        console.log('MFB: optionsContainer =', optionsContainer);
+        if (!optionsContainer) {
+            console.log('MFB: No options container found, exiting');
+            return;
+        }
+
+        // Initialize outer scope variables with DOM elements
+        relayContainer = document.getElementById('myflyingbox-relay-container');
+        searchContainer = document.getElementById('mfb-relay-search');
+        selectedRelayDiv = document.getElementById('mfb-selected-relay');
+        relayInfoDiv = document.getElementById('mfb-relay-info');
+        relayCodeInput = document.getElementById('mfb-relay-code');
+
+        var searchInput = document.getElementById('mfb-search-location');
+        var searchBtn = document.getElementById('mfb-search-btn');
+        var changeBtn = document.getElementById('mfb-change-relay');
+        relayList = document.getElementById('mfb-relay-list');
+        mapContainer = document.getElementById('mfb-map-container');
+
+    // Search handlers
+    if (searchBtn) {
+        searchBtn.addEventListener('click', function() {
+            var query = searchInput.value.trim();
+            if (query.length < 2) {
+                alert('{intl l="Veuillez saisir au moins 2 caractères" d="myflyingbox" js=1}');
+                return;
+            }
+            searchRelayPoints(query);
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchBtn.click();
+            }
+        });
+    }
+
+    if (changeBtn) {
+        changeBtn.addEventListener('click', function() {
+            selectedRelayDiv.style.display = 'none';
+            searchContainer.style.display = 'block';
+        });
     }
 
     } // end initMFB
