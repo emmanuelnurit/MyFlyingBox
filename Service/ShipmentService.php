@@ -1026,13 +1026,33 @@ class ShipmentService
                 'shipment_id' => $shipment->getId(),
             ]);
 
+            // Pre-load DB services by product code for reliable relay detection
+            // (API quote response may not include preset_delivery_location)
+            $offerProductCodes = array_filter(array_map(
+                fn(array $offer) => $offer['product']['code'] ?? '',
+                $offers
+            ));
+            $servicesByCode = [];
+            if (!empty($offerProductCodes)) {
+                $dbServices = MyFlyingBoxServiceQuery::create()
+                    ->filterByCode($offerProductCodes, Criteria::IN)
+                    ->find();
+                foreach ($dbServices as $svc) {
+                    $servicesByCode[$svc->getCode()] = $svc;
+                }
+            }
+
             // Filter offers: exclude relay services (if no relay code) and return services (if not a return shipment)
             $filteredOffers = [];
             $isReturnShipment = $shipment->getIsReturn() ?? false;
 
             foreach ($offers as $offer) {
                 $productCode = $offer['product']['code'] ?? '';
+                // Relay detection: API field first, then DB fallback (more reliable)
                 $isRelayService = $offer['product']['preset_delivery_location'] ?? false;
+                if (!$isRelayService && !empty($productCode) && isset($servicesByCode[$productCode])) {
+                    $isRelayService = (bool) $servicesByCode[$productCode]->getRelayDelivery();
+                }
                 $isReturnService = str_contains(strtolower($productCode), 'retour');
 
                 // Exclude relay services if no relay code
@@ -1108,6 +1128,19 @@ class ShipmentService
             $this->logger->error('No valid offer found after filtering', [
                 'shipment_id' => $shipment->getId(),
                 'has_relay_code' => $hasRelayCode,
+                'relay_code_value' => $shipment->getRelayDeliveryCode(),
+                'is_return_shipment' => $isReturnShipment,
+                'service_id' => $shipment->getServiceId(),
+                'offers_detail' => array_map(fn(array $o) => [
+                    'id' => $o['id'] ?? 'unknown',
+                    'product_code' => $o['product']['code'] ?? '',
+                    'product_name' => $o['product']['name'] ?? '',
+                    'preset_delivery_location' => $o['product']['preset_delivery_location'] ?? 'NOT_SET',
+                    'carrier_code' => $o['product']['carrier_code'] ?? '',
+                    'db_relay_flag' => isset($servicesByCode[$o['product']['code'] ?? ''])
+                        ? $servicesByCode[$o['product']['code'] ?? '']->getRelayDelivery()
+                        : 'NOT_IN_DB',
+                ], $offers),
             ]);
 
             $serviceName = '';
