@@ -18,6 +18,7 @@ use Thelia\Model\ModuleHook;
 use Thelia\Model\ModuleHookQuery;
 use Thelia\Model\ModuleQuery;
 use Thelia\Model\State;
+use Thelia\Model\OrderPostage;
 use Thelia\Module\AbstractDeliveryModuleWithState;
 use Thelia\Module\Exception\DeliveryException;
 
@@ -303,11 +304,13 @@ class MyFlyingBox extends AbstractDeliveryModuleWithState
         // Apply surcharges
         $price = $this->applyPriceSurcharges($price);
 
-        // Build OrderPostage with tax
-        $taxRuleId = $this->getConfigValue(self::CONFIG_TAX_RULE_ID);
-        $locale = $session->getLang()->getLocale();
+        // Price from API is already tax-included (TTC), build OrderPostage without additional tax
+        $orderPostage = new OrderPostage();
+        $orderPostage->setAmount(round($price, 2));
+        $orderPostage->setAmountTax(0);
+        $orderPostage->setTaxRuleTitle('');
 
-        return $this->buildOrderPostage($price, $country, $locale, $taxRuleId);
+        return $orderPostage;
     }
 
     protected function applyPriceSurcharges(float $price): float
