@@ -1073,58 +1073,6 @@
         }
     }
 
-    function searchRelayPoints(query) {
-        relayList.innerHTML = '<div class="mfb-loading">{intl l="Recherche en cours..." d="myflyingbox" js=1}</div>';
-
-        // Pass the currently selected offer ID so the API returns relay points
-        // from the correct carrier's network (e.g. only Mondial Relay pick-up points)
-        var relaySearchUrl = '/myflyingbox/relay-points?query=' + encodeURIComponent(query) + '&cart_id=' + cartId;
-        var selectedRadio = document.querySelector('.mfb-offer-radio:checked');
-        if (selectedRadio && selectedRadio.value) {
-            relaySearchUrl += '&offer_id=' + encodeURIComponent(selectedRadio.value);
-        }
-
-    function displayRelayPoints(relays) {
-        relayList.innerHTML = '';
-
-        relays.forEach(function(relay, index) {
-            const item = document.createElement('div');
-            item.className = 'mfb-relay-item';
-            item.dataset.code = relay.code;
-
-            let html = '<div class="relay-name">' + escapeHtml(relay.name) + '</div>';
-            html += '<div class="relay-address">' + escapeHtml(relay.street) + '<br>' + escapeHtml(relay.postal_code) + ' ' + escapeHtml(relay.city) + '</div>';
-            if (relay.distance) {
-                html += '<div class="relay-distance"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> ' + relay.distance + ' km</div>';
-            }
-
-    function selectRelay(relay) {
-        fetch('/myflyingbox/relay/save', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                cart_id: cartId,
-                relay_code: relay.code,
-                relay_name: relay.name,
-                relay_street: relay.street,
-                relay_city: relay.city,
-                relay_postal_code: relay.postal_code,
-                relay_country: relay.country || 'FR'
-            })
-        })
-        .then(function(response) { return response.json(); })
-        .then(function(data) {
-            if (data.success) {
-                relayCodeInput.value = relay.code;
-                relayInfoDiv.innerHTML = '<strong>' + escapeHtml(relay.name) + '</strong><br>' +
-                    escapeHtml(relay.street) + '<br>' +
-                    escapeHtml(relay.postal_code) + ' ' + escapeHtml(relay.city);
-                selectedRelayDiv.style.display = 'flex';
-                searchContainer.style.display = 'none';
-            } else {
-                alert(data.message || '{intl l="Erreur lors de la sélection" d="myflyingbox" js=1}');
-            }
-
     /**
      * Select offer by ID
      */
@@ -1250,7 +1198,10 @@
                     var searchInput = document.getElementById('mfb-search-location');
                     if (searchInput && searchInput.value.trim().length >= 2) {
                         console.log('MFB: Auto-searching relay points for new offer');
-                        searchRelayPoints(searchInput.value.trim());
+                        // setTimeout ensures searchRelayPoints is defined (async execution)
+                        setTimeout(function() {
+                            searchRelayPoints(searchInput.value.trim());
+                        }, 0);
                     }
                 }
             } else {
@@ -1338,6 +1289,95 @@
         });
     }
 
+    function searchRelayPoints(query) {
+        relayList.innerHTML = '<div class="mfb-loading">{intl l="Recherche en cours..." d="myflyingbox" js=1}</div>';
+
+        // Pass the currently selected offer ID so the API returns relay points
+        // from the correct carrier's network (e.g. only Mondial Relay pick-up points)
+        var relaySearchUrl = '/myflyingbox/relay-points?query=' + encodeURIComponent(query) + '&cart_id=' + cartId;
+        var selectedRadio = document.querySelector('.mfb-offer-radio:checked');
+        if (selectedRadio && selectedRadio.value) {
+            relaySearchUrl += '&offer_id=' + encodeURIComponent(selectedRadio.value);
+        }
+
+        fetch(relaySearchUrl)
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success && data.relays && data.relays.length > 0) {
+                    displayRelayPoints(data.relays);
+                } else {
+                    var errorMsg = data.message || '{intl l="Aucun point relais trouvé" d="myflyingbox" js=1}';
+                    relayList.innerHTML = '<div style="padding: 24px; text-align: center; color: #64748b; background: #f8fafc; border-radius: 12px;">' +
+                        '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 12px; display: block; color: #94a3b8;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>' +
+                        '<p style="margin: 0 0 12px; font-weight: 600; color: #475569;">{intl l="Recherche de points relais indisponible" d="myflyingbox" js=1}</p>' +
+                        '<p style="margin: 0; font-size: 0.9rem; color: #64748b;">{intl l="Le point relais sera sélectionné lors de la préparation de votre commande." d="myflyingbox" js=1}</p>' +
+                        '</div>';
+                    if (mapContainer) mapContainer.style.display = 'none';
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                relayList.innerHTML = '<div style="padding: 24px; text-align: center; color: #64748b; background: #f8fafc; border-radius: 12px;">' +
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 12px; display: block; color: #94a3b8;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>' +
+                    '<p style="margin: 0 0 12px; font-weight: 600; color: #475569;">{intl l="Recherche de points relais indisponible" d="myflyingbox" js=1}</p>' +
+                    '<p style="margin: 0; font-size: 0.9rem; color: #64748b;">{intl l="Le point relais sera sélectionné lors de la préparation de votre commande." d="myflyingbox" js=1}</p>' +
+                    '</div>';
+            });
+    }
+
+    function displayRelayPoints(relays) {
+        relayList.innerHTML = '';
+
+        relays.forEach(function(relay, index) {
+            const item = document.createElement('div');
+            item.className = 'mfb-relay-item';
+            item.dataset.code = relay.code;
+
+            let html = '<div class="relay-name">' + escapeHtml(relay.name) + '</div>';
+            html += '<div class="relay-address">' + escapeHtml(relay.street) + '<br>' + escapeHtml(relay.postal_code) + ' ' + escapeHtml(relay.city) + '</div>';
+            if (relay.distance) {
+                html += '<div class="relay-distance"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> ' + relay.distance + ' km</div>';
+            }
+            item.innerHTML = html;
+
+            item.addEventListener('click', function() {
+                selectRelay(relay);
+            });
+
+            relayList.appendChild(item);
+        });
+
+        if (googleMapsApiKey && relays.length > 0) {
+            initMap(relays);
+        }
+    }
+
+    function selectRelay(relay) {
+        fetch('/myflyingbox/relay/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                cart_id: cartId,
+                relay_code: relay.code,
+                relay_name: relay.name,
+                relay_street: relay.street,
+                relay_city: relay.city,
+                relay_postal_code: relay.postal_code,
+                relay_country: relay.country || 'FR'
+            })
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                relayCodeInput.value = relay.code;
+                relayInfoDiv.innerHTML = '<strong>' + escapeHtml(relay.name) + '</strong><br>' +
+                    escapeHtml(relay.street) + '<br>' +
+                    escapeHtml(relay.postal_code) + ' ' + escapeHtml(relay.city);
+                selectedRelayDiv.style.display = 'flex';
+                searchContainer.style.display = 'none';
+            } else {
+                alert(data.message || '{intl l="Erreur lors de la sélection" d="myflyingbox" js=1}');
+            }
         })
         .catch(function(error) {
             console.error('Error:', error);
