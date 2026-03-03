@@ -1177,32 +1177,22 @@
         currentOfferUuid = radio.getAttribute('data-api-uuid');
 
         if (relayContainer) {
+            // Always reset relay state when switching offers
+            resetRelayState();
+
             if (isRelay) {
                 relayContainer.style.display = 'block';
 
-                // Reset relay selection when switching between relay carriers
-                if (relayCodeInput && relayCodeInput.value) {
-                    relayCodeInput.value = '';
-                    if (selectedRelayDiv) selectedRelayDiv.style.display = 'none';
-                    if (searchContainer) searchContainer.style.display = 'block';
-                }
-
-                if (relayCodeInput && !relayCodeInput.value) {
-                    if (selectedRelayDiv) selectedRelayDiv.style.display = 'none';
-                    if (searchContainer) searchContainer.style.display = 'block';
-
-                    // Auto-search relay points if search field has a value (pre-filled or user-entered)
-                    var searchInput = document.getElementById('mfb-search-location');
-                    if (searchInput && searchInput.value.trim().length >= 2) {
-                        console.log('MFB: Auto-searching relay points with:', searchInput.value.trim());
-                        setTimeout(function() {
-                            searchRelayPoints(searchInput.value.trim());
-                        }, 100);
-                    }
+                // Auto-search relay points if search field has a value (pre-filled or user-entered)
+                var searchInput = document.getElementById('mfb-search-location');
+                if (searchInput && searchInput.value.trim().length >= 2) {
+                    console.log('MFB: Auto-searching relay points with:', searchInput.value.trim());
+                    setTimeout(function() {
+                        searchRelayPoints(searchInput.value.trim());
+                    }, 100);
                 }
             } else {
                 relayContainer.style.display = 'none';
-                if (relayCodeInput) relayCodeInput.value = '';
             }
         }
     }
@@ -1223,6 +1213,27 @@
         .catch(function(error) {
             console.error('MFB: Error saving offer', error);
         });
+    }
+
+    /**
+     * Reset all relay state (DOM + database) when switching transport mode
+     */
+    function resetRelayState() {
+        if (relayCodeInput) relayCodeInput.value = '';
+        if (selectedRelayDiv) selectedRelayDiv.style.display = 'none';
+        if (relayInfoDiv) relayInfoDiv.innerHTML = '';
+        if (relayList) relayList.innerHTML = '';
+        if (mapContainer) mapContainer.style.display = 'none';
+        markers.forEach(function(m) { m.setMap(null); });
+        markers = [];
+        if (searchContainer) searchContainer.style.display = 'block';
+
+        // Fire-and-forget: delete DB record
+        fetch('/myflyingbox/relay/clear', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cart_id: cartId })
+        }).catch(function(e) { console.error('MFB: Error clearing relay', e); });
     }
 
     /**

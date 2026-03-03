@@ -109,6 +109,10 @@
         <default key="_controller">MyFlyingBox\Controller\Front\RelayController::saveRelayAction</default>
     </route>
 
+    <route id="myflyingbox.front.relay.clear" path="/myflyingbox/relay/clear" methods="POST">
+        <default key="_controller">MyFlyingBox\Controller\Front\RelayController::clearRelayAction</default>
+    </route>
+
     <route id="myflyingbox.front.offer.save" path="/myflyingbox/offer/save" methods="POST">
         <default key="_controller">MyFlyingBox\Controller\Front\RelayController::saveOfferAction</default>
     </route>

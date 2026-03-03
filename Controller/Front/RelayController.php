@@ -200,7 +200,7 @@ class RelayController extends BaseFrontController
                     $quoteAddress = AddressQuery::create()->findPk($quote->getAddressId());
                     $quotePostalCode = $quoteAddress?->getZipcode();
                 }
-                if ($quotePostalCode && $quotePostalCode !== $postalCode) {
+                if (!$quotePostalCode || $quotePostalCode !== $postalCode) {
                     $tempUuid = $this->getTemporaryRelayOfferUuid(
                         $apiService, $dimensionService, $dispatcher,
                         $relayOffer, $postalCode, $countryCode
@@ -316,6 +316,38 @@ class RelayController extends BaseFrontController
                 'success' => false,
                 'message' => 'Error saving relay point: ' . $e->getMessage(),
             ]);
+        }
+    }
+
+    /**
+     * Clear relay selection from cart (used when switching transport mode)
+     */
+    public function clearRelayAction(Request $request, EventDispatcherInterface $dispatcher): JsonResponse
+    {
+        try {
+            $data = json_decode($request->getContent(), true);
+            $cartId = $data['cart_id'] ?? null;
+
+            if (!$cartId) {
+                return new JsonResponse(['success' => false, 'message' => 'Missing cart_id']);
+            }
+
+            $sessionCart = $this->getSession()->getSessionCart($dispatcher);
+            if (!$sessionCart || $sessionCart->getId() != $cartId) {
+                return new JsonResponse(['success' => false, 'message' => 'Invalid cart']);
+            }
+
+            $cartRelay = MyFlyingBoxCartRelayQuery::create()
+                ->filterByCartId($cartId)
+                ->findOne();
+
+            if ($cartRelay) {
+                $cartRelay->delete();
+            }
+
+            return new JsonResponse(['success' => true]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['success' => false, 'message' => $e->getMessage()]);
         }
     }
 
@@ -604,7 +636,7 @@ class RelayController extends BaseFrontController
                     'country' => MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_COUNTRY, 'FR'),
                 ],
                 'recipient' => [
-                    'city' => '',
+                    'city' => 'Ville',
                     'postal_code' => $postalCode,
                     'country' => $countryCode,
                     'is_a_company' => false,
@@ -625,7 +657,7 @@ class RelayController extends BaseFrontController
                 return $quoteData['offers'][0]['id'] ?? null;
             }
         } catch (\Exception $e) {
-            // Silently fail - will use original offer UUID as fallback
+            error_log('MyFlyingBox: temporary relay quote error: ' . $e->getMessage());
         }
 
         return null;
