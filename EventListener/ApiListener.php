@@ -6,7 +6,6 @@ use MyFlyingBox\Model\MyFlyingBoxCartRelay;
 use MyFlyingBox\Model\MyFlyingBoxCartRelayQuery;
 use MyFlyingBox\Model\MyFlyingBoxOffer;
 use MyFlyingBox\Model\MyFlyingBoxOfferQuery;
-use MyFlyingBox\Model\MyFlyingBoxQuoteQuery;
 use MyFlyingBox\Model\MyFlyingBoxServiceQuery;
 use MyFlyingBox\MyFlyingBox;
 use MyFlyingBox\Service\LceApiService;
@@ -24,8 +23,6 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Thelia\Core\Event\Delivery\PickupLocationEvent;
 use Thelia\Core\Event\TheliaEvents;
 use Thelia\Core\Translation\Translator;
-use Thelia\Model\AddressQuery;
-use Thelia\Model\CountryQuery;
 use Thelia\Model\ModuleQuery;
 use Thelia\Model\PickupLocation;
 use Thelia\Model\PickupLocationAddress;
@@ -49,11 +46,11 @@ class ApiListener implements EventSubscriberInterface
         return [
             OpenApiEvents::MODULE_DELIVERY_GET_OPTIONS => ['getDeliveryModuleOptions', 128],
             TheliaEvents::MODULE_DELIVERY_GET_PICKUP_LOCATIONS => ['getPickupLocations', 128],
-            OAPickupLocationEvent::MODULE_DELIVERY_SET_PICKUP_LOCATION => ['setPickupLocation', 150]
+            OAPickupLocationEvent::MODULE_DELIVERY_SET_PICKUP_LOCATION => ['setPickupLocation', 128]
         ];
     }
 
-    public function getDeliveryModuleOptions(DeliveryModuleOptionEvent $event)
+    public function getDeliveryModuleOptions(DeliveryModuleOptionEvent $event): void
     {
         // Only for MyFlyingBox module
         if ((int)$event->getModule()->getId() !== (int)MyFlyingBox::getModuleId()) {
@@ -63,8 +60,6 @@ class ApiListener implements EventSubscriberInterface
         $isValid = true;
 
         try {
-            $locale = $this->request?->getSession()->getLang()->getLocale();
-
             $propelModule = ModuleQuery::create()
                 ->filterById(MyFlyingBox::getModuleId())
                 ->findOne();
@@ -83,7 +78,7 @@ class ApiListener implements EventSubscriberInterface
                 throw new DeliveryException(Translator::getInstance()->trans('MyFlyingBox is not available'));
             }
 
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             $isValid = false;
         }
 
@@ -114,7 +109,6 @@ class ApiListener implements EventSubscriberInterface
                 }
             }
 
-            // Si aucune offre ne correspond à ce service, passer au suivant
             if ($offer === null) {
                 continue;
             }
@@ -150,7 +144,7 @@ class ApiListener implements EventSubscriberInterface
         }
 
         try {
-            // Get search parameters from event
+            // Get search parameters from the event
             $zipCode = $pickupLocationEvent->getZipCode();
             $city = $pickupLocationEvent->getCity();
             $address = $pickupLocationEvent->getAddress();
@@ -268,6 +262,10 @@ class ApiListener implements EventSubscriberInterface
             $cartRelay->setCartId($cartId);
         }
 
+        if ($cartRelay->getRelayCode() === $pickupLocationEvent->getId()) {
+            return;
+        }
+
         // Update relay info
         $cartRelay->setRelayCode($pickupLocationEvent->getId());
         $cartRelay->setRelayName($pickupLocationEvent->getTitle());
@@ -283,7 +281,7 @@ class ApiListener implements EventSubscriberInterface
         /** We create the new location address */
         $pickupLocationAddress = new PickupLocationAddress();
 
-        /** We set the differents properties of the location address */
+        /** We set the different properties of the location address */
         $pickupLocationAddress
             ->setId($location['code'])
             ->setTitle($location['name'] ?? '')
