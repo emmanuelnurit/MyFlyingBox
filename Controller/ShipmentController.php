@@ -38,9 +38,9 @@ class ShipmentController extends BaseAdminController
         }
 
         // Read directly from session — at this point session is started (checkAuth already ran).
-        // Avoids TokenProvider::checkToken() which reads $this->token set in constructor
-        // before the session may have been started.
-        $sessionToken = $request->getSession()->get('thelia.token_provider');
+        // Uses module-specific key set by BackHook::getCsrfToken() to avoid
+        // TokenProvider singleton timing issues entirely.
+        $sessionToken = $request->getSession()->get('myflyingbox_csrf_token');
 
         if (empty($sessionToken) || $token !== $sessionToken) {
             return new JsonResponse(['success' => false, 'message' => 'Invalid CSRF token'], 403);
