@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Add "Selected:" label
             var labelSpan = document.createElement('span');
             labelSpan.style.cssText = 'color: #155724; font-weight: 600; margin-right: 0.5rem;';
-            labelSpan.innerHTML = '<i class="fa fa-check" style="margin-right: 0.35rem;"></i>' + MFB_TRANSLATIONS.selected;
+            labelSpan.innerHTML = '<span class="glyphicon glyphicon-ok" style="margin-right: 0.35rem;"></span>' + MFB_TRANSLATIONS.selected;
             inlineSummary.appendChild(labelSpan);
 
             checkedBoxes.forEach(function(checkbox) {
@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 badge.className = 'mfb-summary-badge';
                 badge.dataset.id = serviceId;
                 badge.style.cssText = 'display: inline-flex; align-items: center; padding: 0.5rem 1rem; background: #fff; border: 2px solid #28a745; border-radius: 25px; font-size: 0.9rem; color: #155724; font-weight: 500; box-shadow: 0 2px 4px rgba(40,167,69,0.15);';
-                badge.innerHTML = '<i class="fa fa-truck" style="margin-right: 0.5rem; color: #28a745;"></i><strong style="margin-right: 0.35rem;">' + escapeHtml(carrierCode.toUpperCase()) + '</strong> ' + escapeHtml(serviceCode);
+                badge.innerHTML = '<span class="glyphicon glyphicon-send" style="margin-right: 0.5rem; color: #28a745;"></span><strong style="margin-right: 0.35rem;">' + escapeHtml(carrierCode.toUpperCase()) + '</strong> ' + escapeHtml(serviceCode);
                 inlineSummary.appendChild(badge);
             });
         }
