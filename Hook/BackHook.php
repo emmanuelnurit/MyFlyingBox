@@ -32,6 +32,7 @@ class BackHook extends BaseHook
         $event->add($this->render('myflyingbox-configuration.html', [
             'module_code' => MyFlyingBox::getModuleCode(),
             'module_id' => MyFlyingBox::getModuleId(),
+            'csrf_token' => $this->tokenProvider->assignToken(),
         ]));
     }
 
