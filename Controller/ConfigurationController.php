@@ -18,15 +18,14 @@ use Symfony\Component\HttpFoundation\Response;
 use Thelia\Controller\Admin\BaseAdminController;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
-use Thelia\Tools\TokenProvider;
-
 class ConfigurationController extends BaseAdminController
 {
     /**
-     * Validate CSRF token from AJAX request header or body.
+     * Validate CSRF token from AJAX request query string or header.
+     * Reads the session directly after auth (avoids TokenProvider constructor timing issue).
      * Returns a JsonResponse on failure, null on success.
      */
-    private function checkCsrfToken(Request $request, TokenProvider $tokenProvider): ?JsonResponse
+    private function checkCsrfToken(Request $request): ?JsonResponse
     {
         $token = $request->query->get('_token')
             ?? $request->headers->get('X-CSRF-Token')
@@ -37,9 +36,12 @@ class ConfigurationController extends BaseAdminController
             return new JsonResponse(['success' => false, 'message' => 'Missing CSRF token'], 403);
         }
 
-        try {
-            $tokenProvider->checkToken($token);
-        } catch (\Exception $e) {
+        // Read directly from session — at this point session is started (checkAuth already ran).
+        // Avoids TokenProvider::checkToken() which reads $this->token set in constructor
+        // before the session may have been started.
+        $sessionToken = $request->getSession()->get('thelia.token_provider');
+
+        if (empty($sessionToken) || $token !== $sessionToken) {
             return new JsonResponse(['success' => false, 'message' => 'Invalid CSRF token'], 403);
         }
 
@@ -129,13 +131,13 @@ class ConfigurationController extends BaseAdminController
     /**
      * Test API connection with form values (before save)
      */
-    public function testApiAction(Request $request, LceApiService $apiService, TokenProvider $tokenProvider): JsonResponse
+    public function testApiAction(Request $request, LceApiService $apiService): JsonResponse
     {
         if (null !== $this->checkAuth(AdminResources::MODULE, 'MyFlyingBox', AccessManager::VIEW)) {
             return new JsonResponse(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
-        if (null !== $csrfError = $this->checkCsrfToken($request, $tokenProvider)) {
+        if (null !== $csrfError = $this->checkCsrfToken($request)) {
             return $csrfError;
         }
 
@@ -174,13 +176,13 @@ class ConfigurationController extends BaseAdminController
     /**
      * Refresh services from API (API v2 format)
      */
-    public function refreshServicesAction(Request $request, LceApiService $apiService, TokenProvider $tokenProvider): JsonResponse
+    public function refreshServicesAction(Request $request, LceApiService $apiService): JsonResponse
     {
         if (null !== $this->checkAuth(AdminResources::MODULE, 'MyFlyingBox', AccessManager::UPDATE)) {
             return new JsonResponse(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
-        if (null !== $csrfError = $this->checkCsrfToken($request, $tokenProvider)) {
+        if (null !== $csrfError = $this->checkCsrfToken($request)) {
             return $csrfError;
         }
 
@@ -255,13 +257,13 @@ class ConfigurationController extends BaseAdminController
     /**
      * Toggle service active status
      */
-    public function toggleServiceAction(Request $request, TokenProvider $tokenProvider): JsonResponse
+    public function toggleServiceAction(Request $request): JsonResponse
     {
         if (null !== $this->checkAuth(AdminResources::MODULE, 'MyFlyingBox', AccessManager::UPDATE)) {
             return new JsonResponse(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
-        if (null !== $csrfError = $this->checkCsrfToken($request, $tokenProvider)) {
+        if (null !== $csrfError = $this->checkCsrfToken($request)) {
             return $csrfError;
         }
 
@@ -299,13 +301,13 @@ class ConfigurationController extends BaseAdminController
     /**
      * Update service delivery delay
      */
-    public function updateServiceDelayAction(Request $request, TokenProvider $tokenProvider): JsonResponse
+    public function updateServiceDelayAction(Request $request): JsonResponse
     {
         if (null !== $this->checkAuth(AdminResources::MODULE, 'MyFlyingBox', AccessManager::UPDATE)) {
             return new JsonResponse(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
-        if (null !== $csrfError = $this->checkCsrfToken($request, $tokenProvider)) {
+        if (null !== $csrfError = $this->checkCsrfToken($request)) {
             return $csrfError;
         }
 
@@ -344,13 +346,13 @@ class ConfigurationController extends BaseAdminController
     /**
      * Save dimension mapping
      */
-    public function saveDimensionAction(Request $request, TokenProvider $tokenProvider): JsonResponse
+    public function saveDimensionAction(Request $request): JsonResponse
     {
         if (null !== $this->checkAuth(AdminResources::MODULE, 'MyFlyingBox', AccessManager::UPDATE)) {
             return new JsonResponse(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
-        if (null !== $csrfError = $this->checkCsrfToken($request, $tokenProvider)) {
+        if (null !== $csrfError = $this->checkCsrfToken($request)) {
             return $csrfError;
         }
 
@@ -402,13 +404,13 @@ class ConfigurationController extends BaseAdminController
     /**
      * Delete dimension mapping
      */
-    public function deleteDimensionAction(Request $request, TokenProvider $tokenProvider): JsonResponse
+    public function deleteDimensionAction(Request $request): JsonResponse
     {
         if (null !== $this->checkAuth(AdminResources::MODULE, 'MyFlyingBox', AccessManager::DELETE)) {
             return new JsonResponse(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
-        if (null !== $csrfError = $this->checkCsrfToken($request, $tokenProvider)) {
+        if (null !== $csrfError = $this->checkCsrfToken($request)) {
             return $csrfError;
         }
 
