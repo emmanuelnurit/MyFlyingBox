@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     // Module info
     'MyFlyingBox - Shipping Module' => 'MyFlyingBox - Shipping Module',
@@ -215,6 +217,15 @@ return [
     'Aucun point relais trouvé pour cette recherche' => 'No pickup points found for this search',
     'Recherche de points relais indisponible' => 'Pickup point search unavailable',
     'Le point relais sera sélectionné lors de la préparation de votre commande.' => 'The pickup point will be selected when preparing your order.',
+    'points relais trouvés' => 'pickup points found',
+    'Carte des points relais' => 'Pickup points map',
+    'Relay point search temporarily unavailable' => 'Relay point search temporarily unavailable',
+    'No relay points found' => 'No relay points found',
+    'carrier available' => 'carrier available',
+    'carriers available' => 'carriers available',
+    'Le chargement des options de livraison a pris trop de temps. Veuillez recharger la page.' => 'Loading delivery options took too long. Please reload the page.',
+    'Erreur lors du chargement des options de livraison.' => 'Error loading delivery options.',
+    'Veuillez sélectionner un point relais avant de continuer.' => 'Please select a pickup point before continuing.',
 
     // CLI Commands
     'Synchronize tracking information from MyFlyingBox/LCE API' => 'Synchronize tracking information from MyFlyingBox/LCE API',

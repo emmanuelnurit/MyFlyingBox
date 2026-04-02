@@ -1,4 +1,15 @@
 <script>
+// XSS-safe HTML escaping helper
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(String(str)));
+    return div.innerHTML;
+}
+
+// CSRF token for AJAX requests
+var MFB_CSRF_TOKEN = '{$csrf_token|escape:"javascript"}';
+
 // Translations and URLs (Smarty processed)
 var MFB_URLS = {
     testApi: '{url path="/admin/module/myflyingbox/test-api"}',
@@ -154,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 badge.className = 'mfb-summary-badge';
                 badge.dataset.id = serviceId;
                 badge.style.cssText = 'display: inline-flex; align-items: center; padding: 0.5rem 1rem; background: #fff; border: 2px solid #28a745; border-radius: 25px; font-size: 0.9rem; color: #155724; font-weight: 500; box-shadow: 0 2px 4px rgba(40,167,69,0.15);';
-                badge.innerHTML = '<i class="fa fa-truck" style="margin-right: 0.5rem; color: #28a745;"></i><strong style="margin-right: 0.35rem;">' + carrierCode.toUpperCase() + '</strong> ' + serviceCode;
+                badge.innerHTML = '<i class="fa fa-truck" style="margin-right: 0.5rem; color: #28a745;"></i><strong style="margin-right: 0.35rem;">' + escapeHtml(carrierCode.toUpperCase()) + '</strong> ' + escapeHtml(serviceCode);
                 inlineSummary.appendChild(badge);
             });
         }
@@ -183,9 +194,9 @@ document.addEventListener('DOMContentLoaded', function() {
             '<div style="margin-bottom: 1rem;">' +
                 '<i class="fa fa-' + icon + '" style="font-size: 2.5rem; color: ' + iconColor + ';"></i>' +
             '</div>' +
-            '<div style="font-weight: 600; font-size: 1.15rem; color: ' + textColor + '; margin-bottom: 0.5rem;">' + title + '</div>';
+            '<div style="font-weight: 600; font-size: 1.15rem; color: ' + textColor + '; margin-bottom: 0.5rem;">' + escapeHtml(title) + '</div>';
         if (message) {
-            html += '<div style="color: ' + textColor + '; opacity: 0.9; margin-bottom: 0.5rem; font-size: 0.95rem;">' + message + '</div>';
+            html += '<div style="color: ' + textColor + '; opacity: 0.9; margin-bottom: 0.5rem; font-size: 0.95rem;">' + escapeHtml(message) + '</div>';
         }
         if (details) {
             html += '<div style="' +
@@ -195,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 'font-size: 0.85rem; ' +
                 'color: ' + textColor + '; ' +
                 'opacity: 0.75;' +
-            '">' + details + '</div>';
+            '">' + escapeHtml(details) + '</div>';
         }
         html += '</div>';
         return html;
@@ -243,8 +254,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         '<div style="margin-bottom: 1rem;">' +
                             '<i class="fa fa-' + icon + '" style="font-size: 3rem; color: ' + colors.icon + ';"></i>' +
                         '</div>' +
-                        '<h5 style="margin: 0 0 0.75rem 0; font-weight: 600; color: ' + colors.text + ';">' + title + '</h5>' +
-                        '<p style="margin: 0; color: ' + colors.text + '; opacity: 0.9; font-size: 0.95rem;">' + message + '</p>' +
+                        '<h5 style="margin: 0 0 0.75rem 0; font-weight: 600; color: ' + colors.text + ';">' + escapeHtml(title) + '</h5>' +
+                        '<p style="margin: 0; color: ' + colors.text + '; opacity: 0.9; font-size: 0.95rem;">' + escapeHtml(message) + '</p>' +
                     '</div>' +
                     '<div class="modal-footer" style="padding: 1rem 2rem; background: #fff; border-top: 1px solid ' + colors.border + '40; justify-content: center;">' +
                         '<button type="button" class="btn ' + colors.btn + '" data-dismiss="modal" style="padding: 0.5rem 2rem; font-weight: 500;">' + MFB_TRANSLATIONS.ok + '</button>' +
@@ -290,8 +301,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         '<div style="margin-bottom: 1rem;">' +
                             '<i class="fa fa-exclamation-triangle" style="font-size: 3rem; color: #664d03;"></i>' +
                         '</div>' +
-                        '<h5 style="margin: 0 0 0.75rem 0; font-weight: 600; color: #664d03;">' + title + '</h5>' +
-                        '<p style="margin: 0; color: #664d03; opacity: 0.9; font-size: 0.95rem;">' + message + '</p>' +
+                        '<h5 style="margin: 0 0 0.75rem 0; font-weight: 600; color: #664d03;">' + escapeHtml(title) + '</h5>' +
+                        '<p style="margin: 0; color: #664d03; opacity: 0.9; font-size: 0.95rem;">' + escapeHtml(message) + '</p>' +
                     '</div>' +
                     '<div class="modal-footer" style="padding: 1rem 2rem; background: #fff; border-top: 1px solid #ffc10740; justify-content: center; gap: 1rem;">' +
                         '<button type="button" class="btn btn-secondary" data-dismiss="modal" style="padding: 0.5rem 1.5rem; font-weight: 500;">' + MFB_TRANSLATIONS.cancel + '</button>' +
@@ -361,7 +372,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': MFB_CSRF_TOKEN
                 },
                 body: JSON.stringify(formData)
             })
@@ -373,13 +385,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 var envLabel = data.environment === 'production' ? MFB_TRANSLATIONS.productionEnv : MFB_TRANSLATIONS.stagingEnv;
                 var details = MFB_TRANSLATIONS.environment + ': <strong>' + envLabel + '</strong>';
                 if (data.server_url) {
-                    details += ' &bull; ' + MFB_TRANSLATIONS.serverUrl + ': <code>' + data.server_url + '</code>';
-                }
-                // Debug info
-                if (data.debug) {
-                    details += '<br><small class="text-muted">Debug: env=' + data.debug.received_env +
-                        ', login=' + data.debug.received_login +
-                        ', pwd=' + data.debug.received_password + '</small>';
+                    details += ' &bull; ' + MFB_TRANSLATIONS.serverUrl + ': <code>' + escapeHtml(data.server_url) + '</code>';
                 }
 
                 if (data.success) {
@@ -440,7 +446,8 @@ document.addEventListener('DOMContentLoaded', function() {
             fetch(MFB_URLS.refreshServices, {
                 method: 'POST',
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': MFB_CSRF_TOKEN
                 }
             })
             .then(function(response) { return response.json(); })
@@ -480,7 +487,8 @@ document.addEventListener('DOMContentLoaded', function() {
             fetch(MFB_URLS.diagnostic, {
                 method: 'GET',
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': MFB_CSRF_TOKEN
                 }
             })
             .then(function(response) { return response.json(); })
@@ -502,7 +510,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 html += '<div style="margin-bottom: 0.75rem;">';
                 html += '<strong>Module:</strong> ';
                 if (moduleOk) {
-                    html += '<span class="badge bg-success"><i class="fa fa-check"></i> Active (ID: ' + data.module.id + ')</span>';
+                    html += '<span class="badge bg-success"><i class="fa fa-check"></i> Active (ID: ' + escapeHtml(data.module.id) + ')</span>';
                 } else if (data.module.found) {
                     html += '<span class="badge bg-warning"><i class="fa fa-exclamation-triangle"></i> Found but inactive</span>';
                 } else {
@@ -518,7 +526,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     var cfg = data.configuration[key];
                     var icon = cfg.is_set ? '<i class="fa fa-check text-success"></i>' : '<i class="fa fa-times text-danger"></i>';
                     var val = cfg.value || '(empty)';
-                    html += '<tr><td>' + key + '</td><td><code>' + cfg.key + '</code></td><td>' + icon + '</td><td>' + val + '</td></tr>';
+                    html += '<tr><td>' + escapeHtml(key) + '</td><td><code>' + escapeHtml(cfg.key) + '</code></td><td>' + icon + '</td><td>' + escapeHtml(val) + '</td></tr>';
                 }
                 html += '</tbody></table>';
 
@@ -568,7 +576,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': MFB_CSRF_TOKEN
                 },
                 body: JSON.stringify({ id: serviceId, active: active })
             })
@@ -616,7 +625,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': MFB_CSRF_TOKEN
                 },
                 body: JSON.stringify({ id: serviceId, delivery_delay: deliveryDelay })
             })
@@ -791,7 +801,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': MFB_CSRF_TOKEN
                 },
                 body: JSON.stringify(dimData)
             })
@@ -860,7 +871,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
+                        'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': MFB_CSRF_TOKEN
                     },
                     body: JSON.stringify({ id: id })
                 })
