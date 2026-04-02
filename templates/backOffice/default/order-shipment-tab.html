@@ -1,245 +1,232 @@
-{* MyFlyingBox - Order Shipment Tab *}
+{* MyFlyingBox - Order Shipment Tab (Thelia Native Style) *}
 
 <div class="mfb-shipment-container" data-order-id="{$order_id}">
 
     {if $shipment}
         {* Shipment exists - Show details *}
 
-        {* === ENVELOPE HEADER (Postal Style) === *}
-        <div class="mfb-envelope-header">
-            <div class="mfb-envelope-logo">
-                <div class="mfb-logo-box">
-                    <img src="{mfb_logo}" alt="MyFlyingBox" class="mfb-logo"/>
-                    <span class="mfb-logo-text">My Flying Box</span>
-                </div>
+        {* === SHIPMENT HEADER (Bootstrap Panel) === *}
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <span class="glyphicon glyphicon-send"></span> {intl l="Shipment" d="myflyingbox"} #{$shipment->getId()}
+                    {if $shipment->getStatus() == 'pending'}
+                        <span class="label label-warning pull-right">{intl l="Pending" d="myflyingbox"}</span>
+                    {elseif $shipment->getStatus() == 'booked'}
+                        <span class="label label-info pull-right">{intl l="Booked" d="myflyingbox"}</span>
+                    {elseif $shipment->getStatus() == 'shipped'}
+                        <span class="label label-primary pull-right">{intl l="Shipped" d="myflyingbox"}</span>
+                    {elseif $shipment->getStatus() == 'delivered'}
+                        <span class="label label-success pull-right">{intl l="Delivered" d="myflyingbox"}</span>
+                    {elseif $shipment->getStatus() == 'cancelled'}
+                        <span class="label label-danger pull-right">{intl l="Cancelled" d="myflyingbox"}</span>
+                    {/if}
+                </h4>
             </div>
-            <div class="mfb-envelope-recipient">
-                <svg class="mfb-block-picto" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" fill="currentColor"/>
-                    <path d="M12 14C7.58172 14 4 17.5817 4 22H20C20 17.5817 16.4183 14 12 14Z" fill="currentColor"/>
-                </svg>
-                <div class="mfb-envelope-label"><span class="glyphicon glyphicon-user"></span> {intl l="Recipient" d="myflyingbox"}</div>
-                <div class="mfb-envelope-address">
-                    <strong>{$shipment->getRecipientName()}</strong><br>
-                    {if $shipment->getRecipientCompany()}{$shipment->getRecipientCompany()}<br>{/if}
-                    {$shipment->getRecipientStreet()|nl2br}<br>
-                    {$shipment->getRecipientPostalCode()} {$shipment->getRecipientCity()}<br>
-                    {$shipment->getRecipientCountry()}
-                    {if $shipment->getRecipientPhone()}<br><span class="glyphicon glyphicon-earphone"></span> {$shipment->getRecipientPhone()}{/if}
+            <div class="panel-body">
+                <div class="row">
+                    {* Recipient info *}
+                    <div class="col-md-6">
+                        <h5><span class="glyphicon glyphicon-user"></span> {intl l="Recipient" d="myflyingbox"}</h5>
+                        <address>
+                            <strong>{$shipment->getRecipientName()}</strong><br>
+                            {if $shipment->getRecipientCompany()}{$shipment->getRecipientCompany()}<br>{/if}
+                            {$shipment->getRecipientStreet()|nl2br}<br>
+                            {$shipment->getRecipientPostalCode()} {$shipment->getRecipientCity()}<br>
+                            {$shipment->getRecipientCountry()}
+                            {if $shipment->getRecipientPhone()}<br><span class="glyphicon glyphicon-earphone"></span> {$shipment->getRecipientPhone()}{/if}
+                        </address>
+                    </div>
+                    {* Parcel info *}
+                    <div class="col-md-6">
+                        <h5><span class="glyphicon glyphicon-gift"></span> {intl l="Parcel" d="myflyingbox"}</h5>
+                        {loop type="myflyingbox.parcels" name="header_parcels" shipment_id=$shipment->getId() limit="1"}
+                        <p>
+                            <strong>{$LENGTH}&times;{$WIDTH}&times;{$HEIGHT} cm</strong><br>
+                            {$WEIGHT} kg
+                        </p>
+                        {/loop}
+                        {if $parcels_count > 1}
+                        <p class="text-muted">+{$parcels_count - 1} {intl l="other parcels" d="myflyingbox"}</p>
+                        {/if}
+                    </div>
                 </div>
-            </div>
-            <div class="mfb-envelope-parcel">
-                <svg class="mfb-block-picto" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M20 7L12 3L4 7V17L12 21L20 17V7Z" fill="currentColor"/>
-                    <path d="M12 12V21M12 12L4 7M12 12L20 7" stroke="white" stroke-width="1" stroke-opacity="0.3"/>
-                </svg>
-                <div class="mfb-envelope-label"><span class="glyphicon glyphicon-gift"></span> {intl l="Parcel" d="myflyingbox"}</div>
-                {loop type="myflyingbox.parcels" name="header_parcels" shipment_id=$shipment->getId() limit="1"}
-                <div class="mfb-parcel-dimensions">{$LENGTH}×{$WIDTH}×{$HEIGHT} cm</div>
-                <div class="mfb-parcel-weight">{$WEIGHT} kg</div>
-                {/loop}
-                {if $parcels_count > 1}
-                <div class="mfb-parcel-weight">+{$parcels_count - 1} {intl l="other parcels" d="myflyingbox"}</div>
-                {/if}
             </div>
         </div>
 
-        {* === STATUS TIMELINE === *}
-        <div class="mfb-status-timeline">
-            {* Progress line *}
-            <div class="mfb-timeline-progress" style="width: {if $shipment->getStatus() == 'pending'}0%{elseif $shipment->getStatus() == 'booked'}33%{elseif $shipment->getStatus() == 'shipped'}66%{elseif $shipment->getStatus() == 'delivered'}100%{else}0%{/if};"></div>
+        {* === STATUS PROGRESS === *}
+        <div class="well well-sm text-center">
+            {assign var="status_pct" value="0"}
+            {if $shipment->getStatus() == 'booked'}{assign var="status_pct" value="33"}{/if}
+            {if $shipment->getStatus() == 'shipped'}{assign var="status_pct" value="66"}{/if}
+            {if $shipment->getStatus() == 'delivered'}{assign var="status_pct" value="100"}{/if}
 
-            {* Step 1: Pending *}
-            <div class="mfb-timeline-step {if $shipment->getStatus() == 'pending'}current{elseif $shipment->getStatus() == 'cancelled'}cancelled{else}completed{/if}">
-                <div class="mfb-timeline-icon">
-                    <span class="glyphicon {if $shipment->getStatus() == 'cancelled'}glyphicon-remove{else}glyphicon-pencil{/if}"></span>
+            {if $shipment->getStatus() == 'cancelled'}
+                <p><span class="label label-danger"><span class="glyphicon glyphicon-remove"></span> {intl l="Cancelled" d="myflyingbox"}</span></p>
+            {else}
+                <div class="progress" style="margin-bottom: 10px;">
+                    <div class="progress-bar {if $shipment->getStatus() == 'delivered'}progress-bar-success{else}progress-bar-info{/if}"
+                         role="progressbar" style="width: {$status_pct}%; min-width: 2em;"
+                         aria-valuenow="{$status_pct}" aria-valuemin="0" aria-valuemax="100">
+                        {$status_pct}%
+                    </div>
                 </div>
-                <div class="mfb-timeline-label">{intl l="Pending" d="myflyingbox"}</div>
-            </div>
-
-            {* Step 2: Booked *}
-            <div class="mfb-timeline-step {if $shipment->getStatus() == 'booked'}current{elseif $shipment->getStatus() == 'shipped' || $shipment->getStatus() == 'delivered'}completed{elseif $shipment->getStatus() == 'cancelled'}cancelled{else}pending{/if}">
-                <div class="mfb-timeline-icon">
-                    <span class="glyphicon glyphicon-ok"></span>
-                </div>
-                <div class="mfb-timeline-label">{intl l="Booked" d="myflyingbox"}</div>
-                {if $shipment->getDateBooking()}
-                <div class="mfb-timeline-date">{format_date date=$shipment->getDateBooking() output="date"}</div>
-                {/if}
-            </div>
-
-            {* Step 3: Shipped *}
-            <div class="mfb-timeline-step {if $shipment->getStatus() == 'shipped'}current{elseif $shipment->getStatus() == 'delivered'}completed{elseif $shipment->getStatus() == 'cancelled'}cancelled{else}pending{/if}">
-                <div class="mfb-timeline-icon">
-                    <span class="glyphicon glyphicon-send"></span>
-                </div>
-                <div class="mfb-timeline-label">{intl l="Shipped" d="myflyingbox"}</div>
-            </div>
-
-            {* Step 4: Delivered *}
-            <div class="mfb-timeline-step {if $shipment->getStatus() == 'delivered'}current completed{elseif $shipment->getStatus() == 'cancelled'}cancelled{else}pending{/if}">
-                <div class="mfb-timeline-icon">
-                    <span class="glyphicon glyphicon-home"></span>
-                </div>
-                <div class="mfb-timeline-label">{intl l="Delivered" d="myflyingbox"}</div>
-            </div>
+                <p>
+                    <span class="label {if $shipment->getStatus() == 'pending' || $shipment->getStatus() == 'booked' || $shipment->getStatus() == 'shipped' || $shipment->getStatus() == 'delivered'}label-success{else}label-default{/if}">
+                        <span class="glyphicon glyphicon-pencil"></span> {intl l="Pending" d="myflyingbox"}
+                    </span>
+                    &rarr;
+                    <span class="label {if $shipment->getStatus() == 'booked' || $shipment->getStatus() == 'shipped' || $shipment->getStatus() == 'delivered'}label-success{else}label-default{/if}">
+                        <span class="glyphicon glyphicon-ok"></span> {intl l="Booked" d="myflyingbox"}
+                    </span>
+                    {if $shipment->getDateBooking()}
+                        <small class="text-muted">({format_date date=$shipment->getDateBooking() output="date"})</small>
+                    {/if}
+                    &rarr;
+                    <span class="label {if $shipment->getStatus() == 'shipped' || $shipment->getStatus() == 'delivered'}label-success{else}label-default{/if}">
+                        <span class="glyphicon glyphicon-send"></span> {intl l="Shipped" d="myflyingbox"}
+                    </span>
+                    &rarr;
+                    <span class="label {if $shipment->getStatus() == 'delivered'}label-success{else}label-default{/if}">
+                        <span class="glyphicon glyphicon-home"></span> {intl l="Delivered" d="myflyingbox"}
+                    </span>
+                </p>
+            {/if}
         </div>
 
         {* === MAIN CONTENT (Details + Actions) === *}
         <div class="row">
             {* Left column - Shipment details *}
             <div class="col-md-8">
-                <div class="panel panel-default mfb-history-panel">
+                <div class="panel panel-default">
                     <div class="panel-heading">
-                        <h4 class="panel-title"><i class="fa fa-info-circle"></i> {intl l="Shipment Details" d="myflyingbox"}</h4>
+                        <h4 class="panel-title"><span class="glyphicon glyphicon-info-sign"></span> {intl l="Shipment Details" d="myflyingbox"}</h4>
                     </div>
                     <div class="panel-body">
-                        <div class="mfb-info-list">
-                            <div class="mfb-info-row">
-                                <span class="mfb-info-label">{intl l="Shipment ID" d="myflyingbox"}</span>
-                                <span class="mfb-info-value">#{$shipment->getId()}</span>
-                            </div>
+                        <dl class="dl-horizontal">
+                            <dt>{intl l="Shipment ID" d="myflyingbox"}</dt>
+                            <dd>#{$shipment->getId()}</dd>
 
                             {if $shipment->getServiceId()}
                                 {loop type="myflyingbox.services" name="shipment_service" id=$shipment->getServiceId()}
-                                <div class="mfb-info-row">
-                                    <span class="mfb-info-label">{intl l="Carrier" d="myflyingbox"}</span>
-                                    <span class="mfb-info-value">
-                                        <span class="mfb-carrier-display">
-                                            {if $CARRIER_LOGO}
-                                            <img src="{$CARRIER_LOGO}" alt="{$CARRIER_CODE}"
-                                                 data-fallback="{$CARRIER_LOGO_FALLBACK}"
-                                                 onerror="this.onerror=null; this.src=this.dataset.fallback;"/>
-                                            {/if}
-                                            <strong>{$CARRIER_CODE|upper}</strong>
-                                            <span class="mfb-service-name">- {$NAME}</span>
-                                        </span>
-                                    </span>
-                                </div>
+                                <dt>{intl l="Carrier" d="myflyingbox"}</dt>
+                                <dd>
+                                    {if $CARRIER_LOGO}
+                                    <img src="{$CARRIER_LOGO}" alt="{$CARRIER_CODE}"
+                                         data-fallback="{$CARRIER_LOGO_FALLBACK}"
+                                         onerror="this.onerror=null; this.src=this.dataset.fallback;"
+                                         style="height: 20px; width: auto; margin-right: 5px; vertical-align: middle;"/>
+                                    {/if}
+                                    <strong>{$CARRIER_CODE|upper}</strong> - {$NAME}
+                                </dd>
 
-                                <div class="mfb-info-row">
-                                    <span class="mfb-info-label">{intl l="Delivery type" d="myflyingbox"}</span>
-                                    <span class="mfb-info-value">
-                                        {if $RELAY_DELIVERY}
-                                            <span class="label label-info"><i class="fa fa-map-marker"></i> {intl l="Relay point delivery" d="myflyingbox"}</span>
-                                        {else}
-                                            <span class="label label-default"><i class="fa fa-home"></i> {intl l="Home delivery" d="myflyingbox"}</span>
-                                        {/if}
-                                    </span>
-                                </div>
+                                <dt>{intl l="Delivery type" d="myflyingbox"}</dt>
+                                <dd>
+                                    {if $RELAY_DELIVERY}
+                                        <span class="label label-info"><span class="glyphicon glyphicon-map-marker"></span> {intl l="Relay point delivery" d="myflyingbox"}</span>
+                                    {else}
+                                        <span class="label label-default"><span class="glyphicon glyphicon-home"></span> {intl l="Home delivery" d="myflyingbox"}</span>
+                                    {/if}
+                                </dd>
 
                                 {if $DELIVERY_DELAY}
-                                <div class="mfb-info-row">
-                                    <span class="mfb-info-label">{intl l="Delivery time" d="myflyingbox"}</span>
-                                    <span class="mfb-info-value"><i class="fa fa-clock-o"></i> {$DELIVERY_DELAY}</span>
-                                </div>
+                                <dt>{intl l="Delivery time" d="myflyingbox"}</dt>
+                                <dd><span class="glyphicon glyphicon-time"></span> {$DELIVERY_DELAY}</dd>
                                 {/if}
                                 {/loop}
                             {/if}
 
                             {if $shipment->getRelayDeliveryCode()}
-                            <div class="mfb-info-row">
-                                <span class="mfb-info-label">{intl l="Relay Point" d="myflyingbox"}</span>
-                                <span class="mfb-info-value">
-                                    <div class="mfb-relay-block">
-                                        <div style="display: flex; align-items: flex-start; gap: 10px;">
-                                            <i class="fa fa-map-marker text-info" style="font-size: 1.2em; margin-top: 2px;"></i>
-                                            <div>
-                                                <strong style="color: #0056b3;">{$shipment->getRelayDeliveryCode()}</strong>
-                                                {if $shipment->getRelayName()}<br><span style="font-weight: 500;">{$shipment->getRelayName()}</span>{/if}
-                                                {if $shipment->getRelayStreet()}<br><span class="text-muted">{$shipment->getRelayStreet()}</span>{/if}
-                                                {if $shipment->getRelayPostalCode() || $shipment->getRelayCity()}<br><span class="text-muted">{$shipment->getRelayPostalCode()} {$shipment->getRelayCity()}</span>{/if}
-                                                {if $shipment->getRelayCountry()}<br><span class="text-muted">{$shipment->getRelayCountry()}</span>{/if}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </span>
-                            </div>
+                            <dt>{intl l="Relay Point" d="myflyingbox"}</dt>
+                            <dd>
+                                <div class="well well-sm" style="margin-bottom: 0;">
+                                    <span class="glyphicon glyphicon-map-marker text-info"></span>
+                                    <strong>{$shipment->getRelayDeliveryCode()}</strong>
+                                    {if $shipment->getRelayName()}<br>{$shipment->getRelayName()}{/if}
+                                    {if $shipment->getRelayStreet()}<br><small class="text-muted">{$shipment->getRelayStreet()}</small>{/if}
+                                    {if $shipment->getRelayPostalCode() || $shipment->getRelayCity()}<br><small class="text-muted">{$shipment->getRelayPostalCode()} {$shipment->getRelayCity()}</small>{/if}
+                                    {if $shipment->getRelayCountry()}<br><small class="text-muted">{$shipment->getRelayCountry()}</small>{/if}
+                                </div>
+                            </dd>
                             {/if}
 
                             {if $shipment->getCollectionDate()}
-                            <div class="mfb-info-row">
-                                <span class="mfb-info-label">{intl l="Collection Date" d="myflyingbox"}</span>
-                                <span class="mfb-info-value"><i class="fa fa-calendar"></i> {format_date date=$shipment->getCollectionDate() output="date"}</span>
-                            </div>
+                            <dt>{intl l="Collection Date" d="myflyingbox"}</dt>
+                            <dd><span class="glyphicon glyphicon-calendar"></span> {format_date date=$shipment->getCollectionDate() output="date"}</dd>
                             {/if}
 
                             {* Tracking numbers *}
                             {loop type="myflyingbox.parcels" name="shipment_parcels" shipment_id=$shipment->getId()}
-                            <div class="mfb-info-row">
-                                <span class="mfb-info-label">{intl l="Tracking" d="myflyingbox"} #{$LOOP_COUNT}</span>
-                                <span class="mfb-info-value">
-                                    {if $TRACKING_NUMBER}
-                                        <code>{$TRACKING_NUMBER}</code>
-                                        {if $LABEL_URL}
-                                        <a href="{$LABEL_URL}" target="_blank" class="btn btn-xs btn-default" title="{intl l='Download label' d='myflyingbox'}" style="margin-left: 0.5rem;">
-                                            <i class="fa fa-download"></i> {intl l="Label" d="myflyingbox"}
-                                        </a>
-                                        {/if}
-                                    {else}
-                                        <span class="text-muted"><i class="fa fa-clock-o"></i> {intl l="Awaiting booking" d="myflyingbox"}</span>
+                            <dt>{intl l="Tracking" d="myflyingbox"} #{$LOOP_COUNT}</dt>
+                            <dd>
+                                {if $TRACKING_NUMBER}
+                                    <code>{$TRACKING_NUMBER}</code>
+                                    {if $LABEL_URL}
+                                    <a href="{$LABEL_URL}" target="_blank" class="btn btn-xs btn-default" title="{intl l='Download label' d='myflyingbox'}">
+                                        <span class="glyphicon glyphicon-download-alt"></span> {intl l="Label" d="myflyingbox"}
+                                    </a>
                                     {/if}
-                                </span>
-                            </div>
+                                {else}
+                                    <span class="text-muted"><span class="glyphicon glyphicon-time"></span> {intl l="Awaiting booking" d="myflyingbox"}</span>
+                                {/if}
+                            </dd>
                             {/loop}
 
                             {if $shipment->getApiOrderUuid()}
-                            <div class="mfb-info-row">
-                                <span class="mfb-info-label">{intl l="API Reference" d="myflyingbox"}</span>
-                                <span class="mfb-info-value"><code>{$shipment->getApiOrderUuid()}</code></span>
-                            </div>
+                            <dt>{intl l="API Reference" d="myflyingbox"}</dt>
+                            <dd><code>{$shipment->getApiOrderUuid()}</code></dd>
                             {/if}
-                        </div>
+                        </dl>
                     </div>
                 </div>
             </div>
 
             {* Right column - Actions Panel *}
             <div class="col-md-4">
-                <div class="mfb-actions-panel">
-                    <div class="mfb-actions-title">
-                        <i class="fa fa-bolt"></i> {intl l="Actions" d="myflyingbox"}
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title"><span class="glyphicon glyphicon-cog"></span> {intl l="Actions" d="myflyingbox"}</h4>
                     </div>
-                    <div class="mfb-actions-list">
+                    <div class="panel-body">
                         {if $shipment->getStatus() == 'pending'}
-                            <button type="button" class="mfb-action-btn btn-primary mfb-action-book" data-shipment-id="{$shipment->getId()}">
-                                <i class="fa fa-check-circle"></i>
-                                <span>{intl l="Confirm & Book Shipment" d="myflyingbox"}</span>
+                            <button type="button" class="btn btn-primary btn-block mfb-action-book" data-shipment-id="{$shipment->getId()}" style="margin-bottom: 8px;">
+                                <span class="glyphicon glyphicon-ok-circle"></span>
+                                {intl l="Confirm & Book Shipment" d="myflyingbox"}
                             </button>
                         {/if}
 
                         {if $shipment->getStatus() == 'booked'}
-                            <button type="button" class="mfb-action-btn btn-success mfb-action-ship" data-shipment-id="{$shipment->getId()}">
-                                <i class="fa fa-truck"></i>
-                                <span>{intl l="Mark as Shipped" d="myflyingbox"}</span>
+                            <button type="button" class="btn btn-success btn-block mfb-action-ship" data-shipment-id="{$shipment->getId()}" style="margin-bottom: 8px;">
+                                <span class="glyphicon glyphicon-send"></span>
+                                {intl l="Mark as Shipped" d="myflyingbox"}
                             </button>
                         {/if}
 
                         {if $shipment->getStatus() == 'booked' || $shipment->getStatus() == 'shipped'}
-                            <button type="button" class="mfb-action-btn btn-default mfb-action-labels" data-shipment-id="{$shipment->getId()}">
-                                <i class="fa fa-print"></i>
-                                <span>{intl l="Download Labels" d="myflyingbox"}</span>
+                            <button type="button" class="btn btn-default btn-block mfb-action-labels" data-shipment-id="{$shipment->getId()}" style="margin-bottom: 8px;">
+                                <span class="glyphicon glyphicon-print"></span>
+                                {intl l="Download Labels" d="myflyingbox"}
                             </button>
                         {/if}
 
                         {if $shipment->getStatus() == 'shipped'}
-                            <button type="button" class="mfb-action-btn btn-default mfb-action-tracking" data-shipment-id="{$shipment->getId()}">
-                                <i class="fa fa-refresh"></i>
-                                <span>{intl l="Refresh Tracking Status" d="myflyingbox"}</span>
+                            <button type="button" class="btn btn-default btn-block mfb-action-tracking" data-shipment-id="{$shipment->getId()}" style="margin-bottom: 8px;">
+                                <span class="glyphicon glyphicon-refresh"></span>
+                                {intl l="Refresh Tracking Status" d="myflyingbox"}
                             </button>
                         {/if}
 
                         {if $shipment->getStatus() == 'shipped' || $shipment->getStatus() == 'delivered'}
-                            <button type="button" class="mfb-action-btn btn-warning mfb-action-create-return" data-shipment-id="{$shipment->getId()}" data-toggle="modal" data-target="#mfb-return-modal">
-                                <i class="fa fa-reply"></i>
-                                <span>{intl l="Create Return Label" d="myflyingbox"}</span>
+                            <button type="button" class="btn btn-warning btn-block mfb-action-create-return" data-shipment-id="{$shipment->getId()}" data-toggle="modal" data-target="#mfb-return-modal" style="margin-bottom: 8px;">
+                                <span class="glyphicon glyphicon-share-alt"></span>
+                                {intl l="Create Return Label" d="myflyingbox"}
                             </button>
                         {/if}
 
                         {if $shipment->getStatus() == 'pending' || $shipment->getStatus() == 'booked'}
-                            <button type="button" class="mfb-action-btn btn-danger mfb-action-cancel" data-shipment-id="{$shipment->getId()}">
-                                <i class="fa fa-times"></i>
-                                <span>{intl l="Cancel Shipment" d="myflyingbox"}</span>
+                            <button type="button" class="btn btn-danger btn-block mfb-action-cancel" data-shipment-id="{$shipment->getId()}">
+                                <span class="glyphicon glyphicon-remove"></span>
+                                {intl l="Cancel Shipment" d="myflyingbox"}
                             </button>
                         {/if}
                     </div>
@@ -247,14 +234,14 @@
             </div>
         </div>
 
-        {* === SHIPMENT HISTORY (Unified Style) === *}
-        <div class="panel panel-default mfb-history-panel" style="margin-top: 1.5rem;">
+        {* === SHIPMENT HISTORY === *}
+        <div class="panel panel-default">
             <div class="panel-heading">
-                <h4 class="panel-title"><i class="fa fa-history"></i> {intl l="Tracking History" d="myflyingbox"}</h4>
+                <h4 class="panel-title"><span class="glyphicon glyphicon-time"></span> {intl l="Tracking History" d="myflyingbox"}</h4>
             </div>
             <div class="panel-body" id="mfb-tracking-timeline">
                 <p class="text-center text-muted">
-                    <i class="fa fa-spinner fa-spin"></i> {intl l="Loading history..." d="myflyingbox"}
+                    <span class="glyphicon glyphicon-refresh mfb-spin"></span> {intl l="Loading history..." d="myflyingbox"}
                 </p>
             </div>
         </div>
@@ -264,7 +251,7 @@
         <div class="panel panel-warning">
             <div class="panel-heading">
                 <h4 class="panel-title">
-                    <i class="fa fa-reply"></i> {intl l="Return Shipments" d="myflyingbox"}
+                    <span class="glyphicon glyphicon-share-alt"></span> {intl l="Return Shipments" d="myflyingbox"}
                     <span class="badge">{$return_shipments->count()}</span>
                 </h4>
             </div>
@@ -306,7 +293,7 @@
                                     <code>{$TRACKING_NUMBER}</code>
                                     {if $LABEL_URL}
                                     <a href="{$LABEL_URL}" target="_blank" class="btn btn-xs btn-default" title="{intl l='Download label' d='myflyingbox'}">
-                                        <i class="fa fa-download"></i>
+                                        <span class="glyphicon glyphicon-download-alt"></span>
                                     </a>
                                     {/if}
                                 {else}
@@ -319,18 +306,18 @@
                             <div class="btn-group" style="margin-top: 10px;">
                                 {if $return_shipment->getStatus() == 'pending'}
                                     <button type="button" class="btn btn-xs btn-primary mfb-action-book" data-shipment-id="{$return_shipment->getId()}">
-                                        <i class="fa fa-check"></i> {intl l="Book" d="myflyingbox"}
+                                        <span class="glyphicon glyphicon-ok"></span> {intl l="Book" d="myflyingbox"}
                                     </button>
                                     <button type="button" class="btn btn-xs btn-danger mfb-action-cancel" data-shipment-id="{$return_shipment->getId()}">
-                                        <i class="fa fa-times"></i> {intl l="Cancel" d="myflyingbox"}
+                                        <span class="glyphicon glyphicon-remove"></span> {intl l="Cancel" d="myflyingbox"}
                                     </button>
                                 {/if}
                                 {if $return_shipment->getStatus() == 'booked' || $return_shipment->getStatus() == 'shipped'}
                                     <button type="button" class="btn btn-xs btn-default mfb-action-labels" data-shipment-id="{$return_shipment->getId()}">
-                                        <i class="fa fa-print"></i> {intl l="Labels" d="myflyingbox"}
+                                        <span class="glyphicon glyphicon-print"></span> {intl l="Labels" d="myflyingbox"}
                                     </button>
                                     <button type="button" class="btn btn-xs btn-default mfb-action-tracking" data-shipment-id="{$return_shipment->getId()}">
-                                        <i class="fa fa-refresh"></i> {intl l="Tracking" d="myflyingbox"}
+                                        <span class="glyphicon glyphicon-refresh"></span> {intl l="Tracking" d="myflyingbox"}
                                     </button>
                                 {/if}
                             </div>
@@ -348,14 +335,14 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                        <h4 class="modal-title"><i class="fa fa-reply"></i> {intl l="Create Return Shipment" d="myflyingbox"}</h4>
+                        <h4 class="modal-title"><span class="glyphicon glyphicon-share-alt"></span> {intl l="Create Return Shipment" d="myflyingbox"}</h4>
                     </div>
                     <div class="modal-body">
                         <form id="mfb-create-return-form">
                             <input type="hidden" name="shipment_id" value="{$shipment->getId()}">
 
                             <div class="alert alert-info">
-                                <i class="fa fa-info-circle"></i>
+                                <span class="glyphicon glyphicon-info-sign"></span>
                                 {intl l="A return shipment will be created with the customer as shipper and your store as recipient." d="myflyingbox"}
                             </div>
 
@@ -381,7 +368,7 @@
                                         <small>{$shipment->getRecipientCity()}, {$shipment->getRecipientCountry()}</small>
                                     </div>
                                     <div class="col-xs-2 text-center" style="padding-top: 15px;">
-                                        <i class="fa fa-arrow-right fa-lg text-muted"></i>
+                                        <span class="glyphicon glyphicon-arrow-right text-muted"></span>
                                     </div>
                                     <div class="col-xs-5">
                                         <small class="text-muted">{intl l="To (Store)" d="myflyingbox"}</small><br>
@@ -395,7 +382,7 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">{intl l="Cancel" d="myflyingbox"}</button>
                         <button type="button" class="btn btn-warning" id="mfb-confirm-return">
-                            <i class="fa fa-reply"></i> {intl l="Create Return" d="myflyingbox"}
+                            <span class="glyphicon glyphicon-share-alt"></span> {intl l="Create Return" d="myflyingbox"}
                         </button>
                     </div>
                 </div>
@@ -405,13 +392,13 @@
     {else}
         {* No shipment yet - Show create form *}
         <div class="alert alert-info">
-            <i class="fa fa-info-circle"></i>
+            <span class="glyphicon glyphicon-info-sign"></span>
             {intl l="No shipment has been created for this order yet." d="myflyingbox"}
         </div>
 
         <div class="panel panel-primary">
             <div class="panel-heading">
-                <h4 class="panel-title"><i class="fa fa-plus"></i> {intl l="Create Shipment" d="myflyingbox"}</h4>
+                <h4 class="panel-title"><span class="glyphicon glyphicon-plus"></span> {intl l="Create Shipment" d="myflyingbox"}</h4>
             </div>
             <div class="panel-body">
                 <form id="mfb-create-shipment-form">
@@ -439,7 +426,7 @@
 
                     <div class="form-group">
                         <button type="submit" class="btn btn-success btn-lg btn-block">
-                            <i class="fa fa-truck"></i> {intl l="Create Shipment" d="myflyingbox"}
+                            <span class="glyphicon glyphicon-send"></span> {intl l="Create Shipment" d="myflyingbox"}
                         </button>
                     </div>
                 </form>
@@ -450,7 +437,7 @@
         <div id="mfb-quote-preview" style="display: none;">
             <div class="panel panel-info">
                 <div class="panel-heading">
-                    <h4 class="panel-title"><i class="fa fa-calculator"></i> {intl l="Available Offers" d="myflyingbox"}</h4>
+                    <h4 class="panel-title"><span class="glyphicon glyphicon-list-alt"></span> {intl l="Available Offers" d="myflyingbox"}</h4>
                 </div>
                 <div class="panel-body" id="mfb-quote-offers">
                 </div>

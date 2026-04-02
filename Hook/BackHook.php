@@ -16,15 +16,32 @@ use Thelia\Core\Event\Hook\HookRenderEvent;
 use Thelia\Core\Hook\BaseHook;
 use Thelia\Model\ModuleQuery;
 use Thelia\Model\OrderQuery;
-use Thelia\Tools\TokenProvider;
 
 class BackHook extends BaseHook
 {
-    private TokenProvider $tokenProvider;
+    private const CSRF_SESSION_KEY = 'myflyingbox_csrf_token';
 
-    public function __construct(TokenProvider $tokenProvider)
+    /**
+     * Get or generate a module-specific CSRF token stored directly in the session.
+     * This avoids TokenProvider's constructor timing issue where $this->session
+     * can be null if the service is constructed before the session is started.
+     */
+    private function getCsrfToken(): string
     {
-        $this->tokenProvider = $tokenProvider;
+        $request = $this->getRequest();
+        $session = $request ? $request->getSession() : null;
+
+        if ($session === null) {
+            return bin2hex(random_bytes(32));
+        }
+
+        $token = $session->get(self::CSRF_SESSION_KEY);
+        if (empty($token)) {
+            $token = bin2hex(random_bytes(32));
+            $session->set(self::CSRF_SESSION_KEY, $token);
+        }
+
+        return $token;
     }
 
     public function onModuleConfiguration(HookRenderEvent $event): void
@@ -38,7 +55,7 @@ class BackHook extends BaseHook
     public function onModuleConfigJs(HookRenderEvent $event): void
     {
         $event->add($this->render('module-config-js.html', [
-            'csrf_token' => $this->tokenProvider->assignToken(),
+            'csrf_token' => $this->getCsrfToken(),
         ]));
     }
 
@@ -191,7 +208,7 @@ class BackHook extends BaseHook
 
         $event->add($this->render('order-shipment-js.html', [
             'order_id' => $orderId,
-            'csrf_token' => $this->tokenProvider->assignToken(),
+            'csrf_token' => $this->getCsrfToken(),
         ]));
     }
 
