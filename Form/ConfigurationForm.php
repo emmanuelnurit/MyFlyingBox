@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MyFlyingBox\Form;
 
 use MyFlyingBox\MyFlyingBox;
@@ -159,12 +161,12 @@ class ConfigurationForm extends BaseForm
                 'required' => false,
                 'data' => MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_WEBHOOK_ENABLED, '0'),
             ])
-            ->add('webhook_secret', TextType::class, [
+            ->add('webhook_secret', PasswordType::class, [
                 'label' => $translator->trans('Webhook Secret', [], MyFlyingBox::DOMAIN_NAME),
                 'required' => false,
-                'data' => MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_WEBHOOK_SECRET, ''),
                 'attr' => [
-                    'placeholder' => $translator->trans('Leave empty for no signature validation', [], MyFlyingBox::DOMAIN_NAME),
+                    'autocomplete' => 'new-password',
+                    'placeholder' => $translator->trans('Leave empty to keep current', [], MyFlyingBox::DOMAIN_NAME),
                 ],
             ])
 

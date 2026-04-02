@@ -19,7 +19,7 @@ use Thelia\Model\OrderQuery;
  * Service for sending tracking notification emails to customers
  * Uses Thelia's native message system with templates in /admin/configuration/messages
  */
-class TrackingNotificationService
+final class TrackingNotificationService
 {
     public const STATUS_SHIPPED = 'shipped';
     public const STATUS_DELIVERED = 'delivered';
@@ -27,13 +27,10 @@ class TrackingNotificationService
     public const MESSAGE_SHIPPED = 'myflyingbox_shipped';
     public const MESSAGE_DELIVERED = 'myflyingbox_delivered';
 
-    private MailerFactory $mailer;
-    private LoggerInterface $logger;
-
-    public function __construct(MailerFactory $mailer, LoggerInterface $logger)
-    {
-        $this->mailer = $mailer;
-        $this->logger = $logger;
+    public function __construct(
+        private readonly MailerFactory $mailer,
+        private readonly LoggerInterface $logger
+    ) {
     }
 
     /**

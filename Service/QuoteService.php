@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MyFlyingBox\Service;
 
 use MyFlyingBox\Model\MyFlyingBoxOffer;
@@ -18,22 +20,15 @@ use Thelia\Model\Country;
 /**
  * Service for managing shipping quotes
  */
-class QuoteService
+final class QuoteService
 {
     private const QUOTE_VALIDITY_SECONDS = 1800; // 30 minutes
 
-    private LceApiService $apiService;
-    private DimensionService $dimensionService;
-    private LoggerInterface $logger;
-
     public function __construct(
-        LceApiService $apiService,
-        DimensionService $dimensionService,
-        LoggerInterface $logger
+        private readonly LceApiService $apiService,
+        private readonly DimensionService $dimensionService,
+        private readonly LoggerInterface $logger
     ) {
-        $this->apiService = $apiService;
-        $this->dimensionService = $dimensionService;
-        $this->logger = $logger;
     }
 
     /**

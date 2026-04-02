@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MyFlyingBox\Service;
 
 use MyFlyingBox\Model\MyFlyingBoxShipment;
@@ -12,9 +14,8 @@ use Psr\Log\LoggerInterface;
 /**
  * Service for handling incoming webhooks from MyFlyingBox/LCE API
  */
-class WebhookHandlerService
+final class WebhookHandlerService
 {
-    private LoggerInterface $logger;
     private ?TrackingNotificationService $notificationService = null;
 
     /**
@@ -38,9 +39,9 @@ class WebhookHandlerService
      */
     private array $processedEvents = [];
 
-    public function __construct(LoggerInterface $logger)
-    {
-        $this->logger = $logger;
+    public function __construct(
+        private readonly LoggerInterface $logger
+    ) {
     }
 
     /**

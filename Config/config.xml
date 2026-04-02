@@ -12,6 +12,9 @@
         <!-- Dimension Service -->
         <service id="myflyingbox.dimension.service" class="MyFlyingBox\Service\DimensionService" public="true"/>
 
+        <!-- Price Surcharge Service -->
+        <service id="myflyingbox.price_surcharge.service" class="MyFlyingBox\Service\PriceSurchargeService" public="true"/>
+
         <!-- API Error Translator Service -->
         <service id="myflyingbox.api_error_translator.service" class="MyFlyingBox\Service\ApiErrorTranslator" public="true"/>
 

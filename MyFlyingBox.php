@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MyFlyingBox;
 
 use MyFlyingBox\Model\MyFlyingBoxServiceQuery;
@@ -302,7 +304,9 @@ class MyFlyingBox extends AbstractDeliveryModuleWithState
         }
 
         // Apply surcharges
-        $price = $this->applyPriceSurcharges($price);
+        /** @var \MyFlyingBox\Service\PriceSurchargeService $surchargeService */
+        $surchargeService = $this->getContainer()->get('myflyingbox.price_surcharge.service');
+        $price = $surchargeService->apply($price);
 
         // Price from API is already tax-included (TTC), build OrderPostage without additional tax
         $orderPostage = new OrderPostage();
@@ -313,41 +317,13 @@ class MyFlyingBox extends AbstractDeliveryModuleWithState
         return $orderPostage;
     }
 
-    protected function applyPriceSurcharges(float $price): float
-    {
-        // Percentage surcharge
-        $percentSurcharge = (float) $this->getConfigValue(self::CONFIG_PRICE_SURCHARGE_PERCENT, 0);
-        if ($percentSurcharge > 0) {
-            $price += $price * ($percentSurcharge / 100);
-        }
-
-        // Static surcharge (stored in cents, convert to euros)
-        $staticSurcharge = (float) $this->getConfigValue(self::CONFIG_PRICE_SURCHARGE_STATIC, 0);
-        if ($staticSurcharge > 0) {
-            $price += $staticSurcharge / 100;
-        }
-
-        // Rounding
-        $roundIncrement = (int) $this->getConfigValue(self::CONFIG_PRICE_ROUND_INCREMENT, 1);
-        if ($roundIncrement > 1) {
-            $price = ceil($price * 100 / $roundIncrement) * $roundIncrement / 100;
-        }
-
-        return round($price, 2);
-    }
-
     public function isValidDelivery(Country $country, State $state = null): bool
     {
         // Check if API is configured
         $apiLogin = $this->getConfigValue(self::CONFIG_API_LOGIN);
         $apiPassword = $this->getConfigValue(self::CONFIG_API_PASSWORD);
 
-        // Debug logging
-        error_log('MFB isValidDelivery - apiLogin: ' . ($apiLogin ? 'SET' : 'EMPTY'));
-        error_log('MFB isValidDelivery - apiPassword: ' . ($apiPassword ? 'SET' : 'EMPTY'));
-
         if (empty($apiLogin) || empty($apiPassword)) {
-            error_log('MFB isValidDelivery - FAILED: API credentials missing');
             return false;
         }
 
@@ -355,15 +331,9 @@ class MyFlyingBox extends AbstractDeliveryModuleWithState
         $shipperCity = $this->getConfigValue(self::CONFIG_DEFAULT_SHIPPER_CITY);
         $shipperPostalCode = $this->getConfigValue(self::CONFIG_DEFAULT_SHIPPER_POSTAL_CODE);
 
-        error_log('MFB isValidDelivery - shipperCity: ' . ($shipperCity ?: 'EMPTY'));
-        error_log('MFB isValidDelivery - shipperPostalCode: ' . ($shipperPostalCode ?: 'EMPTY'));
-
         if (empty($shipperCity) || empty($shipperPostalCode)) {
-            error_log('MFB isValidDelivery - FAILED: Shipper address missing');
             return false;
         }
-
-        error_log('MFB isValidDelivery - SUCCESS');
 
         // Note: Services are created dynamically from API responses
         // No need to check for existing services - they will be created on first quote request

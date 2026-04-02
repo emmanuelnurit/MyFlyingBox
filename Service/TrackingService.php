@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MyFlyingBox\Service;
 
 use MyFlyingBox\Model\MyFlyingBoxParcelQuery;
@@ -13,16 +15,14 @@ use Psr\Log\LoggerInterface;
 /**
  * Service for tracking shipments and parcels
  */
-class TrackingService
+final class TrackingService
 {
-    private LceApiService $apiService;
-    private LoggerInterface $logger;
     private ?TrackingNotificationService $notificationService = null;
 
-    public function __construct(LceApiService $apiService, LoggerInterface $logger)
-    {
-        $this->apiService = $apiService;
-        $this->logger = $logger;
+    public function __construct(
+        private readonly LceApiService $apiService,
+        private readonly LoggerInterface $logger
+    ) {
     }
 
     /**
@@ -128,7 +128,6 @@ class TrackingService
             return $events;
 
         } catch (\Exception $e) {
-            $this->logger->debug('Could not get local tracking events: ' . $e->getMessage());
             return [];
         }
     }
@@ -158,7 +157,6 @@ class TrackingService
             return $events;
 
         } catch (\Exception $e) {
-            $this->logger->debug('Could not get shipment level events: ' . $e->getMessage());
             return [];
         }
     }
@@ -172,7 +170,6 @@ class TrackingService
             $shipment = MyFlyingBoxShipmentQuery::create()->findPk($shipmentId);
 
             if (!$shipment || !$shipment->getApiOrderUuid()) {
-                $this->logger->debug('No API order UUID for shipment ' . $shipmentId);
                 return false;
             }
 
@@ -182,25 +179,22 @@ class TrackingService
             // Try dedicated tracking endpoint first
             try {
                 $response = $this->apiService->getOrderTracking($orderUuid);
-                $this->logger->debug('Tracking API response', ['response' => json_encode($response)]);
                 $trackingEvents = $this->extractEventsFromResponse($response);
             } catch (\Exception $e) {
-                $this->logger->debug('Tracking endpoint failed: ' . $e->getMessage());
+                // Silently fall through to order endpoint fallback
             }
 
             // Fallback: try to get events from order endpoint
             if (empty($trackingEvents)) {
                 try {
                     $orderResponse = $this->apiService->getOrder($orderUuid);
-                    $this->logger->debug('Order API response for tracking', ['response' => json_encode($orderResponse)]);
                     $trackingEvents = $this->extractEventsFromResponse($orderResponse);
                 } catch (\Exception $e) {
-                    $this->logger->debug('Order endpoint for tracking failed: ' . $e->getMessage());
+                    // Both endpoints failed
                 }
             }
 
             if (empty($trackingEvents)) {
-                $this->logger->debug('No tracking events found for shipment ' . $shipmentId);
                 return false;
             }
 
@@ -351,8 +345,6 @@ class TrackingService
             }
         }
 
-        $this->logger->debug('Extracted tracking events', ['count' => count($events)]);
-
         return $events;
     }
 
@@ -484,7 +476,6 @@ class TrackingService
     private function sendStatusNotification($shipment, string $previousStatus, string $newStatus): void
     {
         if (!$this->notificationService) {
-            $this->logger->debug('Notification service not configured, skipping email');
             return;
         }
 

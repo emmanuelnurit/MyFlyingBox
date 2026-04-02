@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MyFlyingBox\Service;
 
 use MyFlyingBox\Model\MyFlyingBoxDimensionQuery;
@@ -10,7 +12,7 @@ use Thelia\Model\Cart;
 /**
  * Service for calculating parcel dimensions from cart weight
  */
-class DimensionService
+final class DimensionService
 {
     /**
      * Calculate parcel data from cart
