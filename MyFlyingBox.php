@@ -234,7 +234,7 @@ class MyFlyingBox extends AbstractDeliveryModuleWithState
         }
     }
 
-    public function getPostage(Country $country, State $state = null)
+    public function getPostage(Country $country, ?State $state = null): OrderPostage|float
     {
         $request = $this->getRequest();
         $session = $request->getSession();
