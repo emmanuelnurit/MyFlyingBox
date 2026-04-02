@@ -20,16 +20,20 @@
 
     $(function() {
     var orderId = {$order_id};
-    var csrfToken = '{$csrf_token|escape:"javascript"}';
     var $container = $('.mfb-shipment-container[data-order-id="' + orderId + '"]');
     var $messages = $('#mfb-shipment-messages');
 
-    // Add CSRF token to all AJAX POST requests
-    $.ajaxPrefilter(function(options, originalOptions, jqXHR) {
-        if (options.type && options.type.toUpperCase() === 'POST') {
-            jqXHR.setRequestHeader('X-CSRF-Token', csrfToken);
-        }
-    });
+    // CSRF token embedded in URLs via {token_url} — no custom header needed
+    var MFB_SHIPMENT_URLS = {
+        create: '{token_url path="/admin/module/myflyingbox/shipment/create"}',
+        book: '{token_url path="/admin/module/myflyingbox/shipment/book"}',
+        cancel: '{token_url path="/admin/module/myflyingbox/shipment/cancel"}',
+        status: '{token_url path="/admin/module/myflyingbox/shipment/status"}',
+        syncTracking: '{token_url path="/admin/module/myflyingbox/shipment/sync-tracking"}',
+        createReturn: '{token_url path="/admin/module/myflyingbox/shipment/create-return"}',
+        tracking: '{url path="/admin/module/myflyingbox/shipment/tracking"}',
+        downloadLabel: '{url path="/admin/module/myflyingbox/shipment/download-label"}'
+    };
 
     // Translations for modals and statuses
     var MFB_ORDER_TRANSLATIONS = {
@@ -131,7 +135,7 @@
         showLoading($btn);
 
         $.ajax({
-            url: '{url path="/admin/module/myflyingbox/shipment/create"}',
+            url: MFB_SHIPMENT_URLS.create,
             method: 'POST',
             data: {
                 order_id: orderId,
@@ -175,7 +179,7 @@
                 showLoading($btn);
 
                 $.ajax({
-                    url: '{url path="/admin/module/myflyingbox/shipment/book"}',
+                    url: MFB_SHIPMENT_URLS.book,
                     method: 'POST',
                     data: { shipment_id: shipmentId },
                     dataType: 'json'
@@ -224,7 +228,7 @@
         showLoading($btn);
 
         // Use the proxy route to download the label PDF
-        var downloadUrl = '{url path="/admin/module/myflyingbox/shipment/download-label"}?shipment_id=' + shipmentId;
+        var downloadUrl = MFB_SHIPMENT_URLS.downloadLabel + '&shipment_id=' + shipmentId;
         window.open(downloadUrl, '_blank');
 
         hideLoading($btn);
@@ -242,7 +246,7 @@
                 showLoading($btn);
 
                 $.ajax({
-                    url: '{url path="/admin/module/myflyingbox/shipment/status"}',
+                    url: MFB_SHIPMENT_URLS.status,
                     method: 'POST',
                     data: { shipment_id: shipmentId, status: 'shipped' },
                     dataType: 'json'
@@ -284,7 +288,7 @@
         showLoading($btn);
 
         $.ajax({
-            url: '{url path="/admin/module/myflyingbox/shipment/sync-tracking"}',
+            url: MFB_SHIPMENT_URLS.syncTracking,
             method: 'POST',
             data: { shipment_id: shipmentId },
             dataType: 'json'
@@ -322,7 +326,7 @@
                 showLoading($btn);
 
                 $.ajax({
-                    url: '{url path="/admin/module/myflyingbox/shipment/cancel"}',
+                    url: MFB_SHIPMENT_URLS.cancel,
                     method: 'POST',
                     data: { shipment_id: shipmentId },
                     dataType: 'json'
@@ -358,7 +362,7 @@
         if ($timeline.length === 0) return;
 
         $.ajax({
-            url: '{url path="/admin/module/myflyingbox/shipment/tracking"}',
+            url: MFB_SHIPMENT_URLS.tracking,
             method: 'GET',
             data: { order_id: orderId },
             dataType: 'json'
@@ -469,7 +473,7 @@
         showLoading($btn);
 
         $.ajax({
-            url: '{url path="/admin/module/myflyingbox/shipment/create-return"}',
+            url: MFB_SHIPMENT_URLS.createReturn,
             method: 'POST',
             data: {
                 shipment_id: shipmentId,

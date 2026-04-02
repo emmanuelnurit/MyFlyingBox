@@ -28,7 +28,8 @@ class ConfigurationController extends BaseAdminController
      */
     private function checkCsrfToken(Request $request, TokenProvider $tokenProvider): ?JsonResponse
     {
-        $token = $request->headers->get('X-CSRF-Token')
+        $token = $request->query->get('_token')
+            ?? $request->headers->get('X-CSRF-Token')
             ?? $request->request->get('_token')
             ?? (json_decode($request->getContent(), true)['_token'] ?? null);
 
