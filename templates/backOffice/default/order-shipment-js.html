@@ -23,17 +23,14 @@
     var $container = $('.mfb-shipment-container[data-order-id="' + orderId + '"]');
     var $messages = $('#mfb-shipment-messages');
 
-    // CSRF token — generated per-session in BackHook via direct session access
-    var MFB_CSRF_TOKEN = '{$csrf_token|escape:"javascript"}';
-
-    // URLs — token appended as ?_token= on POST endpoints
+    // CSRF token embedded in URLs via {token_url} — no custom header needed
     var MFB_SHIPMENT_URLS = {
-        create: '{url path="/admin/module/myflyingbox/shipment/create"}?_token={$csrf_token|escape:"javascript"}',
-        book: '{url path="/admin/module/myflyingbox/shipment/book"}?_token={$csrf_token|escape:"javascript"}',
-        cancel: '{url path="/admin/module/myflyingbox/shipment/cancel"}?_token={$csrf_token|escape:"javascript"}',
-        status: '{url path="/admin/module/myflyingbox/shipment/status"}?_token={$csrf_token|escape:"javascript"}',
-        syncTracking: '{url path="/admin/module/myflyingbox/shipment/sync-tracking"}?_token={$csrf_token|escape:"javascript"}',
-        createReturn: '{url path="/admin/module/myflyingbox/shipment/create-return"}?_token={$csrf_token|escape:"javascript"}',
+        create: '{token_url path="/admin/module/myflyingbox/shipment/create"}',
+        book: '{token_url path="/admin/module/myflyingbox/shipment/book"}',
+        cancel: '{token_url path="/admin/module/myflyingbox/shipment/cancel"}',
+        status: '{token_url path="/admin/module/myflyingbox/shipment/status"}',
+        syncTracking: '{token_url path="/admin/module/myflyingbox/shipment/sync-tracking"}',
+        createReturn: '{token_url path="/admin/module/myflyingbox/shipment/create-return"}',
         tracking: '{url path="/admin/module/myflyingbox/shipment/tracking"}',
         downloadLabel: '{url path="/admin/module/myflyingbox/shipment/download-label"}'
     };
@@ -231,7 +228,7 @@
         showLoading($btn);
 
         // Use the proxy route to download the label PDF
-        var downloadUrl = MFB_SHIPMENT_URLS.downloadLabel + '?shipment_id=' + shipmentId;
+        var downloadUrl = MFB_SHIPMENT_URLS.downloadLabel + '&shipment_id=' + shipmentId;
         window.open(downloadUrl, '_blank');
 
         hideLoading($btn);

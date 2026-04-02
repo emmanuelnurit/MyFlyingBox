@@ -7,18 +7,18 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
-// CSRF token — generated per-session in BackHook via direct session access
+// CSRF token for AJAX requests — Thelia native token_url embeds _token in URL
 var MFB_CSRF_TOKEN = '{$csrf_token|escape:"javascript"}';
 
 // Translations and URLs (Smarty processed)
-// Token appended as ?_token= query param; controller validates against session key
+// token_url embeds ?_token=... so the controller can validate CSRF via query string
 var MFB_URLS = {
-    testApi: '{url path="/admin/module/myflyingbox/test-api"}?_token={$csrf_token|escape:"javascript"}',
-    refreshServices: '{url path="/admin/module/myflyingbox/refresh-services"}?_token={$csrf_token|escape:"javascript"}',
-    toggleService: '{url path="/admin/module/myflyingbox/service/toggle"}?_token={$csrf_token|escape:"javascript"}',
-    updateServiceDelay: '{url path="/admin/module/myflyingbox/service/delay"}?_token={$csrf_token|escape:"javascript"}',
-    saveDimension: '{url path="/admin/module/myflyingbox/dimension/save"}?_token={$csrf_token|escape:"javascript"}',
-    deleteDimension: '{url path="/admin/module/myflyingbox/dimension/delete"}?_token={$csrf_token|escape:"javascript"}',
+    testApi: '{token_url path="/admin/module/myflyingbox/test-api"}',
+    refreshServices: '{token_url path="/admin/module/myflyingbox/refresh-services"}',
+    toggleService: '{token_url path="/admin/module/myflyingbox/service/toggle"}',
+    updateServiceDelay: '{token_url path="/admin/module/myflyingbox/service/delay"}',
+    saveDimension: '{token_url path="/admin/module/myflyingbox/dimension/save"}',
+    deleteDimension: '{token_url path="/admin/module/myflyingbox/dimension/delete"}',
     diagnostic: '{url path="/admin/module/myflyingbox/diagnostic"}'
 };
 
@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded', function() {
             html += '<p>' + escapeHtml(message) + '</p>';
         }
         if (details) {
-            html += '<p><small class="text-muted">' + details + '</small></p>';
+            html += '<p><small class="text-muted">' + escapeHtml(details) + '</small></p>';
         }
         html += '</div>';
         return html;
