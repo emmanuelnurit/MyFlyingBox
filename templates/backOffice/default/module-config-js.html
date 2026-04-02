@@ -91,11 +91,11 @@ document.addEventListener('DOMContentLoaded', function() {
         servicesExpanded = !servicesExpanded;
         if (servicesExpanded) {
             servicesBody.style.display = 'block';
-            toggleIcon.className = 'fa fa-chevron-up';
+            toggleIcon.className = 'glyphicon glyphicon-chevron-up';
             inlineSummary.style.display = 'none';
         } else {
             servicesBody.style.display = 'none';
-            toggleIcon.className = 'fa fa-chevron-down';
+            toggleIcon.className = 'glyphicon glyphicon-chevron-down';
             inlineSummary.style.display = 'flex';
         }
     }
@@ -129,10 +129,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (servicesSummarySpan) {
             if (count > 0) {
                 servicesSummarySpan.style.color = '#198754';
-                servicesSummarySpan.innerHTML = '<i class="fa fa-check-circle" style="margin-right: 0.35rem;"></i><span id="mfb-summary-count">' + count + '</span> ' + MFB_TRANSLATIONS.activeServices;
+                servicesSummarySpan.innerHTML = '<span class="glyphicon glyphicon-ok-sign" style="margin-right: 0.35rem;"></span><span id="mfb-summary-count">' + count + '</span> ' + MFB_TRANSLATIONS.activeServices;
             } else {
                 servicesSummarySpan.style.color = '#dc3545';
-                servicesSummarySpan.innerHTML = '<i class="fa fa-exclamation-circle" style="margin-right: 0.35rem;"></i><span id="mfb-summary-count">0</span> ' + MFB_TRANSLATIONS.activeServices;
+                servicesSummarySpan.innerHTML = '<span class="glyphicon glyphicon-exclamation-sign" style="margin-right: 0.35rem;"></span><span id="mfb-summary-count">0</span> ' + MFB_TRANSLATIONS.activeServices;
             }
         }
 
