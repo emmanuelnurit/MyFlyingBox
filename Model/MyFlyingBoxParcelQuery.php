@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MyFlyingBox\Model;
 
 use MyFlyingBox\Model\Base\MyFlyingBoxParcelQuery as BaseMyFlyingBoxParcelQuery;

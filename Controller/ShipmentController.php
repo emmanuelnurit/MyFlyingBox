@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MyFlyingBox\Controller;
 
 use MyFlyingBox\Model\MyFlyingBoxParcelQuery;
@@ -14,12 +16,36 @@ use Thelia\Controller\Admin\BaseAdminController;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
 use Thelia\Model\OrderQuery;
+use Thelia\Tools\TokenProvider;
 
 /**
  * Back-office controller for shipment management
  */
 class ShipmentController extends BaseAdminController
 {
+    /**
+     * Validate CSRF token from AJAX request header or body.
+     * Returns a JsonResponse on failure, null on success.
+     */
+    private function checkCsrfToken(Request $request, TokenProvider $tokenProvider): ?JsonResponse
+    {
+        $token = $request->headers->get('X-CSRF-Token')
+            ?? $request->request->get('_token')
+            ?? (json_decode($request->getContent(), true)['_token'] ?? null);
+
+        if (empty($token)) {
+            return new JsonResponse(['success' => false, 'message' => 'Missing CSRF token'], 403);
+        }
+
+        try {
+            $tokenProvider->checkToken($token);
+        } catch (\Exception $e) {
+            return new JsonResponse(['success' => false, 'message' => 'Invalid CSRF token'], 403);
+        }
+
+        return null;
+    }
+
     /**
      * View shipment details
      */
@@ -52,10 +78,14 @@ class ShipmentController extends BaseAdminController
     /**
      * Book a shipment with the carrier
      */
-    public function bookAction(Request $request, ShipmentService $shipmentService): JsonResponse
+    public function bookAction(Request $request, ShipmentService $shipmentService, TokenProvider $tokenProvider): JsonResponse
     {
         if (null !== $response = $this->checkAuth(AdminResources::ORDER, [], AccessManager::UPDATE)) {
             return new JsonResponse(['success' => false, 'message' => 'Access denied'], 403);
+        }
+
+        if (null !== $csrfError = $this->checkCsrfToken($request, $tokenProvider)) {
+            return $csrfError;
         }
 
         try {
@@ -183,10 +213,14 @@ class ShipmentController extends BaseAdminController
     /**
      * Update shipment status
      */
-    public function updateStatusAction(Request $request, ShipmentService $shipmentService): JsonResponse
+    public function updateStatusAction(Request $request, ShipmentService $shipmentService, TokenProvider $tokenProvider): JsonResponse
     {
         if (null !== $response = $this->checkAuth(AdminResources::ORDER, [], AccessManager::UPDATE)) {
             return new JsonResponse(['success' => false, 'message' => 'Access denied'], 403);
+        }
+
+        if (null !== $csrfError = $this->checkCsrfToken($request, $tokenProvider)) {
+            return $csrfError;
         }
 
         try {
@@ -235,10 +269,14 @@ class ShipmentController extends BaseAdminController
     /**
      * Cancel a shipment
      */
-    public function cancelAction(Request $request, ShipmentService $shipmentService): JsonResponse
+    public function cancelAction(Request $request, ShipmentService $shipmentService, TokenProvider $tokenProvider): JsonResponse
     {
         if (null !== $response = $this->checkAuth(AdminResources::ORDER, [], AccessManager::UPDATE)) {
             return new JsonResponse(['success' => false, 'message' => 'Access denied'], 403);
+        }
+
+        if (null !== $csrfError = $this->checkCsrfToken($request, $tokenProvider)) {
+            return $csrfError;
         }
 
         try {
@@ -278,10 +316,14 @@ class ShipmentController extends BaseAdminController
     /**
      * Create shipment for an order
      */
-    public function createAction(Request $request, ShipmentService $shipmentService): JsonResponse
+    public function createAction(Request $request, ShipmentService $shipmentService, TokenProvider $tokenProvider): JsonResponse
     {
         if (null !== $response = $this->checkAuth(AdminResources::ORDER, [], AccessManager::CREATE)) {
             return new JsonResponse(['success' => false, 'message' => 'Access denied'], 403);
+        }
+
+        if (null !== $csrfError = $this->checkCsrfToken($request, $tokenProvider)) {
+            return $csrfError;
         }
 
         try {
@@ -323,10 +365,14 @@ class ShipmentController extends BaseAdminController
     /**
      * Sync tracking status for a shipment
      */
-    public function syncTrackingAction(Request $request, TrackingService $trackingService): JsonResponse
+    public function syncTrackingAction(Request $request, TrackingService $trackingService, TokenProvider $tokenProvider): JsonResponse
     {
         if (null !== $response = $this->checkAuth(AdminResources::ORDER, [], AccessManager::UPDATE)) {
             return new JsonResponse(['success' => false, 'message' => 'Access denied'], 403);
+        }
+
+        if (null !== $csrfError = $this->checkCsrfToken($request, $tokenProvider)) {
+            return $csrfError;
         }
 
         try {
@@ -393,73 +439,7 @@ class ShipmentController extends BaseAdminController
         } catch (\Exception $e) {
             return new JsonResponse([
                 'success' => false,
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ], 500);
-        }
-    }
-
-    /**
-     * Debug: Get raw API response for tracking
-     */
-    public function debugTrackingAction(Request $request, \MyFlyingBox\Service\LceApiService $apiService): JsonResponse
-    {
-        if (null !== $response = $this->checkAuth(AdminResources::ORDER, [], AccessManager::VIEW)) {
-            return new JsonResponse(['success' => false, 'message' => 'Access denied'], 403);
-        }
-
-        try {
-            $shipmentId = (int) $request->get('shipment_id');
-
-            if (!$shipmentId) {
-                return new JsonResponse(['success' => false, 'message' => 'Shipment ID is required'], 400);
-            }
-
-            $shipment = MyFlyingBoxShipmentQuery::create()->findPk($shipmentId);
-            if (!$shipment) {
-                return new JsonResponse(['success' => false, 'message' => 'Shipment not found'], 404);
-            }
-
-            if (!$shipment->getApiOrderUuid()) {
-                return new JsonResponse([
-                    'success' => false,
-                    'message' => 'No API Order UUID',
-                    'shipment_status' => $shipment->getStatus()
-                ]);
-            }
-
-            $orderUuid = $shipment->getApiOrderUuid();
-            $debug = [
-                'shipment_id' => $shipmentId,
-                'api_order_uuid' => $orderUuid,
-                'shipment_status' => $shipment->getStatus(),
-            ];
-
-            // Try tracking endpoint
-            try {
-                $trackingResponse = $apiService->getOrderTracking($orderUuid);
-                $debug['tracking_endpoint'] = $trackingResponse;
-            } catch (\Exception $e) {
-                $debug['tracking_endpoint_error'] = $e->getMessage();
-            }
-
-            // Try order endpoint
-            try {
-                $orderResponse = $apiService->getOrder($orderUuid);
-                $debug['order_endpoint'] = $orderResponse;
-            } catch (\Exception $e) {
-                $debug['order_endpoint_error'] = $e->getMessage();
-            }
-
-            return new JsonResponse([
-                'success' => true,
-                'debug' => $debug
-            ]);
-
-        } catch (\Exception $e) {
-            return new JsonResponse([
-                'success' => false,
-                'message' => $e->getMessage()
+                'message' => 'An internal error occurred',
             ], 500);
         }
     }
@@ -467,10 +447,14 @@ class ShipmentController extends BaseAdminController
     /**
      * Create a return shipment from an existing shipment
      */
-    public function createReturnAction(Request $request, ShipmentService $shipmentService): JsonResponse
+    public function createReturnAction(Request $request, ShipmentService $shipmentService, TokenProvider $tokenProvider): JsonResponse
     {
         if (null !== $response = $this->checkAuth(AdminResources::ORDER, [], AccessManager::CREATE)) {
             return new JsonResponse(['success' => false, 'message' => 'Access denied'], 403);
+        }
+
+        if (null !== $csrfError = $this->checkCsrfToken($request, $tokenProvider)) {
+            return $csrfError;
         }
 
         try {

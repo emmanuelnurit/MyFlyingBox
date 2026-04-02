@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MyFlyingBox\Controller;
 
 use MyFlyingBox\MyFlyingBox;
@@ -144,7 +146,6 @@ class WebhookController extends BaseFrontController
             $this->logger->error('Webhook processing error', [
                 'webhook_id' => $webhookId,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
             ]);
 
             // Return 500 so the sender can retry
@@ -171,13 +172,12 @@ class WebhookController extends BaseFrontController
     {
         $secret = MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_WEBHOOK_SECRET, '');
 
-        // If no secret is configured, skip signature validation
-        // This is less secure but allows for easier initial setup
+        // Reject if no secret is configured — webhook secret must be set
         if (empty($secret)) {
-            $this->logger->debug('No webhook secret configured, skipping signature validation', [
+            $this->logger->warning('Webhook rejected: no webhook secret configured', [
                 'webhook_id' => $webhookId,
             ]);
-            return true;
+            return false;
         }
 
         // If secret is configured but no signature provided, reject

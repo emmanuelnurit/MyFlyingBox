@@ -134,7 +134,6 @@ final class LceApiService
             $this->logger->error('LCE API returned failure status', [
                 'http_code' => $httpCode,
                 'error' => $errorMessage,
-                'response' => $response,
             ]);
 
             throw new \RuntimeException('API error: ' . $errorMessage);
@@ -147,7 +146,6 @@ final class LceApiService
             $this->logger->error('LCE API HTTP error', [
                 'http_code' => $httpCode,
                 'error' => $errorMessage,
-                'response' => $response,
             ]);
 
             throw new \RuntimeException('API error (' . $httpCode . '): ' . $errorMessage);

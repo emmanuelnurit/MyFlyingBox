@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MyFlyingBox\Hook;
 
 use MyFlyingBox\Model\MyFlyingBoxCartRelayQuery;
@@ -14,9 +16,17 @@ use Thelia\Core\Event\Hook\HookRenderEvent;
 use Thelia\Core\Hook\BaseHook;
 use Thelia\Model\ModuleQuery;
 use Thelia\Model\OrderQuery;
+use Thelia\Tools\TokenProvider;
 
 class BackHook extends BaseHook
 {
+    private TokenProvider $tokenProvider;
+
+    public function __construct(TokenProvider $tokenProvider)
+    {
+        $this->tokenProvider = $tokenProvider;
+    }
+
     public function onModuleConfiguration(HookRenderEvent $event): void
     {
         $event->add($this->render('myflyingbox-configuration.html', [
@@ -27,7 +37,9 @@ class BackHook extends BaseHook
 
     public function onModuleConfigJs(HookRenderEvent $event): void
     {
-        $event->add($this->render('module-config-js.html'));
+        $event->add($this->render('module-config-js.html', [
+            'csrf_token' => $this->tokenProvider->assignToken(),
+        ]));
     }
 
     /**
@@ -179,6 +191,7 @@ class BackHook extends BaseHook
 
         $event->add($this->render('order-shipment-js.html', [
             'order_id' => $orderId,
+            'csrf_token' => $this->tokenProvider->assignToken(),
         ]));
     }
 

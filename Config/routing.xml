@@ -81,10 +81,6 @@
         <default key="_controller">MyFlyingBox\Controller\ShipmentController::trackingAction</default>
     </route>
 
-    <route id="myflyingbox.admin.shipment.debug-tracking" path="/admin/module/myflyingbox/shipment/debug-tracking" methods="GET">
-        <default key="_controller">MyFlyingBox\Controller\ShipmentController::debugTrackingAction</default>
-    </route>
-
     <!-- Generic shipment view route - MUST be LAST to avoid capturing specific paths -->
     <route id="myflyingbox.admin.shipment.view" path="/admin/module/myflyingbox/shipment/{shipmentId}" methods="GET">
         <default key="_controller">MyFlyingBox\Controller\ShipmentController::viewAction</default>

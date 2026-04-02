@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MyFlyingBox\EventListener;
 
 use MyFlyingBox\Model\MyFlyingBoxCartRelayQuery;

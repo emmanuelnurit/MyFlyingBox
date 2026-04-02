@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MyFlyingBox\Command;
 
 use MyFlyingBox\Model\MyFlyingBoxShipmentQuery;

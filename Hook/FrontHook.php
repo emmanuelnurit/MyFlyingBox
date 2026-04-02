@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MyFlyingBox\Hook;
 
 use MyFlyingBox\Model\MyFlyingBoxCartRelayQuery;

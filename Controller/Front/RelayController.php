@@ -18,6 +18,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Thelia\Controller\Front\BaseFrontController;
 use Psr\Log\LoggerInterface;
+use Thelia\Core\Translation\Translator;
 use Thelia\Model\AddressQuery;
 use Thelia\Model\CountryQuery;
 
@@ -90,7 +91,7 @@ class RelayController extends BaseFrontController
             $logger->error('MyFlyingBox: error saving offer selection', ['exception' => $e]);
             return new JsonResponse([
                 'success' => false,
-                'message' => 'An error occurred while saving the offer selection.',
+                'message' => Translator::getInstance()->trans('An error occurred', [], 'myflyingbox'),
             ]);
         }
     }
@@ -207,7 +208,7 @@ class RelayController extends BaseFrontController
                 return new JsonResponse([
                     'success' => true,
                     'relays' => [],
-                    'message' => 'No relay points found',
+                    'message' => Translator::getInstance()->trans('No relay points found', [], 'myflyingbox'),
                 ]);
             }
 
@@ -241,7 +242,7 @@ class RelayController extends BaseFrontController
             return new JsonResponse([
                 'success' => true,
                 'relays' => [],
-                'message' => 'Service de recherche de points relais temporairement indisponible',
+                'message' => Translator::getInstance()->trans('Relay point search temporarily unavailable', [], 'myflyingbox'),
             ]);
         }
     }
@@ -301,7 +302,7 @@ class RelayController extends BaseFrontController
             $logger->error('MyFlyingBox: error saving relay point', ['exception' => $e]);
             return new JsonResponse([
                 'success' => false,
-                'message' => 'An error occurred while saving the relay point.',
+                'message' => Translator::getInstance()->trans('An error occurred', [], 'myflyingbox'),
             ]);
         }
     }
@@ -470,7 +471,7 @@ class RelayController extends BaseFrontController
             $logger->error('MyFlyingBox: error fetching offers', ['exception' => $e]);
             return new JsonResponse([
                 'success' => false,
-                'message' => 'An error occurred while fetching shipping offers.',
+                'message' => Translator::getInstance()->trans('An error occurred', [], 'myflyingbox'),
             ]);
         }
     }
@@ -566,10 +567,11 @@ class RelayController extends BaseFrontController
             $carriersCount = count($prices);
 
             // Build carriers label
+            $translator = Translator::getInstance();
             if ($carriersCount === 1) {
-                $carriersLabel = '1 transporteur disponible';
+                $carriersLabel = '1 ' . $translator->trans('carrier available', [], 'myflyingbox');
             } else {
-                $carriersLabel = $carriersCount . ' transporteurs disponibles';
+                $carriersLabel = $carriersCount . ' ' . $translator->trans('carriers available', [], 'myflyingbox');
             }
 
             return new JsonResponse([
@@ -584,7 +586,7 @@ class RelayController extends BaseFrontController
             $logger->error('MyFlyingBox: error fetching estimate', ['exception' => $e]);
             return new JsonResponse([
                 'success' => false,
-                'message' => 'An error occurred while fetching the delivery estimate.',
+                'message' => Translator::getInstance()->trans('An error occurred', [], 'myflyingbox'),
             ]);
         }
     }
