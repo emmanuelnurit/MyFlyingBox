@@ -13,6 +13,7 @@
     "require": {
         "php": ">=8.0",
         "thelia/installer": "~1.1",
+        "symfony/monolog-bundle": "^3.10",
         "ext-curl": "*",
         "ext-json": "*"
     },
