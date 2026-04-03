@@ -201,6 +201,8 @@ return [
     'Failed' => 'Échec',
 
     // Front-office - Delivery options
+    'Chargement des options de livraison' => 'Chargement des options de livraison',
+    'Nous recherchons les meilleurs tarifs pour votre adresse...' => 'Nous recherchons les meilleurs tarifs pour votre adresse...',
     'Choisissez votre livraison' => 'Choisissez votre livraison',
     'Choisissez votre mode de livraison' => 'Choisissez votre mode de livraison',
     'options disponibles' => 'options disponibles',
