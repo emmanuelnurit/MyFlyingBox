@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     // Module info
     'MyFlyingBox - Shipping Module' => 'MyFlyingBox - Module de livraison',
@@ -104,16 +106,16 @@ return [
     'Warning' => 'Attention',
 
     // Relay points - Front
-    'Sélectionnez un point relais' => 'Sélectionnez un point relais',
-    'Point relais sélectionné :' => 'Point relais sélectionné :',
-    'Changer de point relais' => 'Changer de point relais',
-    'Rechercher un point relais' => 'Rechercher un point relais',
-    'Rechercher' => 'Rechercher',
-    'Recherche en cours...' => 'Recherche en cours...',
-    'Aucun point relais trouvé' => 'Aucun point relais trouvé',
-    'Erreur lors de la recherche' => 'Erreur lors de la recherche',
-    'Veuillez saisir au moins 2 caractères' => 'Veuillez saisir au moins 2 caractères',
-    'Erreur lors de la sélection' => 'Erreur lors de la sélection',
+    'Select a relay point' => 'Sélectionnez un point relais',
+    'Selected relay point:' => 'Point relais sélectionné :',
+    'Change relay point' => 'Changer de point relais',
+    'Search for a relay point' => 'Rechercher un point relais',
+    'Search' => 'Rechercher',
+    'Searching...' => 'Recherche en cours...',
+    'No relay points found' => 'Aucun point relais trouvé',
+    'Search error' => 'Erreur lors de la recherche',
+    'Please enter at least 2 characters' => 'Veuillez saisir au moins 2 caractères',
+    'Selection error' => 'Erreur lors de la sélection',
 
     // Shipments
     'Shipments' => 'Expéditions',
@@ -199,23 +201,32 @@ return [
     'Failed' => 'Échec',
 
     // Front-office - Delivery options
-    'Choisissez votre livraison' => 'Choisissez votre livraison',
-    'Choisissez votre mode de livraison' => 'Choisissez votre mode de livraison',
-    'options disponibles' => 'options disponibles',
-    'Point Relais' => 'Point Relais',
-    'jour(s)' => 'jour(s)',
-    'jours' => 'jours',
-    'Sélectionnez votre point relais' => 'Sélectionnez votre point relais',
-    'Point relais sélectionné' => 'Point relais sélectionné',
-    'Modifier' => 'Modifier',
-    'Rechercher' => 'Rechercher',
-    'Rechercher autour de :' => 'Rechercher autour de :',
-    'Ville ou code postal' => 'Ville ou code postal',
-    'Entrez une ville ou un code postal...' => 'Entrez une ville ou un code postal...',
-    'Aucune option de livraison disponible pour votre adresse.' => 'Aucune option de livraison disponible pour votre adresse.',
-    'Aucun point relais trouvé pour cette recherche' => 'Aucun point relais trouvé pour cette recherche',
-    'Recherche de points relais indisponible' => 'Recherche de points relais indisponible',
-    'Le point relais sera sélectionné lors de la préparation de votre commande.' => 'Le point relais sera sélectionné lors de la préparation de votre commande.',
+    'Loading delivery options' => 'Chargement des options de livraison',
+    'Finding the best rates for your address...' => 'Nous recherchons les meilleurs tarifs pour votre adresse...',
+    'Choose your delivery' => 'Choisissez votre livraison',
+    'Choose your delivery method' => 'Choisissez votre mode de livraison',
+    'available options' => 'options disponibles',
+    'Relay Point' => 'Point Relais',
+    'day(s)' => 'jour(s)',
+    'days' => 'jours',
+    'Select your relay point' => 'Sélectionnez votre point relais',
+    'Relay point selected' => 'Point relais sélectionné',
+    'Change' => 'Modifier',
+    'Search around:' => 'Rechercher autour de :',
+    'City or postal code' => 'Ville ou code postal',
+    'Enter a city or postal code...' => 'Entrez une ville ou un code postal...',
+    'No delivery options available for your address.' => 'Aucune option de livraison disponible pour votre adresse.',
+    'No relay points found for this search' => 'Aucun point relais trouvé pour cette recherche',
+    'Relay point search unavailable' => 'Recherche de points relais indisponible',
+    'The relay point will be selected during order preparation.' => 'Le point relais sera sélectionné lors de la préparation de votre commande.',
+    'relay points found' => 'points relais trouvés',
+    'Relay points map' => 'Carte des points relais',
+    'Relay point search temporarily unavailable' => 'Service de recherche de points relais temporairement indisponible',
+    'carrier available' => 'transporteur disponible',
+    'carriers available' => 'transporteurs disponibles',
+    'Loading delivery options took too long. Please reload the page.' => 'Le chargement des options de livraison a pris trop de temps. Veuillez recharger la page.',
+    'Error loading delivery options.' => 'Erreur lors du chargement des options de livraison.',
+    'Please select a relay point before continuing.' => 'Veuillez sélectionner un point relais avant de continuer.',
 
     // CLI Commands
     'Synchronize tracking information from MyFlyingBox/LCE API' => 'Synchroniser les informations de suivi depuis l\'API MyFlyingBox/LCE',
@@ -238,15 +249,14 @@ return [
     'Filtering by status: %s' => 'Filtrage par statut : %s',
 
     // Front-office - Order tracking
-    'Suivi de votre livraison' => 'Suivi de votre livraison',
-    'Réservé le' => 'Réservé le',
-    'Enlèvement prévu le' => 'Enlèvement prévu le',
-    'Point relais de livraison' => 'Point relais de livraison',
-    'N° de suivi :' => 'N° de suivi :',
-    'Suivre sur le site du transporteur' => 'Suivre sur le site du transporteur',
-    'Historique de suivi' => 'Historique de suivi',
-    'Colis' => 'Colis',
-    'Le suivi sera disponible une fois votre colis expédié.' => 'Le suivi sera disponible une fois votre colis expédié.',
+    'Track your delivery' => 'Suivi de votre livraison',
+    'Booked on' => 'Réservé le',
+    'Collection scheduled for' => 'Enlèvement prévu le',
+    'Relay delivery point' => 'Point relais de livraison',
+    'Tracking number:' => 'N° de suivi :',
+    'Track on carrier website' => 'Suivre sur le site du transporteur',
+    'Tracking history' => 'Historique de suivi',
+    'Tracking will be available once your parcel is shipped.' => 'Le suivi sera disponible une fois votre colis expédié.',
 
     // Webhook Configuration
     'Webhook Configuration' => 'Configuration Webhook',
@@ -368,11 +378,10 @@ return [
     'Status change' => 'Changement de statut',
 
     // Front-office - Order confirmation
-    'Votre livraison' => 'Votre livraison',
-    'Livraison en point relais' => 'Livraison en point relais',
-    'Livraison à domicile' => 'Livraison à domicile',
-    'Vous recevrez un email avec le numéro de suivi dès que votre colis sera expédié.' => 'Vous recevrez un email avec le numéro de suivi dès que votre colis sera expédié.',
-    'Suivre mes commandes' => 'Suivre mes commandes',
+    'Your delivery' => 'Votre livraison',
+    'Relay point delivery' => 'Livraison en point relais',
+    'You will receive an email with the tracking number once your parcel is shipped.' => 'Vous recevrez un email avec le numéro de suivi dès que votre colis sera expédié.',
+    'Track my orders' => 'Suivre mes commandes',
 
     // Email message titles and subjects (for Thelia message system)
     'MyFlyingBox - Shipment sent notification' => 'MyFlyingBox - Notification d\'expédition',
@@ -399,4 +408,8 @@ return [
     'api_error.unknown' => 'Une erreur est survenue avec le service de livraison. Veuillez réessayer ou contacter le support.',
     'api_error.relay_access_denied' => 'La livraison en point relais n\'est pas activée sur votre compte MyFlyingBox. Veuillez contacter le support MyFlyingBox pour activer cette fonctionnalité.',
     'api_error.relay_configuration_error' => 'Erreur de configuration de la livraison en point relais. Veuillez vérifier que la livraison en point relais est correctement configurée dans votre compte MyFlyingBox.',
+
+    // OrderEventListener messages
+    'Please select a relay point for this delivery.' => 'Veuillez sélectionner un point relais pour cette livraison.',
+    'Order marked as shipped in Thelia' => 'Commande marquée comme expédiée dans Thelia',
 ];

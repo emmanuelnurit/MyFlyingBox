@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MyFlyingBox\Service;
 
 use MyFlyingBox\Model\MyFlyingBoxCartRelay;
@@ -24,7 +26,7 @@ use Thelia\Model\OrderAddress;
 /**
  * Service for managing shipments
  */
-class ShipmentService
+final class ShipmentService
 {
     public const STATUS_PENDING = 'pending';
     public const STATUS_BOOKED = 'booked';
@@ -32,21 +34,12 @@ class ShipmentService
     public const STATUS_DELIVERED = 'delivered';
     public const STATUS_CANCELLED = 'cancelled';
 
-    private LceApiService $apiService;
-    private DimensionService $dimensionService;
-    private ApiErrorTranslator $apiErrorTranslator;
-    private LoggerInterface $logger;
-
     public function __construct(
-        LceApiService $apiService,
-        DimensionService $dimensionService,
-        ApiErrorTranslator $apiErrorTranslator,
-        LoggerInterface $logger
+        private readonly LceApiService $apiService,
+        private readonly DimensionService $dimensionService,
+        private readonly ApiErrorTranslator $apiErrorTranslator,
+        private readonly LoggerInterface $logger
     ) {
-        $this->apiService = $apiService;
-        $this->dimensionService = $dimensionService;
-        $this->apiErrorTranslator = $apiErrorTranslator;
-        $this->logger = $logger;
     }
 
     /**
@@ -193,7 +186,13 @@ class ShipmentService
                 $phone = $defaultAddress->getPhone() ?: $defaultAddress->getCellphone();
             }
         }
-        $shipment->setRecipientPhone($phone ?: '0000000000'); // API requires phone
+        if (empty($phone)) {
+            $phone = MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_PHONE, '');
+            $this->logger->warning('MyFlyingBox: no recipient phone found, using shipper phone as fallback', [
+                'orderId' => $order->getId(),
+            ]);
+        }
+        $shipment->setRecipientPhone($phone);
 
         // Email is required - get from customer
         $customer = $order->getCustomer();
@@ -309,7 +308,10 @@ class ShipmentService
                     $recipientPhone = $deliveryAddress->getPhone() ?: $deliveryAddress->getCellphone();
                 }
                 if (empty($recipientPhone)) {
-                    $recipientPhone = '+33612345678'; // API requires valid phone
+                    $recipientPhone = MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_PHONE, '');
+                    $this->logger->warning('MyFlyingBox: no recipient phone at booking, using shipper phone fallback', [
+                        'shipmentId' => $shipment->getId(),
+                    ]);
                 }
                 $shipment->setRecipientPhone($recipientPhone);
                 $shipment->save();
@@ -1252,8 +1254,12 @@ class ShipmentService
     private function formatPhoneForApi(?string $phone, string $country = 'FR'): string
     {
         if (empty($phone)) {
-            // Default valid phone by country
-            return $country === 'FR' ? '+33612345678' : '+33612345678';
+            $configPhone = MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_PHONE, '');
+            if (!empty($configPhone)) {
+                return $this->formatPhoneForApi($configPhone, $country);
+            }
+            $this->logger->warning('MyFlyingBox: no phone number available for API call', ['country' => $country]);
+            return '';
         }
 
         // Keep only digits
@@ -1275,14 +1281,14 @@ class ShipmentService
 
         $prefix = $countryPrefixes[$country] ?? '33';
 
-        // If too short, return default
+        // If too short, log and return as-is (best effort)
         if (strlen($digits) < 9) {
-            $this->logger->warning('Phone number too short, using default', [
+            $this->logger->warning('MyFlyingBox: phone number too short for API', [
                 'original' => $phone,
                 'digits' => $digits,
                 'country' => $country,
             ]);
-            return '+' . $prefix . '612345678';
+            return '+' . $prefix . $digits;
         }
 
         // If starts with country prefix, just add +

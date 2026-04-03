@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MyFlyingBox\Loop;
 
 use MyFlyingBox\Model\MyFlyingBoxParcelQuery;

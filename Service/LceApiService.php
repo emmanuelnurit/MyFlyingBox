@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MyFlyingBox\Service;
 
 use MyFlyingBox\MyFlyingBox;
@@ -9,16 +11,14 @@ use Psr\Log\LoggerInterface;
  * Service for communicating with the LCE (Low Cost Express) API
  * API Documentation: https://www.myflyingbox.com/api
  */
-class LceApiService
+final class LceApiService
 {
     private const API_URL_STAGING = 'https://test.myflyingbox.com/v2';
     private const API_URL_PRODUCTION = 'https://api.myflyingbox.com/v2';
 
-    private LoggerInterface $logger;
-
-    public function __construct(LoggerInterface $logger)
-    {
-        $this->logger = $logger;
+    public function __construct(
+        private readonly LoggerInterface $logger
+    ) {
     }
 
     /**
@@ -83,6 +83,8 @@ class LceApiService
             ],
             CURLOPT_TIMEOUT => 30,
             CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
         ]);
 
         // Method-specific options
@@ -132,7 +134,6 @@ class LceApiService
             $this->logger->error('LCE API returned failure status', [
                 'http_code' => $httpCode,
                 'error' => $errorMessage,
-                'response' => $response,
             ]);
 
             throw new \RuntimeException('API error: ' . $errorMessage);
@@ -145,7 +146,6 @@ class LceApiService
             $this->logger->error('LCE API HTTP error', [
                 'http_code' => $httpCode,
                 'error' => $errorMessage,
-                'response' => $response,
             ]);
 
             throw new \RuntimeException('API error (' . $httpCode . '): ' . $errorMessage);
@@ -237,6 +237,8 @@ class LceApiService
                 'Accept: application/json',
             ],
             CURLOPT_TIMEOUT => 30,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
         ]);
 
         $response = curl_exec($ch);
@@ -421,6 +423,8 @@ class LceApiService
             CURLOPT_TIMEOUT => 60,
             CURLOPT_CONNECTTIMEOUT => 15,
             CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
         ]);
 
         $response = curl_exec($ch);
@@ -457,7 +461,7 @@ class LceApiService
         }
 
         // Verify we got a PDF
-        if (strpos($contentType, 'application/pdf') === false && strpos($response, '%PDF') !== 0) {
+        if (!str_contains($contentType, 'application/pdf') && !str_starts_with($response, '%PDF')) {
             $this->logger->error('Label response is not a PDF', [
                 'content_type' => $contentType,
                 'response_start' => substr($response, 0, 100),

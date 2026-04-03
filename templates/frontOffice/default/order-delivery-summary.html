@@ -21,9 +21,9 @@
                     <span class="mfb-delivery-time">
                         <i class="fa fa-clock-o"></i>
                         {if $selected_offer.delivery_days|strpos:'-' !== false}
-                            {$selected_offer.delivery_days} {intl l="jours" d="myflyingbox"}
+                            {$selected_offer.delivery_days} {intl l="days" d="myflyingbox"}
                         {else}
-                            {$selected_offer.delivery_days} {intl l="jour(s)" d="myflyingbox"}
+                            {$selected_offer.delivery_days} {intl l="day(s)" d="myflyingbox"}
                         {/if}
                     </span>
                     {/if}
@@ -38,7 +38,7 @@
             <div class="mfb-relay-summary">
                 <div class="mfb-relay-header">
                     <i class="fa fa-map-marker"></i>
-                    <span>{intl l="Point relais" d="myflyingbox"}</span>
+                    <span>{intl l="Relay Point" d="myflyingbox"}</span>
                 </div>
                 <div class="mfb-relay-address">
                     <strong>{$selected_relay.name}</strong><br>
@@ -66,7 +66,7 @@
         <div class="mfb-summary-footer">
             <a href="{url path="/order/delivery"}" class="mfb-edit-link">
                 <i class="fa fa-pencil"></i>
-                {intl l="Modifier" d="myflyingbox"}
+                {intl l="Change" d="myflyingbox"}
             </a>
         </div>
     </div>

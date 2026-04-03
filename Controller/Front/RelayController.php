@@ -1,20 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MyFlyingBox\Controller\Front;
 
 use MyFlyingBox\Model\MyFlyingBoxCartRelay;
 use MyFlyingBox\Model\MyFlyingBoxCartRelayQuery;
 use MyFlyingBox\Model\MyFlyingBoxOfferQuery;
 use MyFlyingBox\Model\MyFlyingBoxQuoteQuery;
-use MyFlyingBox\MyFlyingBox;
 use MyFlyingBox\Service\CarrierLogoProvider;
 use MyFlyingBox\Service\LceApiService;
+use MyFlyingBox\Service\PriceSurchargeService;
 use MyFlyingBox\Service\QuoteService;
+use MyFlyingBox\Service\RateLimiterService;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Thelia\Controller\Front\BaseFrontController;
+use Psr\Log\LoggerInterface;
+use Thelia\Core\Translation\Translator;
 use Thelia\Model\AddressQuery;
 use Thelia\Model\CountryQuery;
 
@@ -26,7 +31,7 @@ class RelayController extends BaseFrontController
     /**
      * Save selected offer to session
      */
-    public function saveOfferAction(Request $request, EventDispatcherInterface $dispatcher): JsonResponse
+    public function saveOfferAction(Request $request, EventDispatcherInterface $dispatcher, LoggerInterface $logger): JsonResponse
     {
         try {
             $data = json_decode($request->getContent(), true);
@@ -43,7 +48,7 @@ class RelayController extends BaseFrontController
 
             // Verify cart belongs to current session
             $sessionCart = $this->getSession()->getSessionCart($dispatcher);
-            if (!$sessionCart || $sessionCart->getId() != $cartId) {
+            if (!$sessionCart || $sessionCart->getId() !== (int) $cartId) {
                 return new JsonResponse([
                     'success' => false,
                     'message' => 'Invalid cart',
@@ -84,9 +89,10 @@ class RelayController extends BaseFrontController
             ]);
 
         } catch (\Exception $e) {
+            $logger->error('MyFlyingBox: error saving offer selection', ['exception' => $e]);
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Error saving offer selection: ' . $e->getMessage(),
+                'message' => Translator::getInstance()->trans('An error occurred', [], 'myflyingbox'),
             ]);
         }
     }
@@ -94,8 +100,15 @@ class RelayController extends BaseFrontController
     /**
      * Get relay points for a given location
      */
-    public function getRelayPointsAction(Request $request, LceApiService $apiService): JsonResponse
+    public function getRelayPointsAction(Request $request, LceApiService $apiService, EventDispatcherInterface $dispatcher, LoggerInterface $logger, RateLimiterService $rateLimiter): JsonResponse
     {
+        if (!$rateLimiter->isAllowed('relay_points', 20, 60)) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Too many requests. Please wait before trying again.',
+            ], 429);
+        }
+
         try {
             $query = $request->get('query', '');
             $cartId = $request->get('cart_id');
@@ -105,6 +118,15 @@ class RelayController extends BaseFrontController
                 return new JsonResponse([
                     'success' => false,
                     'message' => 'Missing parameters',
+                ]);
+            }
+
+            // Verify cart belongs to current session (IDOR protection)
+            $sessionCart = $this->getSession()->getSessionCart($dispatcher);
+            if (!$sessionCart || $sessionCart->getId() !== (int) $cartId) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Invalid cart',
                 ]);
             }
 
@@ -165,21 +187,10 @@ class RelayController extends BaseFrontController
                 }
             }
 
-            // Parse query for postal code
-            $postalCode = preg_replace('/[^0-9]/', '', $query);
-            if (strlen($postalCode) < 5) {
-                // Try to extract from query
-                if (preg_match('/\b(\d{5})\b/', $query, $matches)) {
-                    $postalCode = $matches[1];
-                }
-            }
-
-            // Validate postal code matches country (basic check for French postal codes)
-            if (!empty($postalCode) && strlen($postalCode) === 5 && $countryCode !== 'FR') {
-                return new JsonResponse([
-                    'success' => false,
-                    'message' => 'Code postal invalide pour le pays de livraison sélectionné.',
-                ]);
+            // Parse query for postal code (supports international formats: digits, letters, spaces, hyphens)
+            $postalCode = '';
+            if (preg_match('/\b([A-Z0-9]{2,10}(?:[\s\-][A-Z0-9]{2,5})?)\b/i', $query, $matches)) {
+                $postalCode = $matches[1];
             }
 
             // Get delivery locations from API
@@ -205,7 +216,7 @@ class RelayController extends BaseFrontController
                 return new JsonResponse([
                     'success' => true,
                     'relays' => [],
-                    'message' => 'No relay points found',
+                    'message' => Translator::getInstance()->trans('No relay points found', [], 'myflyingbox'),
                 ]);
             }
 
@@ -232,15 +243,14 @@ class RelayController extends BaseFrontController
             ]);
 
         } catch (\Exception $e) {
-            // Log the actual error for debugging
-            error_log('MyFlyingBox relay points error: ' . $e->getMessage());
+            $logger->error('MyFlyingBox: relay points error', ['exception' => $e]);
 
             // Return a user-friendly message, along with success=true and empty relays
             // This allows the frontend to display the fallback message gracefully
             return new JsonResponse([
                 'success' => true,
                 'relays' => [],
-                'message' => 'Service de recherche de points relais temporairement indisponible',
+                'message' => Translator::getInstance()->trans('Relay point search temporarily unavailable', [], 'myflyingbox'),
             ]);
         }
     }
@@ -248,7 +258,7 @@ class RelayController extends BaseFrontController
     /**
      * Save selected relay point to cart
      */
-    public function saveRelayAction(Request $request, EventDispatcherInterface $dispatcher): JsonResponse
+    public function saveRelayAction(Request $request, EventDispatcherInterface $dispatcher, LoggerInterface $logger): JsonResponse
     {
         try {
             $data = json_decode($request->getContent(), true);
@@ -265,7 +275,7 @@ class RelayController extends BaseFrontController
 
             // Verify cart belongs to current session
             $sessionCart = $this->getSession()->getSessionCart($dispatcher);
-            if (!$sessionCart || $sessionCart->getId() != $cartId) {
+            if (!$sessionCart || $sessionCart->getId() !== (int) $cartId) {
                 return new JsonResponse([
                     'success' => false,
                     'message' => 'Invalid cart',
@@ -297,9 +307,10 @@ class RelayController extends BaseFrontController
             ]);
 
         } catch (\Exception $e) {
+            $logger->error('MyFlyingBox: error saving relay point', ['exception' => $e]);
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Error saving relay point: ' . $e->getMessage(),
+                'message' => Translator::getInstance()->trans('An error occurred', [], 'myflyingbox'),
             ]);
         }
     }
@@ -327,8 +338,18 @@ class RelayController extends BaseFrontController
     public function getOffersAction(
         Request $request,
         EventDispatcherInterface $dispatcher,
-        QuoteService $quoteService
+        QuoteService $quoteService,
+        PriceSurchargeService $priceSurchargeService,
+        LoggerInterface $logger,
+        RateLimiterService $rateLimiter
     ): JsonResponse {
+        if (!$rateLimiter->isAllowed('offers', 15, 60)) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Too many requests. Please wait before trying again.',
+            ], 429);
+        }
+
         try {
             $cartId = $request->get('cart_id');
             $addressId = $request->get('address_id');
@@ -343,7 +364,7 @@ class RelayController extends BaseFrontController
 
             // Verify cart belongs to current session
             $sessionCart = $this->getSession()->getSessionCart($dispatcher);
-            if (!$sessionCart || $sessionCart->getId() != $cartId) {
+            if (!$sessionCart || $sessionCart->getId() !== (int) $cartId) {
                 return new JsonResponse([
                     'success' => false,
                     'message' => 'Invalid cart',
@@ -356,13 +377,20 @@ class RelayController extends BaseFrontController
             $deliveryPostalCode = null;
 
             if ($addressId) {
-                $address = AddressQuery::create()->findPk($addressId);
-                $country = $address?->getCountry();
+                $customer = $this->getSecurityContext()->getCustomerUser();
+                $address = AddressQuery::create()
+                    ->filterByCustomerId($customer?->getId())
+                    ->findPk($addressId);
 
-                // Extraire le code postal pour pré-remplir la recherche de relais
-                if ($address) {
-                    $deliveryPostalCode = $address->getZipcode();
+                if (!$address) {
+                    return new JsonResponse([
+                        'success' => false,
+                        'message' => 'Invalid address',
+                    ], 403);
                 }
+
+                $country = $address->getCountry();
+                $deliveryPostalCode = $address->getZipcode();
             }
 
             // Fallback to default country
@@ -412,7 +440,7 @@ class RelayController extends BaseFrontController
                 }
 
                 // Apply price surcharges
-                $price = $this->applyPriceSurcharges($offer->getTotalPriceInCents() / 100);
+                $price = $priceSurchargeService->apply($offer->getTotalPriceInCents() / 100);
 
                 $carrierCode = $service->getCarrierCode();
                 $offers[] = [
@@ -463,9 +491,10 @@ class RelayController extends BaseFrontController
             ]);
 
         } catch (\Exception $e) {
+            $logger->error('MyFlyingBox: error fetching offers', ['exception' => $e]);
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Error fetching offers: ' . $e->getMessage(),
+                'message' => Translator::getInstance()->trans('An error occurred', [], 'myflyingbox'),
             ]);
         }
     }
@@ -477,8 +506,18 @@ class RelayController extends BaseFrontController
     public function getCartEstimateAction(
         Request $request,
         EventDispatcherInterface $dispatcher,
-        QuoteService $quoteService
+        QuoteService $quoteService,
+        PriceSurchargeService $priceSurchargeService,
+        LoggerInterface $logger,
+        RateLimiterService $rateLimiter
     ): JsonResponse {
+        if (!$rateLimiter->isAllowed('cart_estimate', 15, 60)) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Too many requests. Please wait before trying again.',
+            ], 429);
+        }
+
         try {
             $cartId = $request->get('cart_id');
 
@@ -491,7 +530,7 @@ class RelayController extends BaseFrontController
 
             // Verify cart belongs to current session
             $sessionCart = $this->getSession()->getSessionCart($dispatcher);
-            if (!$sessionCart || $sessionCart->getId() != $cartId) {
+            if (!$sessionCart || $sessionCart->getId() !== (int) $cartId) {
                 return new JsonResponse([
                     'success' => false,
                     'message' => 'Invalid cart',
@@ -540,7 +579,7 @@ class RelayController extends BaseFrontController
                     continue;
                 }
 
-                $price = $this->applyPriceSurcharges($offer->getTotalPriceInCents() / 100);
+                $price = $priceSurchargeService->apply($offer->getTotalPriceInCents() / 100);
                 $prices[] = $price;
 
                 if ($service->getRelayDelivery()) {
@@ -559,10 +598,11 @@ class RelayController extends BaseFrontController
             $carriersCount = count($prices);
 
             // Build carriers label
+            $translator = Translator::getInstance();
             if ($carriersCount === 1) {
-                $carriersLabel = '1 transporteur disponible';
+                $carriersLabel = '1 ' . $translator->trans('carrier available', [], 'myflyingbox');
             } else {
-                $carriersLabel = $carriersCount . ' transporteurs disponibles';
+                $carriersLabel = $carriersCount . ' ' . $translator->trans('carriers available', [], 'myflyingbox');
             }
 
             return new JsonResponse([
@@ -574,36 +614,12 @@ class RelayController extends BaseFrontController
             ]);
 
         } catch (\Exception $e) {
+            $logger->error('MyFlyingBox: error fetching estimate', ['exception' => $e]);
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Error fetching estimate: ' . $e->getMessage(),
+                'message' => Translator::getInstance()->trans('An error occurred', [], 'myflyingbox'),
             ]);
         }
     }
 
-    /**
-     * Apply price surcharges (percentage + static)
-     */
-    private function applyPriceSurcharges(float $price): float
-    {
-        // Percentage surcharge
-        $percentSurcharge = (float) MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_PRICE_SURCHARGE_PERCENT, 0);
-        if ($percentSurcharge > 0) {
-            $price += $price * ($percentSurcharge / 100);
-        }
-
-        // Static surcharge (stored in cents, convert to euros)
-        $staticSurcharge = (float) MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_PRICE_SURCHARGE_STATIC, 0);
-        if ($staticSurcharge > 0) {
-            $price += $staticSurcharge / 100;
-        }
-
-        // Rounding
-        $roundIncrement = (int) MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_PRICE_ROUND_INCREMENT, 1);
-        if ($roundIncrement > 1) {
-            $price = ceil($price * 100 / $roundIncrement) * $roundIncrement / 100;
-        }
-
-        return round($price, 2);
-    }
 }

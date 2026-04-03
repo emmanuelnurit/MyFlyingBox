@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MyFlyingBox\Hook;
 
 use MyFlyingBox\Model\MyFlyingBoxCartRelayQuery;
@@ -17,6 +19,31 @@ use Thelia\Model\OrderQuery;
 
 class BackHook extends BaseHook
 {
+    private const CSRF_SESSION_KEY = 'myflyingbox_csrf_token';
+
+    /**
+     * Get or generate a module-specific CSRF token stored directly in the session.
+     * This avoids TokenProvider's constructor timing issue where $this->session
+     * can be null if the service is constructed before the session is started.
+     */
+    private function getCsrfToken(): string
+    {
+        $request = $this->getRequest();
+        $session = $request ? $request->getSession() : null;
+
+        if ($session === null) {
+            return bin2hex(random_bytes(32));
+        }
+
+        $token = $session->get(self::CSRF_SESSION_KEY);
+        if (empty($token)) {
+            $token = bin2hex(random_bytes(32));
+            $session->set(self::CSRF_SESSION_KEY, $token);
+        }
+
+        return $token;
+    }
+
     public function onModuleConfiguration(HookRenderEvent $event): void
     {
         $event->add($this->render('myflyingbox-configuration.html', [
@@ -27,7 +54,9 @@ class BackHook extends BaseHook
 
     public function onModuleConfigJs(HookRenderEvent $event): void
     {
-        $event->add($this->render('module-config-js.html'));
+        $event->add($this->render('module-config-js.html', [
+            'csrf_token' => $this->getCsrfToken(),
+        ]));
     }
 
     /**
@@ -131,9 +160,9 @@ class BackHook extends BaseHook
                 'shipped' => $this->trans('Shipped', [], 'myflyingbox'),
                 'delivered' => $this->trans('Delivered', [], 'myflyingbox'),
                 'cancelled' => $this->trans('Cancelled', [], 'myflyingbox'),
-                default => ucfirst($status),
+                default => htmlspecialchars(ucfirst($status), ENT_QUOTES, 'UTF-8'),
             };
-            $statusBadge = '<span class="badge bg-' . $badgeClass . '" style="margin-left: 5px;">' . $statusLabel . '</span>';
+            $statusBadge = '<span class="badge bg-' . htmlspecialchars($badgeClass, ENT_QUOTES, 'UTF-8') . '" style="margin-left: 5px;">' . $statusLabel . '</span>';
         }
 
         // Add badge for return shipments count
@@ -179,6 +208,7 @@ class BackHook extends BaseHook
 
         $event->add($this->render('order-shipment-js.html', [
             'order_id' => $orderId,
+            'csrf_token' => $this->getCsrfToken(),
         ]));
     }
 

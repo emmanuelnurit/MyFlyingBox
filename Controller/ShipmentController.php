@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MyFlyingBox\Controller;
 
 use MyFlyingBox\Model\MyFlyingBoxParcelQuery;
@@ -13,13 +15,45 @@ use Symfony\Component\HttpFoundation\Response;
 use Thelia\Controller\Admin\BaseAdminController;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
+use Psr\Log\LoggerInterface;
 use Thelia\Model\OrderQuery;
-
 /**
  * Back-office controller for shipment management
  */
 class ShipmentController extends BaseAdminController
 {
+    public function __construct(private readonly LoggerInterface $logger)
+    {
+    }
+
+    /**
+     * Validate CSRF token from AJAX request query string or header.
+     * Reads the session directly after auth (avoids TokenProvider constructor timing issue).
+     * Returns a JsonResponse on failure, null on success.
+     */
+    private function checkCsrfToken(Request $request): ?JsonResponse
+    {
+        $token = $request->query->get('_token')
+            ?? $request->headers->get('X-CSRF-Token')
+            ?? $request->request->get('_token')
+            ?? (json_decode($request->getContent(), true)['_token'] ?? null);
+
+        if (empty($token)) {
+            return new JsonResponse(['success' => false, 'message' => 'Missing CSRF token'], 403);
+        }
+
+        // Read directly from session — at this point session is started (checkAuth already ran).
+        // Uses module-specific key set by BackHook::getCsrfToken() to avoid
+        // TokenProvider singleton timing issues entirely.
+        $sessionToken = $request->getSession()->get('myflyingbox_csrf_token');
+
+        if (empty($sessionToken) || $token !== $sessionToken) {
+            return new JsonResponse(['success' => false, 'message' => 'Invalid CSRF token'], 403);
+        }
+
+        return null;
+    }
+
     /**
      * View shipment details
      */
@@ -58,6 +92,10 @@ class ShipmentController extends BaseAdminController
             return new JsonResponse(['success' => false, 'message' => 'Access denied'], 403);
         }
 
+        if (null !== $csrfError = $this->checkCsrfToken($request)) {
+            return $csrfError;
+        }
+
         try {
             $shipmentId = $request->get('shipment_id');
             $collectionDate = $request->get('collection_date');
@@ -73,7 +111,14 @@ class ShipmentController extends BaseAdminController
 
             $date = null;
             if ($collectionDate) {
-                $date = new \DateTime($collectionDate);
+                try {
+                    $date = new \DateTime($collectionDate);
+                } catch (\Exception) {
+                    return new JsonResponse([
+                        'success' => false,
+                        'message' => 'Invalid date format',
+                    ], 400);
+                }
             }
 
             $result = $shipmentService->bookShipmentWithDetails($shipment, $date);
@@ -93,10 +138,11 @@ class ShipmentController extends BaseAdminController
             }
 
         } catch (\Exception $e) {
+            $this->logger->error('MyFlyingBox: error booking shipment', ['exception' => $e]);
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
-            ]);
+                'message' => 'An internal error occurred while booking the shipment',
+            ], 500);
         }
     }
 
@@ -129,10 +175,11 @@ class ShipmentController extends BaseAdminController
             ]);
 
         } catch (\Exception $e) {
+            $this->logger->error('MyFlyingBox: error fetching labels', ['exception' => $e]);
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
-            ]);
+                'message' => 'An internal error occurred while fetching labels',
+            ], 500);
         }
     }
 
@@ -176,7 +223,8 @@ class ShipmentController extends BaseAdminController
             return $response;
 
         } catch (\Exception $e) {
-            return new Response('Error downloading label: ' . $e->getMessage(), 500, ['Content-Type' => 'text/plain']);
+            $this->logger->error('MyFlyingBox: error downloading label', ['exception' => $e]);
+            return new Response('An error occurred while downloading the label', 500, ['Content-Type' => 'text/plain']);
         }
     }
 
@@ -187,6 +235,10 @@ class ShipmentController extends BaseAdminController
     {
         if (null !== $response = $this->checkAuth(AdminResources::ORDER, [], AccessManager::UPDATE)) {
             return new JsonResponse(['success' => false, 'message' => 'Access denied'], 403);
+        }
+
+        if (null !== $csrfError = $this->checkCsrfToken($request)) {
+            return $csrfError;
         }
 
         try {
@@ -225,10 +277,11 @@ class ShipmentController extends BaseAdminController
             ]);
 
         } catch (\Exception $e) {
+            $this->logger->error('MyFlyingBox: error updating shipment status', ['exception' => $e]);
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
-            ]);
+                'message' => 'An internal error occurred while updating status',
+            ], 500);
         }
     }
 
@@ -239,6 +292,10 @@ class ShipmentController extends BaseAdminController
     {
         if (null !== $response = $this->checkAuth(AdminResources::ORDER, [], AccessManager::UPDATE)) {
             return new JsonResponse(['success' => false, 'message' => 'Access denied'], 403);
+        }
+
+        if (null !== $csrfError = $this->checkCsrfToken($request)) {
+            return $csrfError;
         }
 
         try {
@@ -268,10 +325,11 @@ class ShipmentController extends BaseAdminController
             }
 
         } catch (\Exception $e) {
+            $this->logger->error('MyFlyingBox: error cancelling shipment', ['exception' => $e]);
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
-            ]);
+                'message' => 'An internal error occurred while cancelling the shipment',
+            ], 500);
         }
     }
 
@@ -282,6 +340,10 @@ class ShipmentController extends BaseAdminController
     {
         if (null !== $response = $this->checkAuth(AdminResources::ORDER, [], AccessManager::CREATE)) {
             return new JsonResponse(['success' => false, 'message' => 'Access denied'], 403);
+        }
+
+        if (null !== $csrfError = $this->checkCsrfToken($request)) {
+            return $csrfError;
         }
 
         try {
@@ -313,10 +375,11 @@ class ShipmentController extends BaseAdminController
             }
 
         } catch (\Exception $e) {
+            $this->logger->error('MyFlyingBox: error creating shipment', ['exception' => $e]);
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
-            ]);
+                'message' => 'An internal error occurred while creating the shipment',
+            ], 500);
         }
     }
 
@@ -327,6 +390,10 @@ class ShipmentController extends BaseAdminController
     {
         if (null !== $response = $this->checkAuth(AdminResources::ORDER, [], AccessManager::UPDATE)) {
             return new JsonResponse(['success' => false, 'message' => 'Access denied'], 403);
+        }
+
+        if (null !== $csrfError = $this->checkCsrfToken($request)) {
+            return $csrfError;
         }
 
         try {
@@ -356,9 +423,10 @@ class ShipmentController extends BaseAdminController
             ]);
 
         } catch (\Exception $e) {
+            $this->logger->error('MyFlyingBox: error syncing tracking', ['exception' => $e]);
             return new JsonResponse([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => 'An internal error occurred while syncing tracking',
             ], 500);
         }
     }
@@ -393,73 +461,7 @@ class ShipmentController extends BaseAdminController
         } catch (\Exception $e) {
             return new JsonResponse([
                 'success' => false,
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ], 500);
-        }
-    }
-
-    /**
-     * Debug: Get raw API response for tracking
-     */
-    public function debugTrackingAction(Request $request, \MyFlyingBox\Service\LceApiService $apiService): JsonResponse
-    {
-        if (null !== $response = $this->checkAuth(AdminResources::ORDER, [], AccessManager::VIEW)) {
-            return new JsonResponse(['success' => false, 'message' => 'Access denied'], 403);
-        }
-
-        try {
-            $shipmentId = (int) $request->get('shipment_id');
-
-            if (!$shipmentId) {
-                return new JsonResponse(['success' => false, 'message' => 'Shipment ID is required'], 400);
-            }
-
-            $shipment = MyFlyingBoxShipmentQuery::create()->findPk($shipmentId);
-            if (!$shipment) {
-                return new JsonResponse(['success' => false, 'message' => 'Shipment not found'], 404);
-            }
-
-            if (!$shipment->getApiOrderUuid()) {
-                return new JsonResponse([
-                    'success' => false,
-                    'message' => 'No API Order UUID',
-                    'shipment_status' => $shipment->getStatus()
-                ]);
-            }
-
-            $orderUuid = $shipment->getApiOrderUuid();
-            $debug = [
-                'shipment_id' => $shipmentId,
-                'api_order_uuid' => $orderUuid,
-                'shipment_status' => $shipment->getStatus(),
-            ];
-
-            // Try tracking endpoint
-            try {
-                $trackingResponse = $apiService->getOrderTracking($orderUuid);
-                $debug['tracking_endpoint'] = $trackingResponse;
-            } catch (\Exception $e) {
-                $debug['tracking_endpoint_error'] = $e->getMessage();
-            }
-
-            // Try order endpoint
-            try {
-                $orderResponse = $apiService->getOrder($orderUuid);
-                $debug['order_endpoint'] = $orderResponse;
-            } catch (\Exception $e) {
-                $debug['order_endpoint_error'] = $e->getMessage();
-            }
-
-            return new JsonResponse([
-                'success' => true,
-                'debug' => $debug
-            ]);
-
-        } catch (\Exception $e) {
-            return new JsonResponse([
-                'success' => false,
-                'message' => $e->getMessage()
+                'message' => 'An internal error occurred',
             ], 500);
         }
     }
@@ -471,6 +473,10 @@ class ShipmentController extends BaseAdminController
     {
         if (null !== $response = $this->checkAuth(AdminResources::ORDER, [], AccessManager::CREATE)) {
             return new JsonResponse(['success' => false, 'message' => 'Access denied'], 403);
+        }
+
+        if (null !== $csrfError = $this->checkCsrfToken($request)) {
+            return $csrfError;
         }
 
         try {
@@ -527,9 +533,10 @@ class ShipmentController extends BaseAdminController
             }
 
         } catch (\Exception $e) {
+            $this->logger->error('MyFlyingBox: error creating return shipment', ['exception' => $e]);
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
+                'message' => 'An internal error occurred while creating the return shipment',
             ], 500);
         }
     }

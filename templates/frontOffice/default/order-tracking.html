@@ -4,7 +4,7 @@
 <div class="mfb-order-tracking" style="margin-top: 30px;">
     <h3 class="mfb-tracking-title">
         <i class="fa fa-truck"></i>
-        {intl l="Suivi de votre livraison" d="myflyingbox"}
+        {intl l="Track your delivery" d="myflyingbox"}
     </h3>
 
     {* Shipment Status Card *}
@@ -20,9 +20,9 @@
 
         {if $shipment.date_booking}
         <div class="mfb-status-dates">
-            <span><i class="fa fa-calendar"></i> {intl l="Réservé le" d="myflyingbox"} {$shipment.date_booking}</span>
+            <span><i class="fa fa-calendar"></i> {intl l="Booked on" d="myflyingbox"} {$shipment.date_booking}</span>
             {if $shipment.collection_date}
-            <span><i class="fa fa-calendar-check-o"></i> {intl l="Enlèvement prévu le" d="myflyingbox"} {$shipment.collection_date}</span>
+            <span><i class="fa fa-calendar-check-o"></i> {intl l="Collection scheduled for" d="myflyingbox"} {$shipment.collection_date}</span>
             {/if}
         </div>
         {/if}
@@ -31,7 +31,7 @@
     {* Relay Point Info *}
     {if $relay}
     <div class="mfb-relay-info">
-        <h4><i class="fa fa-map-marker"></i> {intl l="Point relais de livraison" d="myflyingbox"}</h4>
+        <h4><i class="fa fa-map-marker"></i> {intl l="Relay delivery point" d="myflyingbox"}</h4>
         <p>
             {$relay.street}<br>
             {$relay.postal_code} {$relay.city}
@@ -42,7 +42,7 @@
     {* Parcels & Tracking Numbers *}
     {if $parcels|@count > 0}
     <div class="mfb-parcels-section">
-        <h4>{intl l="Colis" d="myflyingbox"}</h4>
+        <h4>{intl l="Parcel" d="myflyingbox"}</h4>
         <div class="mfb-parcels-list">
             {foreach $parcels as $parcel}
             <div class="mfb-parcel-item">
@@ -52,7 +52,7 @@
                 </div>
                 {if $parcel.tracking_number}
                 <div class="mfb-parcel-tracking">
-                    <strong>{intl l="N° de suivi :" d="myflyingbox"}</strong>
+                    <strong>{intl l="Tracking number:" d="myflyingbox"}</strong>
                     <code class="mfb-tracking-number">{$parcel.tracking_number}</code>
                 </div>
                 {/if}
@@ -65,7 +65,7 @@
         <div class="mfb-tracking-link">
             <a href="{$tracking_url}" target="_blank" rel="noopener" class="btn btn-primary">
                 <i class="fa fa-external-link"></i>
-                {intl l="Suivre sur le site du transporteur" d="myflyingbox"}
+                {intl l="Track on carrier website" d="myflyingbox"}
             </a>
         </div>
         {/if}
@@ -75,7 +75,7 @@
     {* Tracking Timeline *}
     {if $events|@count > 0}
     <div class="mfb-timeline-section">
-        <h4>{intl l="Historique de suivi" d="myflyingbox"}</h4>
+        <h4>{intl l="Tracking history" d="myflyingbox"}</h4>
         <div class="mfb-timeline">
             {foreach $events as $event}
             <div class="mfb-timeline-item">
@@ -93,7 +93,7 @@
     </div>
     {elseif $shipment.status == 'pending'}
     <div class="mfb-no-tracking">
-        <p><i class="fa fa-info-circle"></i> {intl l="Le suivi sera disponible une fois votre colis expédié." d="myflyingbox"}</p>
+        <p><i class="fa fa-info-circle"></i> {intl l="Tracking will be available once your parcel is shipped." d="myflyingbox"}</p>
     </div>
     {/if}
 </div>

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MyFlyingBox\EventListener;
 
 use MyFlyingBox\Model\MyFlyingBoxCartRelay;
@@ -16,6 +18,7 @@ use OpenApi\Events\PickupLocationEvent as OAPickupLocationEvent;
 use OpenApi\Model\Api\DeliveryModuleOption;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\Exception\PropelException;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -80,6 +83,9 @@ class ApiListener implements EventSubscriberInterface
 
         } catch (\Exception) {
             $isValid = false;
+            $this->logger->warning('[MFB] ApiListener: delivery options unavailable', [
+                'exception' => $e->getMessage(),
+            ]);
         }
 
         $services = MyFlyingBoxServiceQuery::create()->filterByActive(true)->find();

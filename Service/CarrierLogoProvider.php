@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MyFlyingBox\Service;
 
 use Thelia\Model\ConfigQuery;
@@ -7,7 +9,7 @@ use Thelia\Model\ConfigQuery;
 /**
  * Service to provide carrier logos based on carrier_code
  */
-class CarrierLogoProvider
+final class CarrierLogoProvider
 {
     /**
      * Mapping of carrier codes to local logo filenames

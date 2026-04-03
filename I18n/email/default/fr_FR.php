@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     // Shipped email
     'Your order has been shipped!' => 'Votre commande a été expédiée !',

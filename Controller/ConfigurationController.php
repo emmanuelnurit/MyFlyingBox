@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MyFlyingBox\Controller;
 
 use MyFlyingBox\Form\ConfigurationForm;
@@ -16,9 +18,36 @@ use Symfony\Component\HttpFoundation\Response;
 use Thelia\Controller\Admin\BaseAdminController;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
-
 class ConfigurationController extends BaseAdminController
 {
+    /**
+     * Validate CSRF token from AJAX request query string or header.
+     * Reads the session directly after auth (avoids TokenProvider constructor timing issue).
+     * Returns a JsonResponse on failure, null on success.
+     */
+    private function checkCsrfToken(Request $request): ?JsonResponse
+    {
+        $token = $request->query->get('_token')
+            ?? $request->headers->get('X-CSRF-Token')
+            ?? $request->request->get('_token')
+            ?? (json_decode($request->getContent(), true)['_token'] ?? null);
+
+        if (empty($token)) {
+            return new JsonResponse(['success' => false, 'message' => 'Missing CSRF token'], 403);
+        }
+
+        // Read directly from session — at this point session is started (checkAuth already ran).
+        // Uses module-specific key set by BackHook::getCsrfToken() to avoid
+        // TokenProvider singleton timing issues entirely.
+        $sessionToken = $request->getSession()->get('myflyingbox_csrf_token');
+
+        if (empty($sessionToken) || $token !== $sessionToken) {
+            return new JsonResponse(['success' => false, 'message' => 'Invalid CSRF token'], 403);
+        }
+
+        return null;
+    }
+
     /**
      * Display module configuration page
      */
@@ -108,6 +137,10 @@ class ConfigurationController extends BaseAdminController
             return new JsonResponse(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
+        if (null !== $csrfError = $this->checkCsrfToken($request)) {
+            return $csrfError;
+        }
+
         // Get form values from request (allows testing before saving)
         $data = json_decode($request->getContent(), true) ?? [];
 
@@ -143,10 +176,14 @@ class ConfigurationController extends BaseAdminController
     /**
      * Refresh services from API (API v2 format)
      */
-    public function refreshServicesAction(LceApiService $apiService): JsonResponse
+    public function refreshServicesAction(Request $request, LceApiService $apiService): JsonResponse
     {
         if (null !== $this->checkAuth(AdminResources::MODULE, 'MyFlyingBox', AccessManager::UPDATE)) {
             return new JsonResponse(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        if (null !== $csrfError = $this->checkCsrfToken($request)) {
+            return $csrfError;
         }
 
         try {
@@ -226,6 +263,10 @@ class ConfigurationController extends BaseAdminController
             return new JsonResponse(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
+        if (null !== $csrfError = $this->checkCsrfToken($request)) {
+            return $csrfError;
+        }
+
         try {
             $data = json_decode($request->getContent(), true);
             $serviceId = $data['id'] ?? null;
@@ -264,6 +305,10 @@ class ConfigurationController extends BaseAdminController
     {
         if (null !== $this->checkAuth(AdminResources::MODULE, 'MyFlyingBox', AccessManager::UPDATE)) {
             return new JsonResponse(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        if (null !== $csrfError = $this->checkCsrfToken($request)) {
+            return $csrfError;
         }
 
         try {
@@ -305,6 +350,10 @@ class ConfigurationController extends BaseAdminController
     {
         if (null !== $this->checkAuth(AdminResources::MODULE, 'MyFlyingBox', AccessManager::UPDATE)) {
             return new JsonResponse(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        if (null !== $csrfError = $this->checkCsrfToken($request)) {
+            return $csrfError;
         }
 
         try {
@@ -361,6 +410,10 @@ class ConfigurationController extends BaseAdminController
             return new JsonResponse(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
+        if (null !== $csrfError = $this->checkCsrfToken($request)) {
+            return $csrfError;
+        }
+
         try {
             $data = json_decode($request->getContent(), true);
             $id = $data['id'] ?? null;
@@ -410,36 +463,24 @@ class ConfigurationController extends BaseAdminController
                 'type' => $module?->getType(),
             ];
 
-            // Check configuration values
+            // Check configuration values (only report is_set, never expose actual values)
             $configChecks = [
                 'api_login' => [
-                    'key' => MyFlyingBox::CONFIG_API_LOGIN,
-                    'value' => MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_API_LOGIN, ''),
                     'is_set' => !empty(MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_API_LOGIN, '')),
                 ],
                 'api_password' => [
-                    'key' => MyFlyingBox::CONFIG_API_PASSWORD,
-                    'value' => '***HIDDEN***',
                     'is_set' => !empty(MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_API_PASSWORD, '')),
                 ],
                 'api_env' => [
-                    'key' => MyFlyingBox::CONFIG_API_ENV,
-                    'value' => MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_API_ENV, ''),
                     'is_set' => !empty(MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_API_ENV, '')),
                 ],
                 'shipper_city' => [
-                    'key' => MyFlyingBox::CONFIG_DEFAULT_SHIPPER_CITY,
-                    'value' => MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_CITY, ''),
                     'is_set' => !empty(MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_CITY, '')),
                 ],
                 'shipper_postal_code' => [
-                    'key' => MyFlyingBox::CONFIG_DEFAULT_SHIPPER_POSTAL_CODE,
-                    'value' => MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_POSTAL_CODE, ''),
                     'is_set' => !empty(MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_POSTAL_CODE, '')),
                 ],
                 'shipper_country' => [
-                    'key' => MyFlyingBox::CONFIG_DEFAULT_SHIPPER_COUNTRY,
-                    'value' => MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_COUNTRY, ''),
                     'is_set' => !empty(MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_COUNTRY, '')),
                 ],
             ];
@@ -476,9 +517,8 @@ class ConfigurationController extends BaseAdminController
         } catch (\Exception $e) {
             return new JsonResponse([
                 'success' => false,
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
+                'message' => 'An internal error occurred',
+            ], 500);
         }
     }
 
@@ -494,23 +534,23 @@ class ConfigurationController extends BaseAdminController
         // Express services (24-48h)
         $expressCarriers = ['chronopost', 'dhl_express', 'dhl', 'fedex', 'ups', 'tnt'];
         if (in_array($carrierCode, $expressCarriers)
-            || strpos($code, 'express') !== false
-            || strpos($code, 'chrono') !== false
-            || strpos($name, 'express') !== false
-            || strpos($name, '24') !== false
-            || strpos($name, 'j+1') !== false
+            || str_contains($code, 'express')
+            || str_contains($code, 'chrono')
+            || str_contains($name, 'express')
+            || str_contains($name, '24')
+            || str_contains($name, 'j+1')
         ) {
             return '24-48h';
         }
 
         // Relay point services (72-120h)
         if ($isRelay
-            || strpos($code, 'relay') !== false
-            || strpos($code, 'relais') !== false
-            || strpos($code, 'pickup') !== false
-            || strpos($code, 'point') !== false
-            || strpos($name, 'relais') !== false
-            || strpos($name, 'point') !== false
+            || str_contains($code, 'relay')
+            || str_contains($code, 'relais')
+            || str_contains($code, 'pickup')
+            || str_contains($code, 'point')
+            || str_contains($name, 'relais')
+            || str_contains($name, 'point')
         ) {
             return '72-120h';
         }
@@ -524,8 +564,8 @@ class ConfigurationController extends BaseAdminController
         // Standard services (48-96h)
         $standardCarriers = ['colissimo', 'laposte', 'dpd', 'gls', 'hermes'];
         if (in_array($carrierCode, $standardCarriers)
-            || strpos($code, 'standard') !== false
-            || strpos($name, 'standard') !== false
+            || str_contains($code, 'standard')
+            || str_contains($name, 'standard')
         ) {
             return '48-96h';
         }

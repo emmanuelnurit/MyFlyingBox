@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MyFlyingBox\Service;
 
 use MyFlyingBox\Model\MyFlyingBoxShipment;
@@ -12,11 +14,8 @@ use Psr\Log\LoggerInterface;
 /**
  * Service for handling incoming webhooks from MyFlyingBox/LCE API
  */
-class WebhookHandlerService
+final class WebhookHandlerService
 {
-    private LoggerInterface $logger;
-    private ?TrackingNotificationService $notificationService = null;
-
     /**
      * Map of API statuses to internal shipment statuses
      */
@@ -38,17 +37,10 @@ class WebhookHandlerService
      */
     private array $processedEvents = [];
 
-    public function __construct(LoggerInterface $logger)
-    {
-        $this->logger = $logger;
-    }
-
-    /**
-     * Set the notification service for email notifications
-     */
-    public function setNotificationService(TrackingNotificationService $notificationService): void
-    {
-        $this->notificationService = $notificationService;
+    public function __construct(
+        private readonly LoggerInterface $logger,
+        private readonly TrackingNotificationService $notificationService
+    ) {
     }
 
     /**
@@ -201,10 +193,6 @@ class WebhookHandlerService
      */
     private function sendStatusNotification(MyFlyingBoxShipment $shipment, string $previousStatus, string $newStatus): void
     {
-        if (!$this->notificationService) {
-            return;
-        }
-
         try {
             $this->notificationService->sendStatusChangeNotification($shipment, $previousStatus, $newStatus);
         } catch (\Exception $e) {
@@ -471,7 +459,7 @@ class WebhookHandlerService
 
         // Normalize signature (remove prefix if present)
         $normalizedSignature = $signature;
-        if (strpos($signature, '=') !== false) {
+        if (str_contains($signature, '=')) {
             $parts = explode('=', $signature, 2);
             $normalizedSignature = $parts[1] ?? $signature;
         }

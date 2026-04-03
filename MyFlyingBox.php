@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MyFlyingBox;
 
 use MyFlyingBox\Model\MyFlyingBoxServiceQuery;
@@ -24,33 +26,33 @@ use Thelia\Module\Exception\DeliveryException;
 
 class MyFlyingBox extends AbstractDeliveryModuleWithState
 {
-    const DOMAIN_NAME = 'myflyingbox';
+    public const DOMAIN_NAME = 'myflyingbox';
 
     // Configuration keys
-    const CONFIG_API_LOGIN = 'myflyingbox_api_login';
-    const CONFIG_API_PASSWORD = 'myflyingbox_api_password';
-    const CONFIG_API_ENV = 'myflyingbox_api_env';
-    const CONFIG_DEFAULT_SHIPPER_NAME = 'myflyingbox_shipper_name';
-    const CONFIG_DEFAULT_SHIPPER_COMPANY = 'myflyingbox_shipper_company';
-    const CONFIG_DEFAULT_SHIPPER_STREET = 'myflyingbox_shipper_street';
-    const CONFIG_DEFAULT_SHIPPER_CITY = 'myflyingbox_shipper_city';
-    const CONFIG_DEFAULT_SHIPPER_POSTAL_CODE = 'myflyingbox_shipper_postal_code';
-    const CONFIG_DEFAULT_SHIPPER_COUNTRY = 'myflyingbox_shipper_country';
-    const CONFIG_DEFAULT_SHIPPER_PHONE = 'myflyingbox_shipper_phone';
-    const CONFIG_DEFAULT_SHIPPER_EMAIL = 'myflyingbox_shipper_email';
-    const CONFIG_PRICE_SURCHARGE_PERCENT = 'myflyingbox_surcharge_percent';
-    const CONFIG_PRICE_SURCHARGE_STATIC = 'myflyingbox_surcharge_static';
-    const CONFIG_PRICE_ROUND_INCREMENT = 'myflyingbox_round_increment';
-    const CONFIG_MAX_WEIGHT = 'myflyingbox_max_weight';
-    const CONFIG_TAX_RULE_ID = 'myflyingbox_tax_rule_id';
-    const CONFIG_GOOGLE_MAPS_API_KEY = 'myflyingbox_google_maps_key';
+    public const CONFIG_API_LOGIN = 'myflyingbox_api_login';
+    public const CONFIG_API_PASSWORD = 'myflyingbox_api_password';
+    public const CONFIG_API_ENV = 'myflyingbox_api_env';
+    public const CONFIG_DEFAULT_SHIPPER_NAME = 'myflyingbox_shipper_name';
+    public const CONFIG_DEFAULT_SHIPPER_COMPANY = 'myflyingbox_shipper_company';
+    public const CONFIG_DEFAULT_SHIPPER_STREET = 'myflyingbox_shipper_street';
+    public const CONFIG_DEFAULT_SHIPPER_CITY = 'myflyingbox_shipper_city';
+    public const CONFIG_DEFAULT_SHIPPER_POSTAL_CODE = 'myflyingbox_shipper_postal_code';
+    public const CONFIG_DEFAULT_SHIPPER_COUNTRY = 'myflyingbox_shipper_country';
+    public const CONFIG_DEFAULT_SHIPPER_PHONE = 'myflyingbox_shipper_phone';
+    public const CONFIG_DEFAULT_SHIPPER_EMAIL = 'myflyingbox_shipper_email';
+    public const CONFIG_PRICE_SURCHARGE_PERCENT = 'myflyingbox_surcharge_percent';
+    public const CONFIG_PRICE_SURCHARGE_STATIC = 'myflyingbox_surcharge_static';
+    public const CONFIG_PRICE_ROUND_INCREMENT = 'myflyingbox_round_increment';
+    public const CONFIG_MAX_WEIGHT = 'myflyingbox_max_weight';
+    public const CONFIG_TAX_RULE_ID = 'myflyingbox_tax_rule_id';
+    public const CONFIG_GOOGLE_MAPS_API_KEY = 'myflyingbox_google_maps_key';
 
     // Webhook configuration keys
-    const CONFIG_WEBHOOK_SECRET = 'myflyingbox_webhook_secret';
-    const CONFIG_WEBHOOK_ENABLED = 'myflyingbox_webhook_enabled';
+    public const CONFIG_WEBHOOK_SECRET = 'myflyingbox_webhook_secret';
+    public const CONFIG_WEBHOOK_ENABLED = 'myflyingbox_webhook_enabled';
 
     // Email notification configuration keys
-    const CONFIG_EMAIL_NOTIFICATIONS_ENABLED = 'myflyingbox_email_notifications_enabled';
+    public const CONFIG_EMAIL_NOTIFICATIONS_ENABLED = 'myflyingbox_email_notifications_enabled';
 
     protected ?Translator $translator = null;
 
@@ -232,7 +234,7 @@ class MyFlyingBox extends AbstractDeliveryModuleWithState
         }
     }
 
-    public function getPostage(Country $country, State $state = null)
+    public function getPostage(Country $country, ?State $state = null): OrderPostage|float
     {
         $request = $this->getRequest();
         $session = $request->getSession();
@@ -302,7 +304,9 @@ class MyFlyingBox extends AbstractDeliveryModuleWithState
         }
 
         // Apply surcharges
-        $price = $this->applyPriceSurcharges($price);
+        /** @var \MyFlyingBox\Service\PriceSurchargeService $surchargeService */
+        $surchargeService = $this->getContainer()->get('myflyingbox.price_surcharge.service');
+        $price = $surchargeService->apply($price);
 
         // Price from API is already tax-included (TTC), build OrderPostage without additional tax
         $orderPostage = new OrderPostage();
@@ -313,41 +317,13 @@ class MyFlyingBox extends AbstractDeliveryModuleWithState
         return $orderPostage;
     }
 
-    protected function applyPriceSurcharges(float $price): float
-    {
-        // Percentage surcharge
-        $percentSurcharge = (float) $this->getConfigValue(self::CONFIG_PRICE_SURCHARGE_PERCENT, 0);
-        if ($percentSurcharge > 0) {
-            $price += $price * ($percentSurcharge / 100);
-        }
-
-        // Static surcharge (stored in cents, convert to euros)
-        $staticSurcharge = (float) $this->getConfigValue(self::CONFIG_PRICE_SURCHARGE_STATIC, 0);
-        if ($staticSurcharge > 0) {
-            $price += $staticSurcharge / 100;
-        }
-
-        // Rounding
-        $roundIncrement = (int) $this->getConfigValue(self::CONFIG_PRICE_ROUND_INCREMENT, 1);
-        if ($roundIncrement > 1) {
-            $price = ceil($price * 100 / $roundIncrement) * $roundIncrement / 100;
-        }
-
-        return round($price, 2);
-    }
-
     public function isValidDelivery(Country $country, State $state = null): bool
     {
         // Check if API is configured
         $apiLogin = $this->getConfigValue(self::CONFIG_API_LOGIN);
         $apiPassword = $this->getConfigValue(self::CONFIG_API_PASSWORD);
 
-        // Debug logging
-        error_log('MFB isValidDelivery - apiLogin: ' . ($apiLogin ? 'SET' : 'EMPTY'));
-        error_log('MFB isValidDelivery - apiPassword: ' . ($apiPassword ? 'SET' : 'EMPTY'));
-
         if (empty($apiLogin) || empty($apiPassword)) {
-            error_log('MFB isValidDelivery - FAILED: API credentials missing');
             return false;
         }
 
@@ -355,15 +331,9 @@ class MyFlyingBox extends AbstractDeliveryModuleWithState
         $shipperCity = $this->getConfigValue(self::CONFIG_DEFAULT_SHIPPER_CITY);
         $shipperPostalCode = $this->getConfigValue(self::CONFIG_DEFAULT_SHIPPER_POSTAL_CODE);
 
-        error_log('MFB isValidDelivery - shipperCity: ' . ($shipperCity ?: 'EMPTY'));
-        error_log('MFB isValidDelivery - shipperPostalCode: ' . ($shipperPostalCode ?: 'EMPTY'));
-
         if (empty($shipperCity) || empty($shipperPostalCode)) {
-            error_log('MFB isValidDelivery - FAILED: Shipper address missing');
             return false;
         }
-
-        error_log('MFB isValidDelivery - SUCCESS');
 
         // Note: Services are created dynamically from API responses
         // No need to check for existing services - they will be created on first quote request
