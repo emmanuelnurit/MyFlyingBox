@@ -160,9 +160,9 @@ class BackHook extends BaseHook
                 'shipped' => $this->trans('Shipped', [], 'myflyingbox'),
                 'delivered' => $this->trans('Delivered', [], 'myflyingbox'),
                 'cancelled' => $this->trans('Cancelled', [], 'myflyingbox'),
-                default => ucfirst($status),
+                default => htmlspecialchars(ucfirst($status), ENT_QUOTES, 'UTF-8'),
             };
-            $statusBadge = '<span class="badge bg-' . $badgeClass . '" style="margin-left: 5px;">' . $statusLabel . '</span>';
+            $statusBadge = '<span class="badge bg-' . htmlspecialchars($badgeClass, ENT_QUOTES, 'UTF-8') . '" style="margin-left: 5px;">' . $statusLabel . '</span>';
         }
 
         // Add badge for return shipments count

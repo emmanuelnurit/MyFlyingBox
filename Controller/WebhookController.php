@@ -85,8 +85,8 @@ class WebhookController extends BaseFrontController
             if (!$this->validateSignature($rawPayload, $signature, $webhookId)) {
                 return new JsonResponse([
                     'status' => 'error',
-                    'message' => 'Unauthorized',
-                ], 401);
+                    'message' => 'Forbidden',
+                ], 403);
             }
 
             // Parse JSON payload
@@ -214,7 +214,7 @@ class WebhookController extends BaseFrontController
     private function normalizeSignature(string $signature): string
     {
         // Handle formats like "sha256=signature" or "v1=signature"
-        if (strpos($signature, '=') !== false) {
+        if (str_contains($signature, '=')) {
             $parts = explode('=', $signature, 2);
             return $parts[1] ?? $signature;
         }

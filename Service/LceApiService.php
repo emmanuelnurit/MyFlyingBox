@@ -461,7 +461,7 @@ final class LceApiService
         }
 
         // Verify we got a PDF
-        if (strpos($contentType, 'application/pdf') === false && strpos($response, '%PDF') !== 0) {
+        if (!str_contains($contentType, 'application/pdf') && !str_starts_with($response, '%PDF')) {
             $this->logger->error('Label response is not a PDF', [
                 'content_type' => $contentType,
                 'response_start' => substr($response, 0, 100),

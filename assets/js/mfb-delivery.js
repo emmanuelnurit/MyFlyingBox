@@ -11,13 +11,13 @@
     "use strict";
 
     // ─── Configuration ───────────────────────────────────────────
-    var configEl = document.getElementById("mfb-config");
+    const configEl = document.getElementById("mfb-config");
     if (!configEl) {
         console.warn("MFB: missing #mfb-config element");
         return;
     }
 
-    var cfg;
+    let cfg;
     try {
         cfg = JSON.parse(configEl.textContent);
     } catch (e) {
@@ -25,37 +25,37 @@
         return;
     }
 
-    var googleMapsApiKey = cfg.googleMapsApiKey || "";
-    var cartId = parseInt(cfg.cartId, 10) || 0;
-    var addressId = cfg.addressId || "";
-    var i18n = cfg.i18n || {};
-    var selectedOfferId = null;
-    var hasRelayOffers = false;
-    var offersLoaded = false;
+    const googleMapsApiKey = cfg.googleMapsApiKey || "";
+    const cartId = parseInt(cfg.cartId, 10) || 0;
+    const addressId = cfg.addressId || "";
+    const i18n = cfg.i18n || {};
+    let selectedOfferId = null;
+    let hasRelayOffers = false;
+    let offersLoaded = false;
 
     // ─── DOM references (set in initMFB) ─────────────────────────
-    var relayContainer = null;
-    var searchContainer = null;
-    var selectedRelayDiv = null;
-    var relayInfoDiv = null;
-    var relayCodeInput = null;
-    var relayList = null;
-    var mapContainer = null;
-    var map = null;
-    var markers = [];
-    var currentOfferUuid = null;
+    let relayContainer = null;
+    let searchContainer = null;
+    let selectedRelayDiv = null;
+    let relayInfoDiv = null;
+    let relayCodeInput = null;
+    let relayList = null;
+    let mapContainer = null;
+    let map = null;
+    let markers = [];
+    let currentOfferUuid = null;
 
     // ─── Utilities ───────────────────────────────────────────────
 
     function escapeHtml(text) {
         if (!text) return "";
-        var div = document.createElement("div");
+        const div = document.createElement("div");
         div.textContent = text;
         return div.innerHTML;
     }
 
     function announceToScreenReader(message) {
-        var srStatus = document.getElementById("mfb-sr-status");
+        const srStatus = document.getElementById("mfb-sr-status");
         if (srStatus) {
             srStatus.textContent = "";
             setTimeout(function () {
@@ -65,10 +65,10 @@
     }
 
     function debounce(func, delay) {
-        var timeoutId;
+        let timeoutId;
         return function () {
-            var context = this;
-            var args = arguments;
+            const context = this;
+            const args = arguments;
             clearTimeout(timeoutId);
             timeoutId = setTimeout(function () {
                 func.apply(context, args);
@@ -83,8 +83,8 @@
     // ─── Skeleton / Content Transition ───────────────────────────
 
     function transitionSkeletonToContent() {
-        var skeleton = document.getElementById("mfb-skeleton");
-        var content = document.getElementById("myflyingbox-options");
+        const skeleton = document.getElementById("mfb-skeleton");
+        const content = document.getElementById("myflyingbox-options");
         if (!skeleton || !content) return;
 
         skeleton.style.animation = "mfb-fade-out 0.3s ease-out forwards";
@@ -96,12 +96,12 @@
     }
 
     function hideDeliveryBlock() {
-        var row = document.getElementById("myflyingbox-options-row");
+        const row = document.getElementById("myflyingbox-options-row");
         if (row) row.style.display = "none";
     }
 
     function showErrorMessage(message) {
-        var container = document.getElementById("mfb-offers-container");
+        const container = document.getElementById("mfb-offers-container");
         if (container) {
             container.innerHTML =
                 '<div class="mfb-error-message" style="padding: 24px; background: #fef3c7; border: 2px solid #fbbf24; border-radius: 12px; text-align: center; color: #92400e; font-size: 1rem;">' +
@@ -119,16 +119,16 @@
     // ─── Submit Button State ─────────────────────────────────────
 
     function updateSubmitButtonState() {
-        var form = document.getElementById("form-cart-delivery");
+        const form = document.getElementById("form-cart-delivery");
         if (!form) return;
 
-        var submitBtn = form.querySelector('button[type="submit"]');
+        const submitBtn = form.querySelector('button[type="submit"]');
         if (!submitBtn) return;
 
-        var warningId = "mfb-relay-submit-warning";
-        var warning = document.getElementById(warningId);
+        const warningId = "mfb-relay-submit-warning";
+        let warning = document.getElementById(warningId);
 
-        var selectedRadio = document.querySelector(".mfb-offer-radio:checked");
+        const selectedRadio = document.querySelector(".mfb-offer-radio:checked");
         if (!selectedRadio) {
             if (warning) warning.style.display = "none";
             submitBtn.disabled = false;
@@ -137,9 +137,9 @@
             return;
         }
 
-        var isRelay = selectedRadio.getAttribute("data-relay-delivery") === "1";
-        var relayCode = document.getElementById("mfb-relay-code");
-        var hasRelayCode = relayCode && relayCode.value.trim() !== "";
+        const isRelay = selectedRadio.getAttribute("data-relay-delivery") === "1";
+        const relayCode = document.getElementById("mfb-relay-code");
+        const hasRelayCode = relayCode && relayCode.value.trim() !== "";
 
         if (isRelay && !hasRelayCode) {
             submitBtn.disabled = true;
@@ -156,7 +156,7 @@
                     "<span>" +
                     escapeHtml(t("relayRequired")) +
                     "</span>";
-                var relaySection = document.getElementById(
+                const relaySection = document.getElementById(
                     "myflyingbox-relay-container"
                 );
                 if (relaySection) {
@@ -178,16 +178,16 @@
     // ─── Offer Rendering ─────────────────────────────────────────
 
     function renderOfferCards(offers) {
-        var container = document.getElementById("mfb-offers-container");
+        const container = document.getElementById("mfb-offers-container");
         if (!container) return;
 
-        var html = "";
-        for (var i = 0; i < offers.length; i++) {
-            var offer = offers[i];
-            var relayClass = offer.relay_delivery ? " is-relay" : "";
+        let html = "";
+        for (let i = 0; i < offers.length; i++) {
+            const offer = offers[i];
+            const relayClass = offer.relay_delivery ? " is-relay" : "";
 
-            var serviceName = offer.service_name || "";
-            var isServiceNameUseful =
+            const serviceName = offer.service_name || "";
+            const isServiceNameUseful =
                 serviceName.length > 3 && !/^[\d\.\s]+$/.test(serviceName);
 
             html +=
@@ -258,7 +258,7 @@
                     '<circle cx="12" cy="12" r="10"></circle>' +
                     '<polyline points="12 6 12 12 16 14"></polyline>' +
                     "</svg><span>" +
-                    offer.delivery_days +
+                    escapeHtml(offer.delivery_days) +
                     "h</span></div>";
             }
 
@@ -276,23 +276,23 @@
     // ─── Offer Selection ─────────────────────────────────────────
 
     function selectOfferById(offerId) {
-        var radio = document.querySelector(
+        const radio = document.querySelector(
             '.mfb-offer-radio[value="' + offerId + '"]'
         );
         if (radio) selectOffer(radio);
     }
 
     function setupOfferHandlers() {
-        var offerCards = document.querySelectorAll(".mfb-offer-card");
-        for (var j = 0; j < offerCards.length; j++) {
+        const offerCards = document.querySelectorAll(".mfb-offer-card");
+        for (let j = 0; j < offerCards.length; j++) {
             offerCards[j].addEventListener("click", function () {
-                var radio = this.querySelector(".mfb-offer-radio");
+                const radio = this.querySelector(".mfb-offer-radio");
                 selectOffer(radio);
             });
         }
 
-        var radios = document.querySelectorAll(".mfb-offer-radio");
-        for (var k = 0; k < radios.length; k++) {
+        const radios = document.querySelectorAll(".mfb-offer-radio");
+        for (let k = 0; k < radios.length; k++) {
             radios[k].addEventListener("change", function () {
                 selectOffer(this);
             });
@@ -304,28 +304,28 @@
 
         radio.checked = true;
 
-        var allCards = document.querySelectorAll(".mfb-offer-card");
-        for (var i = 0; i < allCards.length; i++) {
-            var item = allCards[i];
+        const allCards = document.querySelectorAll(".mfb-offer-card");
+        for (let i = 0; i < allCards.length; i++) {
+            const item = allCards[i];
             item.classList.remove("selected");
             item.style.borderColor = "";
             item.style.background = "";
             item.style.boxShadow = "";
-            var chk = item.querySelector(".mfb-check-indicator");
+            const chk = item.querySelector(".mfb-check-indicator");
             if (chk) {
                 chk.style.background = "";
                 chk.style.color = "";
             }
         }
 
-        var card = radio.closest(".mfb-offer-card");
+        const card = radio.closest(".mfb-offer-card");
         card.classList.add("selected");
         card.style.borderColor = "#22c55e";
         card.style.background =
             "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)";
         card.style.boxShadow = "0 8px 25px rgba(34, 197, 94, 0.25)";
 
-        var checkIndicator = card.querySelector(".mfb-check-indicator");
+        const checkIndicator = card.querySelector(".mfb-check-indicator");
         if (checkIndicator) {
             checkIndicator.style.background = "#22c55e";
             checkIndicator.style.color = "white";
@@ -333,10 +333,10 @@
 
         saveOfferSelection(radio.value);
 
-        var isRelay = radio.getAttribute("data-relay-delivery") === "1";
+        const isRelay = radio.getAttribute("data-relay-delivery") === "1";
         currentOfferUuid = radio.getAttribute("data-api-uuid");
 
-        var offerChanged =
+        const offerChanged =
             selectedOfferId && selectedOfferId != radio.value;
 
         if (relayContainer) {
@@ -354,7 +354,7 @@
                         selectedRelayDiv.style.display = "none";
                     if (searchContainer) searchContainer.style.display = "block";
 
-                    var searchInput = document.getElementById(
+                    const searchInput = document.getElementById(
                         "mfb-search-location"
                     );
                     if (searchInput && searchInput.value.trim().length >= 2) {
@@ -390,10 +390,10 @@
     // ─── Relay Points ────────────────────────────────────────────
 
     function displaySelectedRelay(relay) {
-        var selectedDiv = document.getElementById("mfb-selected-relay");
-        var searchDiv = document.getElementById("mfb-relay-search");
-        var infoDiv = document.getElementById("mfb-relay-info");
-        var codeInput = document.getElementById("mfb-relay-code");
+        const selectedDiv = document.getElementById("mfb-selected-relay");
+        const searchDiv = document.getElementById("mfb-relay-search");
+        const infoDiv = document.getElementById("mfb-relay-info");
+        const codeInput = document.getElementById("mfb-relay-code");
 
         if (selectedDiv && infoDiv && relay) {
             infoDiv.innerHTML =
@@ -418,12 +418,12 @@
             "</div>";
         announceToScreenReader(t("searching"));
 
-        var relaySearchUrl =
+        let relaySearchUrl =
             "/myflyingbox/relay-points?query=" +
             encodeURIComponent(query) +
             "&cart_id=" +
             cartId;
-        var selectedRadio = document.querySelector(
+        const selectedRadio = document.querySelector(
             ".mfb-offer-radio:checked"
         );
         if (selectedRadio && selectedRadio.value) {
@@ -468,7 +468,7 @@
         );
 
         relays.forEach(function (relay, index) {
-            var item = document.createElement("div");
+            const item = document.createElement("div");
             item.className = "mfb-relay-item";
             item.dataset.code = relay.code;
             item.setAttribute("tabindex", "0");
@@ -485,7 +485,7 @@
                     (relay.distance ? " (" + relay.distance + " km)" : "")
             );
 
-            var html =
+            let html =
                 '<div class="relay-name">' +
                 escapeHtml(relay.name) +
                 "</div>";
@@ -518,7 +518,7 @@
                     e.key === "ArrowRight"
                 ) {
                     e.preventDefault();
-                    var next = this.nextElementSibling;
+                    const next = this.nextElementSibling;
                     if (next && next.classList.contains("mfb-relay-item"))
                         next.focus();
                 } else if (
@@ -526,15 +526,15 @@
                     e.key === "ArrowLeft"
                 ) {
                     e.preventDefault();
-                    var prev = this.previousElementSibling;
+                    const prev = this.previousElementSibling;
                     if (prev && prev.classList.contains("mfb-relay-item"))
                         prev.focus();
                 } else if (e.key === "Escape") {
                     e.preventDefault();
-                    var searchInput = document.getElementById(
+                    const escSearchInput = document.getElementById(
                         "mfb-search-location"
                     );
-                    if (searchInput) searchInput.focus();
+                    if (escSearchInput) escSearchInput.focus();
                 }
             });
 
@@ -611,7 +611,7 @@
 
     function initMap(relays) {
         if (!window.google || !window.google.maps) {
-            var script = document.createElement("script");
+            const script = document.createElement("script");
             script.src =
                 "https://maps.googleapis.com/maps/api/js?key=" +
                 googleMapsApiKey +
@@ -631,7 +631,7 @@
         if (!mapContainer) return;
         mapContainer.style.display = "block";
 
-        var bounds = new google.maps.LatLngBounds();
+        const bounds = new google.maps.LatLngBounds();
         map = new google.maps.Map(document.getElementById("mfb-map"), {
             zoom: 12,
             mapTypeControl: false,
@@ -648,13 +648,13 @@
 
         relays.forEach(function (relay, index) {
             if (relay.latitude && relay.longitude) {
-                var position = new google.maps.LatLng(
+                const position = new google.maps.LatLng(
                     parseFloat(relay.latitude),
                     parseFloat(relay.longitude)
                 );
                 bounds.extend(position);
 
-                var marker = new google.maps.Marker({
+                const marker = new google.maps.Marker({
                     position: position,
                     map: map,
                     title: relay.name,
@@ -690,7 +690,7 @@
     }
 
     function setupMapKeyboardNav() {
-        var mapEl = document.getElementById("mfb-map");
+        const mapEl = document.getElementById("mfb-map");
         if (!mapEl) return;
 
         mapEl.setAttribute("tabindex", "0");
@@ -700,16 +700,16 @@
         mapEl.addEventListener("keydown", function (e) {
             if (e.key === "Escape") {
                 e.preventDefault();
-                var firstRelay = relayList
+                const firstRelay = relayList
                     ? relayList.querySelector(".mfb-relay-item")
                     : null;
                 if (firstRelay) {
                     firstRelay.focus();
                 } else {
-                    var searchInput = document.getElementById(
+                    const mapSearchInput = document.getElementById(
                         "mfb-search-location"
                     );
-                    if (searchInput) searchInput.focus();
+                    if (mapSearchInput) mapSearchInput.focus();
                 }
             }
         });
@@ -723,13 +723,13 @@
             return;
         }
 
-        var url = "/myflyingbox/offers?cart_id=" + cartId + "&create_quote=1";
+        let url = "/myflyingbox/offers?cart_id=" + cartId + "&create_quote=1";
         if (addressId) {
             url += "&address_id=" + addressId;
         }
 
-        var abortController = new AbortController();
-        var timeoutId = setTimeout(function () {
+        const abortController = new AbortController();
+        const timeoutId = setTimeout(function () {
             abortController.abort();
         }, 15000);
 
@@ -748,7 +748,7 @@
                     hasRelayOffers = data.has_relay_offers;
                     offersLoaded = true;
 
-                    var countEl = document.getElementById("mfb-offers-count");
+                    const countEl = document.getElementById("mfb-offers-count");
                     if (countEl) countEl.textContent = data.offers.length;
                     announceToScreenReader(
                         data.offers.length + " " + t("optionsAvailable")
@@ -764,11 +764,11 @@
                             displaySelectedRelay(data.selected_relay);
                         }
 
-                        var deliveryPostalCode =
+                        const deliveryPostalCode =
                             data.delivery_postal_code || "";
-                        var deliveryCountry =
+                        const deliveryCountry =
                             data.delivery_country || "FR";
-                        var searchInput = document.getElementById(
+                        const searchInput = document.getElementById(
                             "mfb-search-location"
                         );
 
@@ -782,7 +782,7 @@
                                 !data.selected_relay
                             ) {
                                 setTimeout(function () {
-                                    var searchBtn = document.getElementById(
+                                    const searchBtn = document.getElementById(
                                         "mfb-search-btn"
                                     );
                                     if (searchBtn) searchBtn.click();
@@ -817,7 +817,7 @@
     function initMFB() {
         loadOffers();
 
-        var optionsContainer = document.getElementById("myflyingbox-options");
+        const optionsContainer = document.getElementById("myflyingbox-options");
         if (!optionsContainer) return;
 
         relayContainer = document.getElementById(
@@ -828,15 +828,15 @@
         relayInfoDiv = document.getElementById("mfb-relay-info");
         relayCodeInput = document.getElementById("mfb-relay-code");
 
-        var searchInput = document.getElementById("mfb-search-location");
-        var searchBtn = document.getElementById("mfb-search-btn");
-        var changeBtn = document.getElementById("mfb-change-relay");
+        const searchInput = document.getElementById("mfb-search-location");
+        const searchBtn = document.getElementById("mfb-search-btn");
+        const changeBtn = document.getElementById("mfb-change-relay");
         relayList = document.getElementById("mfb-relay-list");
         mapContainer = document.getElementById("mfb-map-container");
 
         if (searchBtn) {
             searchBtn.addEventListener("click", function () {
-                var query = searchInput.value.trim();
+                const query = searchInput.value.trim();
                 if (query.length < 2) {
                     alert(t("minChars"));
                     return;
@@ -853,13 +853,13 @@
                 }
             });
 
-            var debouncedSearch = debounce(function () {
-                var query = searchInput.value.trim();
+            const debouncedSearch = debounce(function () {
+                const query = searchInput.value.trim();
                 if (query.length < 3) return;
 
-                var country = searchInput.dataset.country || "FR";
-                var postalCodeMatch = query.match(/\d{5}/);
-                var postalCode = postalCodeMatch ? postalCodeMatch[0] : "";
+                const country = searchInput.dataset.country || "FR";
+                const postalCodeMatch = query.match(/\d{5}/);
+                const postalCode = postalCodeMatch ? postalCodeMatch[0] : "";
 
                 if (
                     country === "FR" &&
@@ -896,9 +896,9 @@
 
 // Hide default module row
 (function () {
-    var optionsRow = document.getElementById("myflyingbox-options-row");
+    const optionsRow = document.getElementById("myflyingbox-options-row");
     if (optionsRow) {
-        var prevRow = optionsRow.previousElementSibling;
+        let prevRow = optionsRow.previousElementSibling;
         while (prevRow && prevRow.tagName !== "TR") {
             prevRow = prevRow.previousElementSibling;
         }
@@ -908,7 +908,7 @@
             prevRow.id &&
             prevRow.id.startsWith("delivery-module-")
         ) {
-            var moduleRadio = prevRow.querySelector('input[type="radio"]');
+            const moduleRadio = prevRow.querySelector('input[type="radio"]');
             if (moduleRadio) moduleRadio.checked = true;
             prevRow.style.display = "none";
         }

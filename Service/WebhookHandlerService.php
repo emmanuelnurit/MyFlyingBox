@@ -16,8 +16,6 @@ use Psr\Log\LoggerInterface;
  */
 final class WebhookHandlerService
 {
-    private ?TrackingNotificationService $notificationService = null;
-
     /**
      * Map of API statuses to internal shipment statuses
      */
@@ -40,16 +38,9 @@ final class WebhookHandlerService
     private array $processedEvents = [];
 
     public function __construct(
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly TrackingNotificationService $notificationService
     ) {
-    }
-
-    /**
-     * Set the notification service for email notifications
-     */
-    public function setNotificationService(TrackingNotificationService $notificationService): void
-    {
-        $this->notificationService = $notificationService;
     }
 
     /**
@@ -202,10 +193,6 @@ final class WebhookHandlerService
      */
     private function sendStatusNotification(MyFlyingBoxShipment $shipment, string $previousStatus, string $newStatus): void
     {
-        if (!$this->notificationService) {
-            return;
-        }
-
         try {
             $this->notificationService->sendStatusChangeNotification($shipment, $previousStatus, $newStatus);
         } catch (\Exception $e) {
@@ -472,7 +459,7 @@ final class WebhookHandlerService
 
         // Normalize signature (remove prefix if present)
         $normalizedSignature = $signature;
-        if (strpos($signature, '=') !== false) {
+        if (str_contains($signature, '=')) {
             $parts = explode('=', $signature, 2);
             $normalizedSignature = $parts[1] ?? $signature;
         }

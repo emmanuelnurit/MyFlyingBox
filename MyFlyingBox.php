@@ -26,33 +26,33 @@ use Thelia\Module\Exception\DeliveryException;
 
 class MyFlyingBox extends AbstractDeliveryModuleWithState
 {
-    const DOMAIN_NAME = 'myflyingbox';
+    public const DOMAIN_NAME = 'myflyingbox';
 
     // Configuration keys
-    const CONFIG_API_LOGIN = 'myflyingbox_api_login';
-    const CONFIG_API_PASSWORD = 'myflyingbox_api_password';
-    const CONFIG_API_ENV = 'myflyingbox_api_env';
-    const CONFIG_DEFAULT_SHIPPER_NAME = 'myflyingbox_shipper_name';
-    const CONFIG_DEFAULT_SHIPPER_COMPANY = 'myflyingbox_shipper_company';
-    const CONFIG_DEFAULT_SHIPPER_STREET = 'myflyingbox_shipper_street';
-    const CONFIG_DEFAULT_SHIPPER_CITY = 'myflyingbox_shipper_city';
-    const CONFIG_DEFAULT_SHIPPER_POSTAL_CODE = 'myflyingbox_shipper_postal_code';
-    const CONFIG_DEFAULT_SHIPPER_COUNTRY = 'myflyingbox_shipper_country';
-    const CONFIG_DEFAULT_SHIPPER_PHONE = 'myflyingbox_shipper_phone';
-    const CONFIG_DEFAULT_SHIPPER_EMAIL = 'myflyingbox_shipper_email';
-    const CONFIG_PRICE_SURCHARGE_PERCENT = 'myflyingbox_surcharge_percent';
-    const CONFIG_PRICE_SURCHARGE_STATIC = 'myflyingbox_surcharge_static';
-    const CONFIG_PRICE_ROUND_INCREMENT = 'myflyingbox_round_increment';
-    const CONFIG_MAX_WEIGHT = 'myflyingbox_max_weight';
-    const CONFIG_TAX_RULE_ID = 'myflyingbox_tax_rule_id';
-    const CONFIG_GOOGLE_MAPS_API_KEY = 'myflyingbox_google_maps_key';
+    public const CONFIG_API_LOGIN = 'myflyingbox_api_login';
+    public const CONFIG_API_PASSWORD = 'myflyingbox_api_password';
+    public const CONFIG_API_ENV = 'myflyingbox_api_env';
+    public const CONFIG_DEFAULT_SHIPPER_NAME = 'myflyingbox_shipper_name';
+    public const CONFIG_DEFAULT_SHIPPER_COMPANY = 'myflyingbox_shipper_company';
+    public const CONFIG_DEFAULT_SHIPPER_STREET = 'myflyingbox_shipper_street';
+    public const CONFIG_DEFAULT_SHIPPER_CITY = 'myflyingbox_shipper_city';
+    public const CONFIG_DEFAULT_SHIPPER_POSTAL_CODE = 'myflyingbox_shipper_postal_code';
+    public const CONFIG_DEFAULT_SHIPPER_COUNTRY = 'myflyingbox_shipper_country';
+    public const CONFIG_DEFAULT_SHIPPER_PHONE = 'myflyingbox_shipper_phone';
+    public const CONFIG_DEFAULT_SHIPPER_EMAIL = 'myflyingbox_shipper_email';
+    public const CONFIG_PRICE_SURCHARGE_PERCENT = 'myflyingbox_surcharge_percent';
+    public const CONFIG_PRICE_SURCHARGE_STATIC = 'myflyingbox_surcharge_static';
+    public const CONFIG_PRICE_ROUND_INCREMENT = 'myflyingbox_round_increment';
+    public const CONFIG_MAX_WEIGHT = 'myflyingbox_max_weight';
+    public const CONFIG_TAX_RULE_ID = 'myflyingbox_tax_rule_id';
+    public const CONFIG_GOOGLE_MAPS_API_KEY = 'myflyingbox_google_maps_key';
 
     // Webhook configuration keys
-    const CONFIG_WEBHOOK_SECRET = 'myflyingbox_webhook_secret';
-    const CONFIG_WEBHOOK_ENABLED = 'myflyingbox_webhook_enabled';
+    public const CONFIG_WEBHOOK_SECRET = 'myflyingbox_webhook_secret';
+    public const CONFIG_WEBHOOK_ENABLED = 'myflyingbox_webhook_enabled';
 
     // Email notification configuration keys
-    const CONFIG_EMAIL_NOTIFICATIONS_ENABLED = 'myflyingbox_email_notifications_enabled';
+    public const CONFIG_EMAIL_NOTIFICATIONS_ENABLED = 'myflyingbox_email_notifications_enabled';
 
     protected ?Translator $translator = null;
 

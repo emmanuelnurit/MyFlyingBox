@@ -14,8 +14,10 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Thelia\Core\Event\Order\OrderEvent;
 use Thelia\Core\Event\TheliaEvents;
+use Thelia\Core\Translation\Translator;
 use Thelia\Model\ModuleQuery;
 use Thelia\Model\OrderStatusQuery;
+use Thelia\Module\Exception\DeliveryException;
 
 /**
  * Event listener for order-related events
@@ -197,7 +199,7 @@ class OrderEventListener implements EventSubscriberInterface
         $this->shipmentService->createShipmentEvent(
             $shipment->getId(),
             'ORDER_STATUS_SENT',
-            'Commande marquee comme expediee dans Thelia',
+            Translator::getInstance()->trans('Order marked as shipped in Thelia', [], MyFlyingBox::DOMAIN_NAME),
             new \DateTime()
         );
 
@@ -232,7 +234,9 @@ class OrderEventListener implements EventSubscriberInterface
 
         if (!$cartRelay || !$cartRelay->getRelayCode()) {
             $this->logger->error('[MFB] Relay required but not selected for cart ' . $cartId);
-            throw new \Exception('Veuillez sélectionner un point relais pour cette livraison.');
+            throw new DeliveryException(
+                Translator::getInstance()->trans('Please select a relay point for this delivery.', [], MyFlyingBox::DOMAIN_NAME)
+            );
         }
 
         $this->logger->info('[MFB] Relay validation passed: ' . $cartRelay->getRelayCode());

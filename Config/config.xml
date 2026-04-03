@@ -43,18 +43,20 @@
         <service id="myflyingbox.tracking.service" class="MyFlyingBox\Service\TrackingService" public="true">
             <argument type="service" id="myflyingbox.api.service"/>
             <argument type="service" id="monolog.logger"/>
-            <call method="setNotificationService">
-                <argument type="service" id="myflyingbox.tracking_notification.service"/>
-            </call>
+            <argument type="service" id="myflyingbox.tracking_notification.service"/>
         </service>
 
         <!-- Webhook Handler Service -->
         <service id="myflyingbox.webhook_handler.service" class="MyFlyingBox\Service\WebhookHandlerService" public="true">
             <argument type="service" id="monolog.logger"/>
-            <call method="setNotificationService">
-                <argument type="service" id="myflyingbox.tracking_notification.service"/>
-            </call>
+            <argument type="service" id="myflyingbox.tracking_notification.service"/>
         </service>
+
+        <!-- Rate Limiter Service -->
+        <service id="MyFlyingBox\Service\RateLimiterService" class="MyFlyingBox\Service\RateLimiterService" public="true">
+            <argument type="service" id="request_stack"/>
+        </service>
+        <service id="myflyingbox.rate_limiter.service" alias="MyFlyingBox\Service\RateLimiterService"/>
 
         <!-- Carrier Logo Provider -->
         <service id="myflyingbox.carrier_logo.provider" class="MyFlyingBox\Service\CarrierLogoProvider" public="true"/>
@@ -99,11 +101,12 @@
     <hooks>
         <hook id="myflyingbox.hook.front" class="MyFlyingBox\Hook\FrontHook">
             <argument type="service" id="myflyingbox.quote.service"/>
+            <argument type="service" id="monolog.logger"/>
             <argument type="service" id="thelia.parser"/>
             <argument type="service" id="thelia.parser.asset.resolver"/>
             <argument type="service" id="event_dispatcher"/>
-            <tag name="hook.event_listener" event="order-delivery.extra" type="front"/>
-            <tag name="hook.event_listener" event="account-order.after-information" type="front"/>
+            <tag name="hook.event_listener" event="order-delivery.extra" type="front" method="onOrderDeliveryExtra"/>
+            <tag name="hook.event_listener" event="account-order.after-information" type="front" method="onAccountOrderAfterInformation"/>
             <tag name="hook.event_listener" event="cart.bottom" type="front" method="onCartBottom"/>
             <tag name="hook.event_listener" event="order-invoice.delivery-address" type="front" method="onOrderInvoiceDeliveryAddress"/>
             <tag name="hook.event_listener" event="order-placed.additional-payment-info" type="front" method="onOrderPlacedAdditionalPaymentInfo"/>

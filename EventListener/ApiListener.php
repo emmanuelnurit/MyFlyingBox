@@ -8,6 +8,7 @@ use MyFlyingBox\MyFlyingBox;
 use OpenApi\Events\DeliveryModuleOptionEvent;
 use OpenApi\Events\OpenApiEvents;
 use OpenApi\Model\Api\DeliveryModuleOption;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,20 +25,23 @@ class ApiListener implements EventSubscriberInterface
     /** @var Request|null */
     protected $request;
 
-    public function __construct(ContainerInterface $container, RequestStack $requestStack)
+    private LoggerInterface $logger;
+
+    public function __construct(ContainerInterface $container, RequestStack $requestStack, LoggerInterface $logger)
     {
         $this->container = $container;
         $this->request = $requestStack->getCurrentRequest();
+        $this->logger = $logger;
     }
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             OpenApiEvents::MODULE_DELIVERY_GET_OPTIONS => ['getDeliveryModuleOptions', 129],
         ];
     }
 
-    public function getDeliveryModuleOptions(DeliveryModuleOptionEvent $event)
+    public function getDeliveryModuleOptions(DeliveryModuleOptionEvent $event): void
     {
         // Only for MyFlyingBox module
         if ((int) $event->getModule()->getId() !== (int) MyFlyingBox::getModuleId()) {
@@ -74,6 +78,9 @@ class ApiListener implements EventSubscriberInterface
             $postageTax = $orderPostage->getAmountTax();
         } catch (\Exception $e) {
             $isValid = false;
+            $this->logger->warning('[MFB] ApiListener: delivery options unavailable', [
+                'exception' => $e->getMessage(),
+            ]);
         }
 
         /** @var DeliveryModuleOption $option */

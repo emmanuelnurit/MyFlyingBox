@@ -17,20 +17,11 @@ use Psr\Log\LoggerInterface;
  */
 final class TrackingService
 {
-    private ?TrackingNotificationService $notificationService = null;
-
     public function __construct(
         private readonly LceApiService $apiService,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly TrackingNotificationService $notificationService
     ) {
-    }
-
-    /**
-     * Set the notification service (optional dependency for email notifications)
-     */
-    public function setNotificationService(TrackingNotificationService $notificationService): void
-    {
-        $this->notificationService = $notificationService;
     }
 
     /**
@@ -475,10 +466,6 @@ final class TrackingService
      */
     private function sendStatusNotification($shipment, string $previousStatus, string $newStatus): void
     {
-        if (!$this->notificationService) {
-            return;
-        }
-
         try {
             $this->notificationService->sendStatusChangeNotification($shipment, $previousStatus, $newStatus);
         } catch (\Exception $e) {

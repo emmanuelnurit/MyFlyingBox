@@ -7,17 +7,16 @@ namespace MyFlyingBox\Hook;
 use MyFlyingBox\Model\MyFlyingBoxCartRelayQuery;
 use MyFlyingBox\Model\MyFlyingBoxOfferQuery;
 use MyFlyingBox\Model\MyFlyingBoxParcelQuery;
-use MyFlyingBox\Model\MyFlyingBoxServiceQuery;
 use MyFlyingBox\Model\MyFlyingBoxShipmentEventQuery;
 use MyFlyingBox\Model\MyFlyingBoxShipmentQuery;
 use MyFlyingBox\MyFlyingBox;
 use MyFlyingBox\Service\QuoteService;
 use Propel\Runtime\ActiveQuery\Criteria;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Thelia\Core\Event\Hook\HookRenderEvent;
 use Thelia\Core\Hook\BaseHook;
 use Thelia\Core\Template\Assets\AssetResolverInterface;
-use Thelia\Model\CountryQuery;
 use Thelia\Model\ModuleQuery;
 use TheliaSmarty\Template\SmartyParser;
 
@@ -27,15 +26,18 @@ use TheliaSmarty\Template\SmartyParser;
 class FrontHook extends BaseHook
 {
     private QuoteService $quoteService;
+    private LoggerInterface $logger;
 
     public function __construct(
         QuoteService $quoteService,
-        SmartyParser $parser = null,
-        AssetResolverInterface $resolver = null,
-        EventDispatcherInterface $eventDispatcher = null
+        LoggerInterface $logger,
+        ?SmartyParser $parser = null,
+        ?AssetResolverInterface $resolver = null,
+        ?EventDispatcherInterface $eventDispatcher = null
     ) {
         parent::__construct($parser, $resolver, $eventDispatcher);
         $this->quoteService = $quoteService;
+        $this->logger = $logger;
     }
 
     /**
@@ -91,50 +93,6 @@ class FrontHook extends BaseHook
     }
 
     /**
-     * Get formatted offers for template display
-     */
-    private function getFormattedOffers(int $quoteId): array
-    {
-        try {
-            $dbOffers = MyFlyingBoxOfferQuery::create()
-                ->filterByQuoteId($quoteId)
-                ->joinWithMyFlyingBoxService()
-                ->orderByTotalPriceInCents(Criteria::ASC)
-                ->find();
-
-            $offers = [];
-            foreach ($dbOffers as $offer) {
-                $service = $offer->getMyFlyingBoxService();
-                if (!$service || !$service->getActive()) {
-                    continue;
-                }
-
-                // Apply price surcharges
-                $price = $offer->getTotalPriceInCents() / 100;
-                $price = $this->applyPriceSurcharges($price);
-
-                $offers[] = [
-                    'id' => $offer->getId(),
-                    'service_id' => $service->getId(),
-                    'service_code' => $service->getCode(),
-                    'service_name' => $service->getName(),
-                    'carrier_code' => $service->getCarrierCode(),
-                    'price' => $price,
-                    'price_formatted' => number_format($price, 2, ',', ' ') . ' €',
-                    'delivery_days' => $offer->getDeliveryDays(),
-                    'relay_delivery' => (bool) $service->getRelayDelivery(),
-                    'api_offer_uuid' => $offer->getApiOfferUuid(),
-                ];
-            }
-
-            return $offers;
-
-        } catch (\Exception $e) {
-            return [];
-        }
-    }
-
-    /**
      * Apply price surcharges (same logic as main module)
      */
     private function applyPriceSurcharges(float $price): float
@@ -161,23 +119,6 @@ class FrontHook extends BaseHook
     }
 
     /**
-     * Check if there are any active relay delivery services
-     */
-    private function hasRelayServices(): bool
-    {
-        try {
-            $relayService = MyFlyingBoxServiceQuery::create()
-                ->filterByActive(true)
-                ->filterByRelayDelivery(true)
-                ->findOne();
-
-            return $relayService !== null;
-        } catch (\Exception $e) {
-            return false;
-        }
-    }
-
-    /**
      * Get the currently selected relay point for a cart
      */
     private function getSelectedRelay(int $cartId): ?array
@@ -198,7 +139,7 @@ class FrontHook extends BaseHook
                 ];
             }
         } catch (\Exception $e) {
-            // Table may not exist
+            $this->logger->debug('MyFlyingBox: failed to get selected relay', ['exception' => $e->getMessage()]);
         }
 
         return null;
@@ -255,7 +196,7 @@ class FrontHook extends BaseHook
             ]));
 
         } catch (\Exception $e) {
-            // Silently fail
+            $this->logger->debug('MyFlyingBox: failed to render delivery summary', ['exception' => $e->getMessage()]);
         }
     }
 
@@ -364,7 +305,7 @@ class FrontHook extends BaseHook
             ]));
 
         } catch (\Exception $e) {
-            // Silently fail - tables may not exist
+            $this->logger->debug('MyFlyingBox: failed to render tracking info', ['exception' => $e->getMessage()]);
         }
     }
 
@@ -438,7 +379,7 @@ class FrontHook extends BaseHook
             ]));
 
         } catch (\Exception $e) {
-            // Silently fail
+            $this->logger->debug('MyFlyingBox: failed to render order confirmation delivery', ['exception' => $e->getMessage()]);
         }
     }
 

@@ -463,36 +463,24 @@ class ConfigurationController extends BaseAdminController
                 'type' => $module?->getType(),
             ];
 
-            // Check configuration values
+            // Check configuration values (only report is_set, never expose actual values)
             $configChecks = [
                 'api_login' => [
-                    'key' => MyFlyingBox::CONFIG_API_LOGIN,
-                    'value' => MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_API_LOGIN, ''),
                     'is_set' => !empty(MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_API_LOGIN, '')),
                 ],
                 'api_password' => [
-                    'key' => MyFlyingBox::CONFIG_API_PASSWORD,
-                    'value' => '***HIDDEN***',
                     'is_set' => !empty(MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_API_PASSWORD, '')),
                 ],
                 'api_env' => [
-                    'key' => MyFlyingBox::CONFIG_API_ENV,
-                    'value' => MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_API_ENV, ''),
                     'is_set' => !empty(MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_API_ENV, '')),
                 ],
                 'shipper_city' => [
-                    'key' => MyFlyingBox::CONFIG_DEFAULT_SHIPPER_CITY,
-                    'value' => MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_CITY, ''),
                     'is_set' => !empty(MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_CITY, '')),
                 ],
                 'shipper_postal_code' => [
-                    'key' => MyFlyingBox::CONFIG_DEFAULT_SHIPPER_POSTAL_CODE,
-                    'value' => MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_POSTAL_CODE, ''),
                     'is_set' => !empty(MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_POSTAL_CODE, '')),
                 ],
                 'shipper_country' => [
-                    'key' => MyFlyingBox::CONFIG_DEFAULT_SHIPPER_COUNTRY,
-                    'value' => MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_COUNTRY, ''),
                     'is_set' => !empty(MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_DEFAULT_SHIPPER_COUNTRY, '')),
                 ],
             ];
@@ -546,23 +534,23 @@ class ConfigurationController extends BaseAdminController
         // Express services (24-48h)
         $expressCarriers = ['chronopost', 'dhl_express', 'dhl', 'fedex', 'ups', 'tnt'];
         if (in_array($carrierCode, $expressCarriers)
-            || strpos($code, 'express') !== false
-            || strpos($code, 'chrono') !== false
-            || strpos($name, 'express') !== false
-            || strpos($name, '24') !== false
-            || strpos($name, 'j+1') !== false
+            || str_contains($code, 'express')
+            || str_contains($code, 'chrono')
+            || str_contains($name, 'express')
+            || str_contains($name, '24')
+            || str_contains($name, 'j+1')
         ) {
             return '24-48h';
         }
 
         // Relay point services (72-120h)
         if ($isRelay
-            || strpos($code, 'relay') !== false
-            || strpos($code, 'relais') !== false
-            || strpos($code, 'pickup') !== false
-            || strpos($code, 'point') !== false
-            || strpos($name, 'relais') !== false
-            || strpos($name, 'point') !== false
+            || str_contains($code, 'relay')
+            || str_contains($code, 'relais')
+            || str_contains($code, 'pickup')
+            || str_contains($code, 'point')
+            || str_contains($name, 'relais')
+            || str_contains($name, 'point')
         ) {
             return '72-120h';
         }
@@ -576,8 +564,8 @@ class ConfigurationController extends BaseAdminController
         // Standard services (48-96h)
         $standardCarriers = ['colissimo', 'laposte', 'dpd', 'gls', 'hermes'];
         if (in_array($carrierCode, $standardCarriers)
-            || strpos($code, 'standard') !== false
-            || strpos($name, 'standard') !== false
+            || str_contains($code, 'standard')
+            || str_contains($name, 'standard')
         ) {
             return '48-96h';
         }

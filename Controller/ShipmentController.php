@@ -15,12 +15,17 @@ use Symfony\Component\HttpFoundation\Response;
 use Thelia\Controller\Admin\BaseAdminController;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
+use Psr\Log\LoggerInterface;
 use Thelia\Model\OrderQuery;
 /**
  * Back-office controller for shipment management
  */
 class ShipmentController extends BaseAdminController
 {
+    public function __construct(private readonly LoggerInterface $logger)
+    {
+    }
+
     /**
      * Validate CSRF token from AJAX request query string or header.
      * Reads the session directly after auth (avoids TokenProvider constructor timing issue).
@@ -106,7 +111,14 @@ class ShipmentController extends BaseAdminController
 
             $date = null;
             if ($collectionDate) {
-                $date = new \DateTime($collectionDate);
+                try {
+                    $date = new \DateTime($collectionDate);
+                } catch (\Exception) {
+                    return new JsonResponse([
+                        'success' => false,
+                        'message' => 'Invalid date format',
+                    ], 400);
+                }
             }
 
             $result = $shipmentService->bookShipmentWithDetails($shipment, $date);
@@ -126,10 +138,11 @@ class ShipmentController extends BaseAdminController
             }
 
         } catch (\Exception $e) {
+            $this->logger->error('MyFlyingBox: error booking shipment', ['exception' => $e]);
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
-            ]);
+                'message' => 'An internal error occurred while booking the shipment',
+            ], 500);
         }
     }
 
@@ -162,10 +175,11 @@ class ShipmentController extends BaseAdminController
             ]);
 
         } catch (\Exception $e) {
+            $this->logger->error('MyFlyingBox: error fetching labels', ['exception' => $e]);
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
-            ]);
+                'message' => 'An internal error occurred while fetching labels',
+            ], 500);
         }
     }
 
@@ -209,7 +223,8 @@ class ShipmentController extends BaseAdminController
             return $response;
 
         } catch (\Exception $e) {
-            return new Response('Error downloading label: ' . $e->getMessage(), 500, ['Content-Type' => 'text/plain']);
+            $this->logger->error('MyFlyingBox: error downloading label', ['exception' => $e]);
+            return new Response('An error occurred while downloading the label', 500, ['Content-Type' => 'text/plain']);
         }
     }
 
@@ -262,10 +277,11 @@ class ShipmentController extends BaseAdminController
             ]);
 
         } catch (\Exception $e) {
+            $this->logger->error('MyFlyingBox: error updating shipment status', ['exception' => $e]);
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
-            ]);
+                'message' => 'An internal error occurred while updating status',
+            ], 500);
         }
     }
 
@@ -309,10 +325,11 @@ class ShipmentController extends BaseAdminController
             }
 
         } catch (\Exception $e) {
+            $this->logger->error('MyFlyingBox: error cancelling shipment', ['exception' => $e]);
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
-            ]);
+                'message' => 'An internal error occurred while cancelling the shipment',
+            ], 500);
         }
     }
 
@@ -358,10 +375,11 @@ class ShipmentController extends BaseAdminController
             }
 
         } catch (\Exception $e) {
+            $this->logger->error('MyFlyingBox: error creating shipment', ['exception' => $e]);
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
-            ]);
+                'message' => 'An internal error occurred while creating the shipment',
+            ], 500);
         }
     }
 
@@ -405,9 +423,10 @@ class ShipmentController extends BaseAdminController
             ]);
 
         } catch (\Exception $e) {
+            $this->logger->error('MyFlyingBox: error syncing tracking', ['exception' => $e]);
             return new JsonResponse([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => 'An internal error occurred while syncing tracking',
             ], 500);
         }
     }
@@ -514,9 +533,10 @@ class ShipmentController extends BaseAdminController
             }
 
         } catch (\Exception $e) {
+            $this->logger->error('MyFlyingBox: error creating return shipment', ['exception' => $e]);
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
+                'message' => 'An internal error occurred while creating the return shipment',
             ], 500);
         }
     }

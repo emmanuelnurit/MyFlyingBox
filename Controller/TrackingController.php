@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MyFlyingBox\Controller;
 
 use MyFlyingBox\Service\TrackingService;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Thelia\Controller\Admin\BaseAdminController;
@@ -17,6 +18,10 @@ use Thelia\Tools\TokenProvider;
  */
 class TrackingController extends BaseAdminController
 {
+    public function __construct(private readonly LoggerInterface $logger)
+    {
+    }
+
     /**
      * Validate CSRF token from AJAX request header or body.
      */
@@ -66,10 +71,11 @@ class TrackingController extends BaseAdminController
             ]);
 
         } catch (\Exception $e) {
+            $this->logger->error('MyFlyingBox: error getting tracking', ['exception' => $e]);
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
-            ]);
+                'message' => 'An internal error occurred while fetching tracking information',
+            ], 500);
         }
     }
 
@@ -104,10 +110,11 @@ class TrackingController extends BaseAdminController
             ]);
 
         } catch (\Exception $e) {
+            $this->logger->error('MyFlyingBox: error syncing tracking status', ['exception' => $e]);
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
-            ]);
+                'message' => 'An internal error occurred while syncing tracking status',
+            ], 500);
         }
     }
 }

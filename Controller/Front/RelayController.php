@@ -12,6 +12,7 @@ use MyFlyingBox\Service\CarrierLogoProvider;
 use MyFlyingBox\Service\LceApiService;
 use MyFlyingBox\Service\PriceSurchargeService;
 use MyFlyingBox\Service\QuoteService;
+use MyFlyingBox\Service\RateLimiterService;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -99,8 +100,15 @@ class RelayController extends BaseFrontController
     /**
      * Get relay points for a given location
      */
-    public function getRelayPointsAction(Request $request, LceApiService $apiService, EventDispatcherInterface $dispatcher, LoggerInterface $logger): JsonResponse
+    public function getRelayPointsAction(Request $request, LceApiService $apiService, EventDispatcherInterface $dispatcher, LoggerInterface $logger, RateLimiterService $rateLimiter): JsonResponse
     {
+        if (!$rateLimiter->isAllowed('relay_points', 20, 60)) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Too many requests. Please wait before trying again.',
+            ], 429);
+        }
+
         try {
             $query = $request->get('query', '');
             $cartId = $request->get('cart_id');
@@ -332,8 +340,16 @@ class RelayController extends BaseFrontController
         EventDispatcherInterface $dispatcher,
         QuoteService $quoteService,
         PriceSurchargeService $priceSurchargeService,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        RateLimiterService $rateLimiter
     ): JsonResponse {
+        if (!$rateLimiter->isAllowed('offers', 15, 60)) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Too many requests. Please wait before trying again.',
+            ], 429);
+        }
+
         try {
             $cartId = $request->get('cart_id');
             $addressId = $request->get('address_id');
@@ -361,13 +377,20 @@ class RelayController extends BaseFrontController
             $deliveryPostalCode = null;
 
             if ($addressId) {
-                $address = AddressQuery::create()->findPk($addressId);
-                $country = $address?->getCountry();
+                $customer = $this->getSecurityContext()->getCustomerUser();
+                $address = AddressQuery::create()
+                    ->filterByCustomerId($customer?->getId())
+                    ->findPk($addressId);
 
-                // Extraire le code postal pour pré-remplir la recherche de relais
-                if ($address) {
-                    $deliveryPostalCode = $address->getZipcode();
+                if (!$address) {
+                    return new JsonResponse([
+                        'success' => false,
+                        'message' => 'Invalid address',
+                    ], 403);
                 }
+
+                $country = $address->getCountry();
+                $deliveryPostalCode = $address->getZipcode();
             }
 
             // Fallback to default country
@@ -485,8 +508,16 @@ class RelayController extends BaseFrontController
         EventDispatcherInterface $dispatcher,
         QuoteService $quoteService,
         PriceSurchargeService $priceSurchargeService,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        RateLimiterService $rateLimiter
     ): JsonResponse {
+        if (!$rateLimiter->isAllowed('cart_estimate', 15, 60)) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Too many requests. Please wait before trying again.',
+            ], 429);
+        }
+
         try {
             $cartId = $request->get('cart_id');
 
