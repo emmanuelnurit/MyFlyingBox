@@ -799,12 +799,6 @@
 {literal}}{/literal}
 </script>
 
-{* Load externalized JS module *}
-{$mfb_js_url = "{module_asset file='assets/js/mfb-delivery.js' module='MyFlyingBox'}"}
-{if $mfb_js_url}
-<script src="{$mfb_js_url}" defer></script>
-{else}
-{* Fallback: inline JS if module asset URL is not available *}
 <script>
 (function() {
     "use strict";
@@ -1667,6 +1661,5 @@
     }
 })();
 </script>
-{/if}
     </td>
 </tr>
