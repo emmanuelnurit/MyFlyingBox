@@ -18,6 +18,9 @@
         <!-- API Error Translator Service -->
         <service id="myflyingbox.api_error_translator.service" class="MyFlyingBox\Service\ApiErrorTranslator" public="true"/>
 
+        <!-- Shipment Lock Guard (booked-state edit guard) -->
+        <service id="myflyingbox.shipment_lock_guard.service" class="MyFlyingBox\Service\ShipmentLockGuard" public="true"/>
+
         <!-- Quote Service -->
         <service id="myflyingbox.quote.service" class="MyFlyingBox\Service\QuoteService" public="true">
             <argument type="service" id="myflyingbox.api.service"/>

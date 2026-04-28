@@ -87,6 +87,22 @@
         <requirement key="shipmentId">\d+</requirement>
     </route>
 
+    <!-- BO order shipment endpoints (delivery option + relay live + persist) -->
+    <route id="myflyingbox.admin.order.shipment.options" path="/admin/module/myflyingbox/order/{orderId}/shipment/options" methods="GET">
+        <default key="_controller">MyFlyingBox\Controller\ShipmentController::listOrderDeliveryOptionsAction</default>
+        <requirement key="orderId">\d+</requirement>
+    </route>
+
+    <route id="myflyingbox.admin.order.shipment.relays" path="/admin/module/myflyingbox/order/{orderId}/shipment/relays" methods="GET">
+        <default key="_controller">MyFlyingBox\Controller\ShipmentController::listOrderRelayPointsAction</default>
+        <requirement key="orderId">\d+</requirement>
+    </route>
+
+    <route id="myflyingbox.admin.order.shipment.select" path="/admin/module/myflyingbox/order/{orderId}/shipment/select" methods="POST">
+        <default key="_controller">MyFlyingBox\Controller\ShipmentController::selectOrderDeliveryOptionAction</default>
+        <requirement key="orderId">\d+</requirement>
+    </route>
+
     <!-- Tracking routes -->
     <route id="myflyingbox.admin.tracking.get" path="/admin/module/myflyingbox/tracking" methods="GET">
         <default key="_controller">MyFlyingBox\Controller\TrackingController::getTrackingAction</default>
