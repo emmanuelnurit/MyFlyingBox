@@ -535,7 +535,7 @@
     var $relaySelText  = $('#mfb-picker-relay-selected-text');
     var $saveBtn       = $('#mfb-picker-save-btn');
 
-    // Cache of {offerId: optionPayload} so we know if the selected one is a relay offer.
+    // Cache mapping offerId to its option payload, so we can tell whether the selected one is a relay offer.
     var pickerOptionsById = {};
 
     function pickerSetLocked(locked) {
