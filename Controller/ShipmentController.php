@@ -218,7 +218,7 @@ class ShipmentController extends BaseAdminController
             $response = new Response($pdfContent);
             $response->headers->set('Content-Type', 'application/pdf');
             $response->headers->set('Content-Disposition', 'attachment; filename="label-' . $shipmentId . '.pdf"');
-            $response->headers->set('Content-Length', strlen($pdfContent));
+            $response->headers->set('Content-Length', (string) strlen($pdfContent));
 
             return $response;
 
