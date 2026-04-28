@@ -81,11 +81,9 @@ class ApiListener implements EventSubscriberInterface
                 throw new DeliveryException(Translator::getInstance()->trans('MyFlyingBox is not available'));
             }
 
-        } catch (\Exception) {
+        } catch (\Exception $e) {
             $isValid = false;
-            $this->logger->warning('[MFB] ApiListener: delivery options unavailable', [
-                'exception' => $e->getMessage(),
-            ]);
+            error_log('[MFB] ApiListener: delivery options unavailable: ' . $e->getMessage());
         }
 
         $services = MyFlyingBoxServiceQuery::create()->filterByActive(true)->find();

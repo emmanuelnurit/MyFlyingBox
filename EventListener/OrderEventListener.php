@@ -9,6 +9,7 @@ use MyFlyingBox\Model\MyFlyingBoxOfferQuery;
 use MyFlyingBox\Model\MyFlyingBoxShipmentQuery;
 use MyFlyingBox\MyFlyingBox;
 use MyFlyingBox\Service\ShipmentService;
+use Propel\Runtime\ActiveQuery\Criteria;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -70,17 +71,26 @@ class OrderEventListener implements EventSubscriberInterface
             return;
         }
 
-        // Find the offer matching the selected option code in the most recent quote
+        // Scope the offer lookup to the current cart so concurrent users
+        // cannot end up sharing an offer id from another shopper's quote.
+        $cartId = $order->getCartId();
+        if (!$cartId) {
+            return;
+        }
+
         $offer = MyFlyingBoxOfferQuery::create()
             ->useMyFlyingBoxServiceQuery()
                 ->filterByCode(strtolower($optionCode))
             ->endUse()
-            ->orderById(\Propel\Runtime\ActiveQuery\Criteria::DESC)
+            ->useMyFlyingBoxQuoteQuery()
+                ->filterByCartId($cartId)
+            ->endUse()
+            ->orderById(Criteria::DESC)
             ->findOne();
 
         if ($offer) {
             $session->set('mfb_selected_offer_id', $offer->getId());
-            $this->logger->info('[MFB] Set selected offer from option code: ' . $optionCode . ' → offer ID ' . $offer->getId());
+            $this->logger->debug('[MFB] Set selected offer from option code: ' . $optionCode . ' → offer ID ' . $offer->getId());
         }
     }
 
