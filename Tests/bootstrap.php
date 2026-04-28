@@ -2,6 +2,13 @@
 
 declare(strict_types=1);
 
+// Safety: this file ends up scanned by Symfony's PSR-4 service auto-import
+// (because composer.json maps `MyFlyingBox\` to the module root). It must
+// therefore be a no-op when included outside a CLI test runner.
+if (PHP_SAPI !== 'cli') {
+    return;
+}
+
 // Load the parent Thelia project's autoloader first so Propel-generated Base
 // classes (in var/cache/.../propel/model/) are reachable, then layer the
 // module's local autoloader (phpunit + dev deps) on top.
