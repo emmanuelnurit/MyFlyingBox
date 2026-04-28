@@ -13,6 +13,7 @@ use MyFlyingBox\Model\MyFlyingBoxQuoteQuery;
 use MyFlyingBox\Model\MyFlyingBoxShipment;
 use MyFlyingBox\Model\MyFlyingBoxShipmentQuery;
 use MyFlyingBox\MyFlyingBox;
+use MyFlyingBox\Service\BackOfficeShipmentUpdater;
 use MyFlyingBox\Service\CarrierLogoProvider;
 use MyFlyingBox\Service\LceApiService;
 use MyFlyingBox\Service\PriceSurchargeService;
@@ -793,7 +794,8 @@ class ShipmentController extends BaseAdminController
         Request $request,
         int $orderId,
         ShipmentLockGuard $lockGuard,
-        ShipmentService $shipmentService
+        ShipmentService $shipmentService,
+        BackOfficeShipmentUpdater $backOfficeShipmentUpdater
     ): JsonResponse {
         if (null !== $response = $this->checkAuth(AdminResources::ORDER, [], AccessManager::UPDATE)) {
             return new JsonResponse(['success' => false, 'error' => 'Access denied'], 403);
@@ -926,6 +928,10 @@ class ShipmentController extends BaseAdminController
 
             // Mirror selection in session so existing consumers (e.g. getPostage) align.
             $request->getSession()->set('mfb_selected_offer_id', $offer->getId());
+
+            // Silently recompute and persist the order postage based on the new offer.
+            // Idempotent — a no-op if the order already has the same postage.
+            $backOfficeShipmentUpdater->applyOfferToOrder($order, $offer, $shipment);
 
             $shipmentService->createShipmentEvent(
                 $shipment->getId(),
