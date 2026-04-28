@@ -45,19 +45,43 @@ class OrderEventListener implements EventSubscriberInterface
     }
 
     /**
-     * Called when delivery module is set for an order
-     * Check if MyFlyingBox is selected
+     * Called when delivery module is set for an order.
+     * Reads the selected option code from the request and stores the matching
+     * offer ID in the session so getPostage() returns the correct price.
      */
     public function onOrderSetDeliveryModule(OrderEvent $event): void
     {
         $order = $event->getOrder();
 
-        // Check if MyFlyingBox is the delivery module
         if (!$this->isMyFlyingBoxDelivery($order->getDeliveryModuleId())) {
             return;
         }
 
-        // Additional processing could be done here if needed
+        $request = $this->requestStack->getCurrentRequest();
+        if (!$request) {
+            return;
+        }
+
+        $session = $request->getSession();
+        $decodedContent = json_decode($request->getContent(), true);
+        $optionCode = $decodedContent['deliveryModuleOptionCode'] ?? null;
+
+        if (!$optionCode) {
+            return;
+        }
+
+        // Find the offer matching the selected option code in the most recent quote
+        $offer = MyFlyingBoxOfferQuery::create()
+            ->useMyFlyingBoxServiceQuery()
+                ->filterByCode(strtolower($optionCode))
+            ->endUse()
+            ->orderById(\Propel\Runtime\ActiveQuery\Criteria::DESC)
+            ->findOne();
+
+        if ($offer) {
+            $session->set('mfb_selected_offer_id', $offer->getId());
+            $this->logger->info('[MFB] Set selected offer from option code: ' . $optionCode . ' → offer ID ' . $offer->getId());
+        }
     }
 
     /**
