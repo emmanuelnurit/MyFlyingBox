@@ -33,6 +33,8 @@ composer.lock
 # Test files
 /tests/coverage/
 phpunit.xml
+.phpunit.cache/
+.phpunit.result.cache
 
 # Temporary files
 *.tmp

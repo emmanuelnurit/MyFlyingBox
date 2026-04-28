@@ -2,6 +2,99 @@
 
 <div class="mfb-shipment-container" data-order-id="{$order_id}">
 
+    {* === DELIVERY MODE PICKER (THE-549) ===
+       Loaded via AJAX on mount. Hidden until /options responds. *}
+    <div class="panel panel-default mfb-delivery-picker" id="mfb-delivery-picker" style="display: none;">
+        <div class="panel-heading">
+            <h4 class="panel-title">
+                <span class="glyphicon glyphicon-road"></span> {intl l="Delivery mode" d="myflyingbox.bo"}
+            </h4>
+        </div>
+        <div class="panel-body">
+            {* Locked banner (set when API returns data.locked=true) *}
+            <div class="alert alert-warning mfb-picker-locked" id="mfb-picker-locked" style="display: none;">
+                <span class="glyphicon glyphicon-lock"></span>
+                <strong>{intl l="This shipment is locked: it has already been booked." d="myflyingbox.bo"}</strong><br>
+                <small>{intl l="Modifications will be possible again if the shipment is cancelled." d="myflyingbox.bo"}</small>
+            </div>
+
+            {* Loader while /options is in flight *}
+            <p class="text-muted mfb-picker-loading" id="mfb-picker-loading">
+                <span class="glyphicon glyphicon-refresh mfb-spin"></span>
+                {intl l="Loading available delivery modes..." d="myflyingbox.bo"}
+            </p>
+
+            {* Empty state when /options returns 0 eligible offers *}
+            <div class="alert alert-info mfb-picker-empty" id="mfb-picker-empty" style="display: none;">
+                <span class="glyphicon glyphicon-info-sign"></span>
+                {intl l="No eligible delivery mode for this order" d="myflyingbox.bo"}
+            </div>
+
+            {* Picker form (revealed after /options succeeds with at least one offer) *}
+            <form id="mfb-picker-form" style="display: none;" novalidate>
+                <div class="form-group">
+                    <label for="mfb-picker-offer">{intl l="Select a delivery mode" d="myflyingbox.bo"}</label>
+                    <select class="form-control" id="mfb-picker-offer" name="offer_id">
+                        <option value="">--</option>
+                    </select>
+                </div>
+
+                {* Relay search section: visible only when the selected offer is a relay one *}
+                <div class="mfb-picker-relay-section" id="mfb-picker-relay-section" style="display: none;">
+                    <hr>
+                    <label>
+                        <span class="glyphicon glyphicon-map-marker"></span>
+                        {intl l="Relay point" d="myflyingbox.bo"}
+                    </label>
+
+                    <div class="input-group" style="margin-bottom: 10px;">
+                        <input type="text" class="form-control" id="mfb-picker-relay-query"
+                               placeholder="{intl l='Search by address or postal code' d='myflyingbox.bo'}">
+                        <span class="input-group-btn">
+                            <button type="button" class="btn btn-default" id="mfb-picker-relay-search-btn">
+                                <span class="glyphicon glyphicon-search"></span> {intl l="Search" d="myflyingbox.bo"}
+                            </button>
+                        </span>
+                    </div>
+
+                    <p class="text-muted mfb-picker-relay-loading" id="mfb-picker-relay-loading" style="display: none;">
+                        <span class="glyphicon glyphicon-refresh mfb-spin"></span>
+                        {intl l="Loading relay points..." d="myflyingbox.bo"}
+                    </p>
+
+                    <div class="alert alert-info mfb-picker-relay-empty" id="mfb-picker-relay-empty" style="display: none;">
+                        {intl l="No relay points available for this address" d="myflyingbox.bo"}
+                    </div>
+
+                    {* Currently selected relay summary *}
+                    <div class="well well-sm mfb-picker-relay-selected" id="mfb-picker-relay-selected" style="display: none;">
+                        <strong><span class="glyphicon glyphicon-ok-circle text-success"></span>
+                            {intl l="Selected relay point" d="myflyingbox.bo"} :</strong>
+                        <span id="mfb-picker-relay-selected-text"></span>
+                    </div>
+
+                    {* Result list — populated by JS *}
+                    <div class="list-group mfb-picker-relay-list" id="mfb-picker-relay-list"></div>
+
+                    {* Hidden fields fed by relay row click OR by THE-550 widget event mfb:pickup-selected *}
+                    <input type="hidden" id="mfb-picker-relay-code" name="relay_code" value="">
+                    <input type="hidden" id="mfb-picker-relay-name" name="relay_name" value="">
+                    <input type="hidden" id="mfb-picker-relay-street" name="relay_street" value="">
+                    <input type="hidden" id="mfb-picker-relay-city" name="relay_city" value="">
+                    <input type="hidden" id="mfb-picker-relay-postal-code" name="relay_postal_code" value="">
+                    <input type="hidden" id="mfb-picker-relay-country" name="relay_country" value="">
+                </div>
+
+                <div class="form-group" style="margin-top: 15px;">
+                    <button type="submit" class="btn btn-primary" id="mfb-picker-save-btn">
+                        <span class="glyphicon glyphicon-floppy-disk"></span>
+                        {intl l="Save delivery mode" d="myflyingbox.bo"}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     {if $shipment}
         {* Shipment exists - Show details *}
 

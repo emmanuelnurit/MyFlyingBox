@@ -412,4 +412,7 @@ return [
     // OrderEventListener messages
     'Please select a relay point for this delivery.' => 'Veuillez sélectionner un point relais pour cette livraison.',
     'Order marked as shipped in Thelia' => 'Commande marquée comme expédiée dans Thelia',
+
+    // BO order shipment actions
+    'This shipment has already been booked. Cancel the booking before changing the delivery option.' => 'Cette expédition a déjà été réservée. Annulez la réservation avant de modifier le mode de livraison.',
 ];

@@ -9,6 +9,7 @@ use MyFlyingBox\Model\MyFlyingBoxOfferQuery;
 use MyFlyingBox\Model\MyFlyingBoxShipmentQuery;
 use MyFlyingBox\MyFlyingBox;
 use MyFlyingBox\Service\ShipmentService;
+use Propel\Runtime\ActiveQuery\Criteria;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -45,19 +46,52 @@ class OrderEventListener implements EventSubscriberInterface
     }
 
     /**
-     * Called when delivery module is set for an order
-     * Check if MyFlyingBox is selected
+     * Called when delivery module is set for an order.
+     * Reads the selected option code from the request and stores the matching
+     * offer ID in the session so getPostage() returns the correct price.
      */
     public function onOrderSetDeliveryModule(OrderEvent $event): void
     {
         $order = $event->getOrder();
 
-        // Check if MyFlyingBox is the delivery module
         if (!$this->isMyFlyingBoxDelivery($order->getDeliveryModuleId())) {
             return;
         }
 
-        // Additional processing could be done here if needed
+        $request = $this->requestStack->getCurrentRequest();
+        if (!$request) {
+            return;
+        }
+
+        $session = $request->getSession();
+        $decodedContent = json_decode($request->getContent(), true);
+        $optionCode = $decodedContent['deliveryModuleOptionCode'] ?? null;
+
+        if (!$optionCode) {
+            return;
+        }
+
+        // Scope the offer lookup to the current cart so concurrent users
+        // cannot end up sharing an offer id from another shopper's quote.
+        $cartId = $order->getCartId();
+        if (!$cartId) {
+            return;
+        }
+
+        $offer = MyFlyingBoxOfferQuery::create()
+            ->useMyFlyingBoxServiceQuery()
+                ->filterByCode(strtolower($optionCode))
+            ->endUse()
+            ->useMyFlyingBoxQuoteQuery()
+                ->filterByCartId($cartId)
+            ->endUse()
+            ->orderById(Criteria::DESC)
+            ->findOne();
+
+        if ($offer) {
+            $session->set('mfb_selected_offer_id', $offer->getId());
+            $this->logger->debug('[MFB] Set selected offer from option code: ' . $optionCode . ' → offer ID ' . $offer->getId());
+        }
     }
 
     /**

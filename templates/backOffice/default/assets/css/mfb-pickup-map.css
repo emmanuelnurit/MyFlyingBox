@@ -1,0 +1,55 @@
+/* MyFlyingBox - Back Office pickup-point map widget */
+
+.mfb-pickup-map-widget { display: flex; flex-direction: column; gap: 10px; }
+
+.mfb-pickup-map-widget .mfb-pickup-map-toolbar {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+}
+.mfb-pickup-map-widget .mfb-pickup-map-toolbar input,
+.mfb-pickup-map-widget .mfb-pickup-map-toolbar select {
+    flex: 1 1 140px; min-width: 0;
+}
+
+.mfb-pickup-map-widget .mfb-pickup-map-body {
+    display: flex; flex-wrap: wrap; gap: 12px;
+}
+.mfb-pickup-map-widget .mfb-pickup-map-list {
+    flex: 1 1 280px; max-height: 380px; overflow-y: auto;
+    border: 1px solid #ddd; border-radius: 4px;
+}
+.mfb-pickup-map-widget .mfb-pickup-map-canvas {
+    flex: 2 1 360px; height: 380px; min-height: 280px;
+    border: 1px solid #ddd; border-radius: 4px; background: #f4f4f4;
+}
+
+.mfb-pickup-map-widget .mfb-pickup-item {
+    display: block; width: 100%; text-align: left;
+    padding: 8px 12px; border: 0; border-bottom: 1px solid #eee;
+    background: #fff; cursor: pointer; font: inherit;
+}
+.mfb-pickup-map-widget .mfb-pickup-item:hover { background: #f5f5f5; }
+.mfb-pickup-map-widget .mfb-pickup-item.active {
+    background: #337ab7; color: #fff;
+}
+.mfb-pickup-map-widget .mfb-pickup-item.active small { color: #e8f0f7; }
+
+.mfb-pickup-map-widget .mfb-pickup-loader {
+    text-align: center; padding: 12px; color: #666;
+}
+.mfb-pickup-map-widget .mfb-pickup-error {
+    background: #f2dede; color: #a94442; border: 1px solid #ebccd1;
+    padding: 8px 12px; border-radius: 4px;
+}
+.mfb-pickup-map-widget .mfb-pickup-empty {
+    background: #fcf8e3; color: #8a6d3b; border: 1px solid #faebcc;
+    padding: 8px 12px; border-radius: 4px;
+}
+.mfb-pickup-map-widget .mfb-pickup-selected {
+    padding: 8px 12px; background: #dff0d8; border: 1px solid #d6e9c6;
+    color: #3c763d; border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+    .mfb-pickup-map-widget .mfb-pickup-map-canvas { height: 280px; flex-basis: 100%; }
+    .mfb-pickup-map-widget .mfb-pickup-map-list { max-height: 220px; flex-basis: 100%; }
+}

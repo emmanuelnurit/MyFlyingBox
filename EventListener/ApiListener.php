@@ -81,11 +81,9 @@ class ApiListener implements EventSubscriberInterface
                 throw new DeliveryException(Translator::getInstance()->trans('MyFlyingBox is not available'));
             }
 
-        } catch (\Exception) {
+        } catch (\Exception $e) {
             $isValid = false;
-            $this->logger->warning('[MFB] ApiListener: delivery options unavailable', [
-                'exception' => $e->getMessage(),
-            ]);
+            error_log('[MFB] ApiListener: delivery options unavailable: ' . $e->getMessage());
         }
 
         $services = MyFlyingBoxServiceQuery::create()->filterByActive(true)->find();
@@ -122,7 +120,7 @@ class ApiListener implements EventSubscriberInterface
             $option
                 ->setCode(strtoupper($service->getCode()))
                 ->setValid($isValid)
-                ->setTitle('')
+                ->setTitle(strtoupper($service->getCarrierCode()) . ' - ' . $service->getName())
                 ->setImage('')
                 ->setMinimumDeliveryDate('')
                 ->setMaximumDeliveryDate('')
@@ -175,20 +173,18 @@ class ApiListener implements EventSubscriberInterface
                 return;
             }
 
-            // Get the most recent quote that contains relay offers
-            // We need an offer UUID to search for pickup locations
-            $relayOffer = MyFlyingBoxOfferQuery::create()
+            // Get all relay offers from the most recent quote
+            $relayOffers = MyFlyingBoxOfferQuery::create()
                 ->useMyFlyingBoxServiceQuery()
-                ->filterByActive(true)
-                ->filterByRelayDelivery(true)
+                    ->filterByActive(true)
+                    ->filterByRelayDelivery(true)
                 ->endUse()
                 ->useMyFlyingBoxQuoteQuery()
                 ->endUse()
                 ->orderById(Criteria::DESC)
-                ->findOne();
+                ->find();
 
-            // If no recent quote with relay offers, we cannot search
-            if (!$relayOffer || !$relayOffer->getApiOfferUuid()) {
+            if ($relayOffers->count() === 0) {
                 return;
             }
 
@@ -203,48 +199,73 @@ class ApiListener implements EventSubscriberInterface
                 $params['postal_code'] = $zipCode;
             }
 
-            // Call API to get delivery locations
-            $response = $this->apiService->getDeliveryLocations(
-                $relayOffer->getApiOfferUuid(),
-                $params
-            );
+            // Track which quote we're using to avoid mixing quotes
+            $targetQuoteId = null;
+            $processedOfferIds = [];
 
-            // API returns data in 'data' key
-            $locations = $response['data'] ?? $response['locations'] ?? [];
-
-            if (empty($locations)) {
-                return;
-            }
-
-            // Convert API locations to Thelia PickupLocation objects
-            foreach ($locations as $location) {
-                // Skip locations without valid GPS coordinates
-                $lat = $location['latitude'] ?? $location['lat'] ?? null;
-                $lng = $location['longitude'] ?? $location['lng'] ?? $location['lon'] ?? null;
-
-                if (empty($lat) || empty($lng) || !is_numeric($lat) || !is_numeric($lng)) {
-                    error_log('MyFlyingBox: Skipping location without valid coordinates: ' . json_encode($location));
+            foreach ($relayOffers as $relayOffer) {
+                if (!$relayOffer->getApiOfferUuid()) {
                     continue;
                 }
 
-                $pickupLocation = new PickupLocation();
+                // Only process offers from the same (most recent) quote
+                if ($targetQuoteId === null) {
+                    $targetQuoteId = $relayOffer->getQuoteId();
+                } elseif ($relayOffer->getQuoteId() !== $targetQuoteId) {
+                    break;
+                }
 
-                $pickupLocation
-                    ->setId($location['code'] ?? '')
-                    ->setTitle($location['company'] ?? $location['name'] ?? '')
-                    ->setAddress($this->createPickupLocationAddressFromLocation($location))
-                    ->setLatitude((float)$lat)
-                    ->setLongitude((float)$lng)
-                    ->setOpeningHours(PickupLocation::MONDAY_OPENING_HOURS_KEY, $location['opening_hours'][0]['hours'] ?? "00:00-00:00 00:00-00:00")
-                    ->setOpeningHours(PickupLocation::TUESDAY_OPENING_HOURS_KEY, $location['opening_hours'][1]['hours'] ?? "00:00-00:00 00:00-00:00")
-                    ->setOpeningHours(PickupLocation::WEDNESDAY_OPENING_HOURS_KEY, $location['opening_hours'][2]['hours'] ?? "00:00-00:00 00:00-00:00")
-                    ->setOpeningHours(PickupLocation::THURSDAY_OPENING_HOURS_KEY, $location['opening_hours'][3]['hours'] ?? "00:00-00:00 00:00-00:00")
-                    ->setOpeningHours(PickupLocation::FRIDAY_OPENING_HOURS_KEY, $location['opening_hours'][4]['hours'] ?? "00:00-00:00 00:00-00:00")
-                    ->setOpeningHours(PickupLocation::SATURDAY_OPENING_HOURS_KEY, $location['opening_hours'][5]['hours'] ?? "00:00-00:00 00:00-00:00")
-                    ->setOpeningHours(PickupLocation::SUNDAY_OPENING_HOURS_KEY, $location['opening_hours'][6]['hours'] ?? "00:00-00:00 00:00-00:00")
-                    ->setModuleId(MyFlyingBox::getModuleId());
+                // Avoid duplicate service processing
+                if (in_array($relayOffer->getServiceId(), $processedOfferIds, true)) {
+                    continue;
+                }
+                $processedOfferIds[] = $relayOffer->getServiceId();
 
-                $pickupLocationEvent->appendLocation($pickupLocation);
+                $service = $relayOffer->getMyFlyingBoxService();
+                $optionCode = strtoupper($service->getCode());
+
+                // Call API to get delivery locations for this specific carrier
+                try {
+                    $response = $this->apiService->getDeliveryLocations(
+                        $relayOffer->getApiOfferUuid(),
+                        $params
+                    );
+                } catch (\Exception $e) {
+                    error_log('MyFlyingBox: Failed to get locations for ' . $optionCode . ': ' . $e->getMessage());
+                    continue;
+                }
+
+                $locations = $response['data'] ?? $response['locations'] ?? [];
+
+                // Convert API locations to Thelia PickupLocation objects
+                foreach ($locations as $location) {
+                    $lat = $location['latitude'] ?? $location['lat'] ?? null;
+                    $lng = $location['longitude'] ?? $location['lng'] ?? $location['lon'] ?? null;
+
+                    if (empty($lat) || empty($lng) || !is_numeric($lat) || !is_numeric($lng)) {
+                        continue;
+                    }
+
+                    $pickupLocation = new PickupLocation();
+
+                    $pickupLocation
+                        ->setId($location['code'] ?? '')
+                        ->setTitle($location['company'] ?? $location['name'] ?? '')
+                        ->setAddress($this->createPickupLocationAddressFromLocation($location))
+                        ->setLatitude((float)$lat)
+                        ->setLongitude((float)$lng)
+                        ->setOpeningHours(PickupLocation::MONDAY_OPENING_HOURS_KEY, $location['opening_hours'][0]['hours'] ?? "00:00-00:00 00:00-00:00")
+                        ->setOpeningHours(PickupLocation::TUESDAY_OPENING_HOURS_KEY, $location['opening_hours'][1]['hours'] ?? "00:00-00:00 00:00-00:00")
+                        ->setOpeningHours(PickupLocation::WEDNESDAY_OPENING_HOURS_KEY, $location['opening_hours'][2]['hours'] ?? "00:00-00:00 00:00-00:00")
+                        ->setOpeningHours(PickupLocation::THURSDAY_OPENING_HOURS_KEY, $location['opening_hours'][3]['hours'] ?? "00:00-00:00 00:00-00:00")
+                        ->setOpeningHours(PickupLocation::FRIDAY_OPENING_HOURS_KEY, $location['opening_hours'][4]['hours'] ?? "00:00-00:00 00:00-00:00")
+                        ->setOpeningHours(PickupLocation::SATURDAY_OPENING_HOURS_KEY, $location['opening_hours'][5]['hours'] ?? "00:00-00:00 00:00-00:00")
+                        ->setOpeningHours(PickupLocation::SUNDAY_OPENING_HOURS_KEY, $location['opening_hours'][6]['hours'] ?? "00:00-00:00 00:00-00:00")
+                        ->setModuleId(MyFlyingBox::getModuleId())
+                        ->setModuleOptionCode($optionCode);
+
+                    $pickupLocationEvent->appendLocation($pickupLocation);
+                }
             }
         } catch (\Exception $e) {
             // Log error but don't throw to avoid breaking other modules

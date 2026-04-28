@@ -17,12 +17,26 @@
         "ext-curl": "*",
         "ext-json": "*"
     },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5",
+        "dg/bypass-finals": "^1.9"
+    },
     "autoload": {
         "psr-4": {
             "MyFlyingBox\\": ""
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "MyFlyingBox\\Tests\\": "Tests/"
+        }
+    },
     "extra": {
         "installer-name": "MyFlyingBox"
+    },
+    "config": {
+        "allow-plugins": {
+            "thelia/installer": true
+        }
     }
 }

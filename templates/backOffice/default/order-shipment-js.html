@@ -35,7 +35,11 @@
         syncTracking: '{url path="/admin/module/myflyingbox/shipment/sync-tracking"}?_token={$csrf_token|escape:"javascript"}',
         createReturn: '{url path="/admin/module/myflyingbox/shipment/create-return"}?_token={$csrf_token|escape:"javascript"}',
         tracking: '{url path="/admin/module/myflyingbox/shipment/tracking"}',
-        downloadLabel: '{url path="/admin/module/myflyingbox/shipment/download-label"}'
+        downloadLabel: '{url path="/admin/module/myflyingbox/shipment/download-label"}',
+        // THE-547 BO order shipment endpoints
+        pickerOptions: '{url path="/admin/module/myflyingbox/order/"}' + orderId + '/shipment/options',
+        pickerRelays:  '{url path="/admin/module/myflyingbox/order/"}' + orderId + '/shipment/relays',
+        pickerSelect: '{url path="/admin/module/myflyingbox/order/"}' + orderId + '/shipment/select?_token={$csrf_token|escape:"javascript"}'
     };
 
     // Translations for modals and statuses
@@ -511,6 +515,283 @@
     $('#mfb-return-modal').on('hidden.bs.modal', function() {
         $('#mfb-return-service-select').val('');
     });
+
+    // ============================================================
+    // Delivery mode picker (THE-549) — calls THE-547 BO endpoints
+    // ============================================================
+
+    var $picker        = $('#mfb-delivery-picker');
+    var $pickerLoading = $('#mfb-picker-loading');
+    var $pickerEmpty   = $('#mfb-picker-empty');
+    var $pickerLocked  = $('#mfb-picker-locked');
+    var $pickerForm    = $('#mfb-picker-form');
+    var $offerSelect   = $('#mfb-picker-offer');
+    var $relaySection  = $('#mfb-picker-relay-section');
+    var $relayQuery    = $('#mfb-picker-relay-query');
+    var $relayList     = $('#mfb-picker-relay-list');
+    var $relayLoading  = $('#mfb-picker-relay-loading');
+    var $relayEmpty    = $('#mfb-picker-relay-empty');
+    var $relaySelected = $('#mfb-picker-relay-selected');
+    var $relaySelText  = $('#mfb-picker-relay-selected-text');
+    var $saveBtn       = $('#mfb-picker-save-btn');
+
+    // Cache mapping offerId to its option payload, so we can tell whether the selected one is a relay offer.
+    var pickerOptionsById = {};
+
+    function pickerSetLocked(locked) {
+        if (locked) {
+            $pickerLocked.show();
+            $pickerForm.find('input,select,button').prop('disabled', true);
+        } else {
+            $pickerLocked.hide();
+            $pickerForm.find('input,select,button').prop('disabled', false);
+        }
+    }
+
+    function pickerResetRelayFields() {
+        $('#mfb-picker-relay-code').val('');
+        $('#mfb-picker-relay-name').val('');
+        $('#mfb-picker-relay-street').val('');
+        $('#mfb-picker-relay-city').val('');
+        $('#mfb-picker-relay-postal-code').val('');
+        $('#mfb-picker-relay-country').val('');
+        $relaySelected.hide();
+        $relaySelText.text('');
+    }
+
+    function pickerSetSelectedRelay(relay) {
+        $('#mfb-picker-relay-code').val(relay.code || '');
+        $('#mfb-picker-relay-name').val(relay.name || '');
+        $('#mfb-picker-relay-street').val(relay.street || '');
+        $('#mfb-picker-relay-city').val(relay.city || '');
+        $('#mfb-picker-relay-postal-code').val(relay.postal_code || '');
+        $('#mfb-picker-relay-country').val(relay.country || '');
+        var label = (relay.name ? relay.name + ' — ' : '')
+            + [relay.street, relay.postal_code, relay.city].filter(Boolean).join(', ')
+            + ' (' + (relay.code || '') + ')';
+        $relaySelText.text(label);
+        $relaySelected.show();
+    }
+
+    function loadPickerOptions() {
+        if ($picker.length === 0) return;
+        $picker.show();
+
+        $.ajax({ url: MFB_SHIPMENT_URLS.pickerOptions, method: 'GET', dataType: 'json' })
+        .done(function(response) {
+            $pickerLoading.hide();
+
+            if (!response || !response.success || !response.data) {
+                $pickerEmpty.show();
+                return;
+            }
+
+            var data = response.data;
+            var options = data.options || [];
+            var preselectedOfferUuid = data.shipment && data.shipment.api_offer_uuid;
+
+            if (options.length === 0) {
+                $pickerEmpty.show();
+                pickerSetLocked(!!data.locked);
+                return;
+            }
+
+            pickerOptionsById = {};
+            $offerSelect.empty().append(
+                $('<option/>').val('').text('--')
+            );
+
+            options.forEach(function(opt) {
+                pickerOptionsById[opt.id] = opt;
+                var label = (opt.carrier_code ? opt.carrier_code.toUpperCase() + ' — ' : '')
+                    + (opt.service_name || '')
+                    + (opt.relay_delivery ? ' ({intl l="Relay" d="myflyingbox.bo"|escape:"javascript"})' : '')
+                    + ' — ' + (opt.price_formatted || '');
+                $offerSelect.append($('<option/>').val(opt.id).text(label));
+
+                if (opt.api_offer_uuid && opt.api_offer_uuid === preselectedOfferUuid) {
+                    $offerSelect.val(opt.id);
+                }
+            });
+
+            // Pre-render persisted relay info if any
+            if (data.shipment && data.shipment.relay) {
+                pickerSetSelectedRelay(data.shipment.relay);
+            }
+
+            $pickerForm.show();
+            pickerSetLocked(!!data.locked);
+            handlePickerOfferChange(); // reveal relay section if pre-selected is a relay
+        })
+        .fail(function(xhr) {
+            $pickerLoading.hide();
+            var msg = '{intl l="Failed to load delivery modes." d="myflyingbox.bo"|escape:"javascript"}';
+            if (xhr.responseJSON && xhr.responseJSON.error) {
+                msg = xhr.responseJSON.error;
+            }
+            $picker.find('.panel-body').prepend(
+                '<div class="alert alert-danger">' + escapeHtml(msg) + '</div>'
+            );
+        });
+    }
+
+    function handlePickerOfferChange() {
+        var offerId = parseInt($offerSelect.val(), 10);
+        var opt = pickerOptionsById[offerId];
+
+        if (!opt || !opt.relay_delivery) {
+            $relaySection.hide();
+            pickerResetRelayFields();
+            return;
+        }
+
+        $relaySection.show();
+        // Auto-load relays once when revealing
+        if ($relayList.children().length === 0 && !$('#mfb-picker-relay-code').val()) {
+            loadRelaysForCurrentOffer('');
+        }
+    }
+
+    function loadRelaysForCurrentOffer(query) {
+        var offerId = parseInt($offerSelect.val(), 10);
+        if (!offerId) return;
+
+        $relayLoading.show();
+        $relayEmpty.hide();
+        $relayList.empty();
+
+        $.ajax({
+            url: MFB_SHIPMENT_URLS.pickerRelays,
+            method: 'GET',
+            data: { offer_id: offerId, query: query || '' },
+            dataType: 'json'
+        })
+        .done(function(response) {
+            $relayLoading.hide();
+
+            var relays = (response && response.data && response.data.relays) || [];
+            if (relays.length === 0) {
+                $relayEmpty.show();
+                return;
+            }
+
+            relays.forEach(function(relay) {
+                var $row = $('<a href="#" class="list-group-item mfb-picker-relay-row"/>');
+                $row.data('relay', relay);
+                var distanceLabel = (relay.distance != null) ? ' <small class="text-muted">(' + relay.distance + ' km)</small>' : '';
+                $row.html(
+                    '<strong>' + escapeHtml(relay.name || relay.code) + '</strong>' + distanceLabel +
+                    '<br><small>' + escapeHtml([relay.street, relay.postal_code, relay.city].filter(Boolean).join(', ')) + '</small>' +
+                    '<br><small class="text-muted"><code>' + escapeHtml(relay.code) + '</code></small>'
+                );
+                $relayList.append($row);
+            });
+        })
+        .fail(function(xhr) {
+            $relayLoading.hide();
+            var msg = '{intl l="Failed to load relay points." d="myflyingbox.bo"|escape:"javascript"}';
+            if (xhr.responseJSON && xhr.responseJSON.error) {
+                msg = xhr.responseJSON.error;
+            }
+            showMessage('danger', escapeHtml(msg));
+        });
+    }
+
+    $offerSelect.on('change', handlePickerOfferChange);
+
+    $('#mfb-picker-relay-search-btn').on('click', function() {
+        loadRelaysForCurrentOffer($relayQuery.val());
+    });
+    $relayQuery.on('keydown', function(e) {
+        if (e.which === 13) { e.preventDefault(); loadRelaysForCurrentOffer($relayQuery.val()); }
+    });
+
+    $relayList.on('click', '.mfb-picker-relay-row', function(e) {
+        e.preventDefault();
+        var relay = $(this).data('relay');
+        if (relay) pickerSetSelectedRelay(relay);
+        $relayList.find('.list-group-item').removeClass('active');
+        $(this).addClass('active');
+    });
+
+    // Hook for THE-550 widget event: pre-fill relay fields when pickup point chosen on the map.
+    $picker.on('mfb:pickup-selected mfb:pickup-point-selected', function(e) {
+        var detail = e.originalEvent && e.originalEvent.detail ? e.originalEvent.detail : (e.detail || {});
+        if (detail && detail.code) {
+            pickerSetSelectedRelay({
+                code: detail.code,
+                name: detail.name || '',
+                street: detail.street || (detail.address && detail.address.street) || '',
+                city: detail.city || (detail.address && detail.address.city) || '',
+                postal_code: detail.postal_code || (detail.address && detail.address.postal_code) || '',
+                country: detail.country || (detail.address && detail.address.country) || ''
+            });
+        }
+    });
+
+    $pickerForm.on('submit', function(e) {
+        e.preventDefault();
+
+        var offerId = parseInt($offerSelect.val(), 10);
+        if (!offerId) {
+            showMessage('warning', '{intl l="Select a delivery mode" d="myflyingbox.bo"|escape:"javascript"}');
+            return;
+        }
+
+        var opt = pickerOptionsById[offerId];
+        var payload = {
+            _token: MFB_CSRF_TOKEN,
+            offer_id: offerId
+        };
+        if (opt && opt.relay_delivery) {
+            var relayCode = $('#mfb-picker-relay-code').val();
+            if (!relayCode) {
+                showMessage('warning', '{intl l="A relay point must be selected for this delivery mode." d="myflyingbox.bo"|escape:"javascript"}');
+                return;
+            }
+            payload.relay_code        = relayCode;
+            payload.relay_name        = $('#mfb-picker-relay-name').val();
+            payload.relay_street      = $('#mfb-picker-relay-street').val();
+            payload.relay_city        = $('#mfb-picker-relay-city').val();
+            payload.relay_postal_code = $('#mfb-picker-relay-postal-code').val();
+            payload.relay_country     = $('#mfb-picker-relay-country').val();
+        }
+
+        showLoading($saveBtn);
+
+        $.ajax({
+            url: MFB_SHIPMENT_URLS.pickerSelect,
+            method: 'POST',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(payload),
+            dataType: 'json'
+        })
+        .done(function(response) {
+            if (response && response.success) {
+                showMessage('success', '{intl l="Delivery mode updated successfully." d="myflyingbox.bo"|escape:"javascript"}');
+                setTimeout(function() { location.reload(); }, 800);
+            } else {
+                showMessage('danger', (response && response.error) || '{intl l="Failed to save delivery mode." d="myflyingbox.bo"|escape:"javascript"}');
+            }
+        })
+        .fail(function(xhr) {
+            var msg = '{intl l="Failed to save delivery mode." d="myflyingbox.bo"|escape:"javascript"}';
+            if (xhr.status === 409) {
+                msg = (xhr.responseJSON && xhr.responseJSON.error) || '{intl l="Shipment is already booked or shipped — delivery mode cannot be modified." d="myflyingbox.bo"|escape:"javascript"}';
+                pickerSetLocked(true);
+            } else if (xhr.responseJSON && xhr.responseJSON.error) {
+                msg = xhr.responseJSON.error;
+            }
+            showMessage('danger', escapeHtml(msg));
+        })
+        .always(function() {
+            hideLoading($saveBtn);
+        });
+    });
+
+    // Kick off
+    loadPickerOptions();
+
     });
 })();
 </script>

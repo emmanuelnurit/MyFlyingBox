@@ -361,8 +361,15 @@ class MyFlyingBox extends AbstractDeliveryModuleWithState
 
     public static function configureServices(ServicesConfigurator $servicesConfigurator): void
     {
+        $modulePath = THELIA_MODULE_DIR . ucfirst(self::getModuleCode());
+
         $servicesConfigurator->load(self::getModuleCode() . '\\', __DIR__)
-            ->exclude([THELIA_MODULE_DIR . ucfirst(self::getModuleCode()) . '/I18n/*'])
+            ->exclude([
+                $modulePath . '/I18n/*',
+                $modulePath . '/Tests/*',
+                $modulePath . '/Resources/*',
+                $modulePath . '/vendor/*',
+            ])
             ->autowire(true)
             ->autoconfigure(true);
     }

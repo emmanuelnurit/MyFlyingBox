@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
+         bootstrap="Tests/bootstrap.php"
+         colors="true"
+         cacheDirectory=".phpunit.cache"
+         executionOrder="depends,defects"
+         beStrictAboutOutputDuringTests="true"
+         displayDetailsOnTestsThatTriggerErrors="true"
+         displayDetailsOnTestsThatTriggerWarnings="true"
+         displayDetailsOnTestsThatTriggerNotices="true"
+         displayDetailsOnTestsThatTriggerDeprecations="true">
+
+    <testsuites>
+        <testsuite name="unit">
+            <directory suffix="Test.php">Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="functional">
+            <directory suffix="Test.php">Tests/Functional</directory>
+        </testsuite>
+    </testsuites>
+
+    <source>
+        <include>
+            <directory suffix=".php">Service</directory>
+            <directory suffix=".php">Controller</directory>
+        </include>
+        <exclude>
+            <directory suffix=".php">Model</directory>
+            <directory suffix=".php">vendor</directory>
+        </exclude>
+    </source>
+</phpunit>
