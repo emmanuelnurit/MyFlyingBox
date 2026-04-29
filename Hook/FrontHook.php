@@ -74,6 +74,25 @@ class FrontHook extends BaseHook
     }
 
     /**
+     * Hook for order-delivery.bottom - injects a script that gates the
+     * modern template's "next step" CTA when the chosen offer requires
+     * a relay point that has not been selected yet. Server-side validation
+     * already runs in OrderEventListener::onOrderBeforePayment; this is
+     * the UX layer so the user cannot click through.
+     */
+    public function onOrderDeliveryBottom(HookRenderEvent $event): void
+    {
+        $cart = $this->getCart();
+        if (!$cart) {
+            return;
+        }
+
+        $event->add($this->render('order-delivery-bottom.html', [
+            'cart_id' => $cart->getId(),
+        ]));
+    }
+
+    /**
      * Hook for cart.bottom - displays delivery cost estimation in cart page
      * Renders skeleton immediately, data loaded via AJAX for better UX
      */

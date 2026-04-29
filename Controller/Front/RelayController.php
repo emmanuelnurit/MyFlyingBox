@@ -500,6 +500,51 @@ class RelayController extends BaseFrontController
     }
 
     /**
+     * Lightweight relay-status endpoint used by the order-delivery hook
+     * to gate the modern checkout's "next step" CTA in pickup mode.
+     * Returns DB-only state — no LCE API call, safe to poll.
+     */
+    public function getRelayStatusAction(Request $request, EventDispatcherInterface $dispatcher): JsonResponse
+    {
+        $cartId = (int) $request->get('cart_id', 0);
+        if ($cartId <= 0) {
+            return new JsonResponse(['success' => false, 'message' => 'Missing cart_id']);
+        }
+
+        $sessionCart = $this->getSession()->getSessionCart($dispatcher);
+        if (!$sessionCart || $sessionCart->getId() !== $cartId) {
+            return new JsonResponse(['success' => false, 'message' => 'Invalid cart']);
+        }
+
+        $selectedOfferId = $this->getSession()->get('mfb_selected_offer_id');
+        $requiresRelay = false;
+        $hasOffer = false;
+
+        if ($selectedOfferId) {
+            $offer = MyFlyingBoxOfferQuery::create()
+                ->joinWithMyFlyingBoxService()
+                ->findPk($selectedOfferId);
+            if ($offer) {
+                $hasOffer = true;
+                $service = $offer->getMyFlyingBoxService();
+                $requiresRelay = $service ? (bool) $service->getRelayDelivery() : false;
+            }
+        }
+
+        $cartRelay = MyFlyingBoxCartRelayQuery::create()
+            ->filterByCartId($cartId)
+            ->findOne();
+        $hasRelay = $cartRelay !== null && !empty($cartRelay->getRelayCode());
+
+        return new JsonResponse([
+            'success' => true,
+            'has_offer' => $hasOffer,
+            'requires_relay' => $requiresRelay,
+            'has_relay' => $hasRelay,
+        ]);
+    }
+
+    /**
      * Get cart delivery estimation data via AJAX
      * Used by skeleton loader pattern on cart page
      */
