@@ -1,5 +1,7 @@
-{* MyFlyingBox - Cart Delivery Estimation with Skeleton Loader *}
-{* Hook: cart.bottom - Affiche une estimation des frais de port dans le panier *}
+{* MyFlyingBox - Cart Delivery Estimation with Skeleton Loader [THE-558 design pass] *}
+{* Hook: cart.bottom - Displays a shipping cost estimation block in the cart *}
+
+{include file="_mfb-tokens.html"}
 
 {* Critical skeleton CSS - must load BEFORE skeleton HTML for instant display *}
 <style>
@@ -22,35 +24,35 @@
 .mfb-skeleton-line,
 .mfb-skeleton-icon-circle,
 .mfb-skeleton-button-rect {
-    background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+    background: linear-gradient(90deg, var(--mfb-border) 25%, #f1f5f9 50%, var(--mfb-border) 75%);
     background-size: 200% 100%;
     animation: mfb-shimmer 1.5s ease-in-out infinite;
-    border-radius: 8px;
+    border-radius: var(--mfb-radius-sm);
 }
-.mfb-cart-estimation { margin-top: 20px; margin-bottom: 20px; }
+.mfb-cart-estimation { margin-top: var(--mfb-space-5); margin-bottom: var(--mfb-space-5); }
 .mfb-estimation-card {
     display: flex;
     align-items: center;
-    gap: 15px;
-    padding: 15px 20px;
-    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+    gap: var(--mfb-space-4);
+    padding: var(--mfb-space-4) var(--mfb-space-5);
+    background: linear-gradient(135deg, var(--mfb-color-primary-soft) 0%, #f3e5f5 100%);
     border: 1px solid #bbdefb;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border-radius: var(--mfb-radius-md);
+    box-shadow: var(--mfb-shadow-sm);
 }
-.mfb-skeleton-icon-circle { flex-shrink: 0; width: 50px; height: 50px; border-radius: 50%; }
-.mfb-skeleton-content { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.mfb-skeleton-icon-circle { flex-shrink: 0; width: 50px; height: 50px; border-radius: var(--mfb-radius-pill); }
+.mfb-skeleton-content { flex: 1; display: flex; flex-direction: column; gap: var(--mfb-space-2); }
 .mfb-skeleton-title-line { height: 18px; width: 180px; }
 .mfb-skeleton-price-line { height: 22px; width: 140px; }
 .mfb-skeleton-info-line { height: 14px; width: 160px; }
-.mfb-skeleton-button-rect { flex-shrink: 0; width: 140px; height: 36px; border-radius: 6px; }
+.mfb-skeleton-button-rect { flex-shrink: 0; width: 140px; height: 36px; border-radius: var(--mfb-radius-sm); }
 </style>
 
 <div class="mfb-cart-estimation" id="mfb-cart-estimation">
     {* ============================================
        SKELETON LOADER - Visible during loading
        ============================================ *}
-    <div id="mfb-cart-skeleton" class="mfb-estimation-card mfb-skeleton-card-container">
+    <div id="mfb-cart-skeleton" class="mfb-estimation-card mfb-skeleton-card-container" aria-hidden="true">
         <div class="mfb-skeleton-icon-circle"></div>
         <div class="mfb-skeleton-content">
             <div class="mfb-skeleton-line mfb-skeleton-title-line"></div>
@@ -63,27 +65,27 @@
     {* ============================================
        REAL CONTENT - Hidden initially
        ============================================ *}
-    <div id="mfb-cart-content" class="mfb-estimation-card mfb-content-hidden">
-        <div class="mfb-estimation-icon">
+    <div id="mfb-cart-content" class="mfb-estimation-card mfb-content-hidden" role="status" aria-live="polite">
+        <div class="mfb-estimation-icon" aria-hidden="true">
             <i class="fa fa-truck"></i>
         </div>
         <div class="mfb-estimation-content">
-            <h4 class="mfb-estimation-title">{intl l="Estimation des frais de port" d="myflyingbox"}</h4>
+            <h4 class="mfb-estimation-title">{intl l="Shipping cost estimate" d="myflyingbox"}</h4>
             <p class="mfb-estimation-price">
-                {intl l="À partir de" d="myflyingbox"} <strong id="mfb-min-price"></strong>
+                {intl l="Starting from" d="myflyingbox"} <strong id="mfb-min-price"></strong>
             </p>
             <p class="mfb-estimation-info">
                 <span id="mfb-carriers-count"></span>
                 <span id="mfb-relay-badge" class="mfb-relay-badge-small" style="display: none;">
-                    <i class="fa fa-map-marker"></i>
+                    <i class="fa fa-map-marker" aria-hidden="true"></i>
                     {intl l="Relay Point" d="myflyingbox"}
                 </span>
             </p>
         </div>
         <div class="mfb-estimation-action">
-            <a href="{url path="/order/delivery"}" class="btn btn-outline-primary btn-sm">
-                {intl l="Choisir la livraison" d="myflyingbox"}
-                <i class="fa fa-chevron-right"></i>
+            <a href="{url path="/order/delivery"}" class="btn btn-outline-primary btn-sm mfb-estimation-cta">
+                {intl l="Choose delivery" d="myflyingbox"}
+                <i class="fa fa-chevron-right" aria-hidden="true"></i>
             </a>
         </div>
     </div>
@@ -91,7 +93,7 @@
 
 <style>
 /* ============================================
-   CARD CONTENT STYLES (skeleton styles in critical CSS block above)
+   CARD CONTENT STYLES — uses tokens from _mfb-tokens.html
    ============================================ */
 
 .mfb-estimation-icon {
@@ -101,14 +103,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #fff;
-    border-radius: 50%;
+    background: var(--mfb-surface);
+    border-radius: var(--mfb-radius-pill);
     box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
 }
 
 .mfb-estimation-icon i {
-    font-size: 1.5rem;
-    color: #2196F3;
+    font-size: var(--mfb-font-size-xl);
+    color: var(--mfb-color-primary);
 }
 
 .mfb-estimation-content {
@@ -116,42 +118,43 @@
 }
 
 .mfb-estimation-title {
-    font-size: 1rem;
+    font-size: var(--mfb-font-size-base);
     font-weight: 600;
-    margin: 0 0 5px 0;
-    color: #333;
+    margin: 0 0 var(--mfb-space-1);
+    color: var(--mfb-text);
+    line-height: var(--mfb-line-height-tight);
 }
 
 .mfb-estimation-price {
-    font-size: 1.1rem;
-    margin: 0 0 5px 0;
-    color: #1565C0;
+    font-size: var(--mfb-font-size-lg);
+    margin: 0 0 var(--mfb-space-1);
+    color: var(--mfb-color-primary);
 }
 
 .mfb-estimation-price strong {
-    font-size: 1.25rem;
-    color: #2e7d32;
+    font-size: var(--mfb-font-size-xl);
+    color: var(--mfb-color-success);
 }
 
 .mfb-estimation-info {
-    font-size: 0.85rem;
+    font-size: var(--mfb-font-size-sm);
     margin: 0;
-    color: #666;
+    color: var(--mfb-text-muted);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--mfb-space-2);
     flex-wrap: wrap;
 }
 
 .mfb-relay-badge-small {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    font-size: 0.75rem;
-    background: #ff9800;
-    color: #fff;
-    padding: 2px 8px;
-    border-radius: 12px;
+    gap: var(--mfb-space-1);
+    font-size: var(--mfb-font-size-xs);
+    background: var(--mfb-color-accent);
+    color: var(--mfb-surface);
+    padding: 2px var(--mfb-space-2);
+    border-radius: var(--mfb-radius-pill);
     font-weight: 500;
 }
 
@@ -163,19 +166,21 @@
     flex-shrink: 0;
 }
 
-.mfb-estimation-action .btn {
+.mfb-estimation-action .mfb-estimation-cta {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--mfb-space-2);
     white-space: nowrap;
+    transition: background var(--mfb-transition-base), color var(--mfb-transition-base);
 }
 
-.mfb-estimation-action .btn i {
+.mfb-estimation-action .mfb-estimation-cta i {
     font-size: 0.8rem;
-    transition: transform 0.2s ease;
+    transition: transform var(--mfb-transition-base);
 }
 
-.mfb-estimation-action .btn:hover i {
+.mfb-estimation-action .mfb-estimation-cta:hover i,
+.mfb-estimation-action .mfb-estimation-cta:focus-visible i {
     transform: translateX(3px);
 }
 
@@ -201,26 +206,15 @@
         width: 100%;
     }
 
-    .mfb-estimation-action .btn {
+    .mfb-estimation-action .mfb-estimation-cta {
         width: 100%;
         justify-content: center;
     }
 
-    .mfb-skeleton-title-line {
-        width: 140px;
-    }
-
-    .mfb-skeleton-price-line {
-        width: 120px;
-    }
-
-    .mfb-skeleton-info-line {
-        width: 130px;
-    }
-
-    .mfb-skeleton-button-rect {
-        height: 40px;
-    }
+    .mfb-skeleton-title-line { width: 140px; }
+    .mfb-skeleton-price-line { width: 120px; }
+    .mfb-skeleton-info-line  { width: 130px; }
+    .mfb-skeleton-button-rect { height: 40px; }
 }
 </style>
 
