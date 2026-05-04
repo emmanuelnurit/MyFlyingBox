@@ -41,7 +41,126 @@
     // (`order-delivery.extra` hook isn't called), so `mfbWidgetActive()` is
     // always false and we must read the chosen module/option from
     // /open_api/checkout instead of relying on DOM radios.
-    var isModern = !!document.querySelector("body.page-order-delivery .Checkout-footer");
+    var isModern = (
+        document.body && (
+            document.body.classList.contains("page-order-delivery") ||
+            !!document.querySelector("body.page-order-delivery, .Checkout-footer")
+        )
+    );
+
+    // [THE-560] Modern-template MFB module split.
+    // -------------------------------------------------------------------
+    // Thelia core's React renders delivery modules grouped by `mode`
+    // (pickup vs delivery). MyFlyingBox is a single Thelia module that
+    // exposes both relay (pickup) and home (delivery) options. Without
+    // a per-option `deliveryMode`, the React app either hides the
+    // PickupMap (when MFB is treated as "delivery") or hides the home
+    // options (when treated as "pickup"). We cannot edit the React core
+    // (board: "on ne touche pas le core"), so we transparently split
+    // MFB into two virtual modules on the client by intercepting
+    // /open_api/delivery/modules responses. Both copies keep the real
+    // module id so the order/server flow is unchanged; only the
+    // client-side `code` and `deliveryMode` fields differ.
+    var MFB_RELAY_SUFFIX = "_RELAY";
+    var MFB_HOME_SUFFIX = "_HOME";
+    // Metadata is rendered inline by FrontHook so the fetch wrapper has it
+    // synchronously, before React kicks off its first delivery-modules call.
+    var optionsMeta = (function () {
+        try {
+            var moduleId = parseInt("{$mfb_module_id|default:0}", 10);
+            var relayCodes = {$mfb_relay_codes_json|default:'[]' nofilter};
+            var homeCodes = {$mfb_home_codes_json|default:'[]' nofilter};
+            if (!moduleId) return null;
+            return {
+                mfb_module_id: moduleId,
+                relay_codes: new Set((relayCodes || []).map(function (c) { return String(c).toUpperCase(); })),
+                home_codes: new Set((homeCodes || []).map(function (c) { return String(c).toUpperCase(); }))
+            };
+        } catch (e) {
+            return null;
+        }
+    })();
+
+    function splitMfbModules(modules) {
+        if (!isModern || !optionsMeta || !Array.isArray(modules)) return modules;
+        var out = [];
+        modules.forEach(function (m) {
+            if (!m || parseInt(m.id, 10) !== optionsMeta.mfb_module_id) {
+                out.push(m);
+                return;
+            }
+            var opts = Array.isArray(m.options) ? m.options : [];
+            var relayOpts = opts.filter(function (o) {
+                return o && o.code && optionsMeta.relay_codes.has(String(o.code).toUpperCase());
+            });
+            var homeOpts = opts.filter(function (o) {
+                return o && o.code && optionsMeta.home_codes.has(String(o.code).toUpperCase());
+            });
+            // Edge case: option whose code isn't in either set (carrier
+            // added in admin without active flag, etc.) — keep it on the
+            // home side as a safe default so it doesn't disappear silently.
+            opts.forEach(function (o) {
+                var c = o && o.code ? String(o.code).toUpperCase() : "";
+                if (c && !optionsMeta.relay_codes.has(c) && !optionsMeta.home_codes.has(c)) {
+                    homeOpts.push(o);
+                }
+            });
+            if (relayOpts.length > 0) {
+                var relayCopy = Object.assign({}, m, {
+                    code: (m.code || "MFB") + MFB_RELAY_SUFFIX,
+                    deliveryMode: "pickup",
+                    options: relayOpts
+                });
+                out.push(relayCopy);
+            }
+            if (homeOpts.length > 0) {
+                var homeCopy = Object.assign({}, m, {
+                    code: (m.code || "MFB") + MFB_HOME_SUFFIX,
+                    deliveryMode: "delivery",
+                    options: homeOpts
+                });
+                out.push(homeCopy);
+            }
+            // If both lists are empty (no active services), preserve the
+            // original module unchanged so React still surfaces it (likely
+            // as invalid).
+            if (relayOpts.length === 0 && homeOpts.length === 0) {
+                out.push(m);
+            }
+        });
+        return out;
+    }
+
+    function installFetchPatch() {
+        if (!isModern) return;
+        if (typeof window.fetch !== "function") return;
+        if (window.__mfbDeliveryModulesPatched) return;
+        window.__mfbDeliveryModulesPatched = true;
+
+        var origFetch = window.fetch.bind(window);
+        window.fetch = function (input, init) {
+            var url = "";
+            try { url = typeof input === "string" ? input : (input && input.url) || ""; } catch (e) { url = ""; }
+            var isModulesCall = /\/open_api\/delivery\/modules(\?|$)/.test(url);
+            var p = origFetch(input, init);
+            if (!isModulesCall) return p;
+            return p.then(function (response) {
+                if (!response || !response.ok) return response;
+                // Clone so other consumers can still read the body.
+                var cloned = response.clone();
+                return cloned.json().then(function (body) {
+                    if (!Array.isArray(body)) return response;
+                    var patched = splitMfbModules(body);
+                    var headers = new Headers(response.headers);
+                    return new Response(JSON.stringify(patched), {
+                        status: response.status,
+                        statusText: response.statusText,
+                        headers: headers
+                    });
+                }).catch(function () { return response; });
+            });
+        };
+    }
 
     var state = {
         requires_relay: false,
@@ -235,10 +354,18 @@
         pollTimer = setInterval(fetchStatus, POLL_INTERVAL_MS);
     }
 
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", startPolling);
-    } else {
+    function bootstrap() {
+        // Install the fetch patch first (synchronously) so React's first
+        // /open_api/delivery/modules call already gets the split layout.
+        // Metadata is inlined above so the patch has everything it needs.
+        installFetchPatch();
         startPolling();
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", bootstrap);
+    } else {
+        bootstrap();
     }
 })();
 </script>

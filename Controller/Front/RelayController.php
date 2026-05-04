@@ -575,6 +575,42 @@ class RelayController extends BaseFrontController
     }
 
     /**
+     * Lightweight metadata endpoint used by the modern-template gate JS to
+     * split the single MyFlyingBox delivery module into two virtual entries
+     * (relay vs home) on the client. Returns the MFB module id and a per-code
+     * relay-delivery flag so the JS can rewrite /open_api/delivery/modules
+     * responses without round-tripping per option.
+     */
+    public function getOptionsMetaAction(): JsonResponse
+    {
+        $relayCodes = [];
+        $homeCodes = [];
+
+        $services = MyFlyingBoxServiceQuery::create()
+            ->filterByActive(true)
+            ->find();
+
+        foreach ($services as $service) {
+            // ApiListener::getDeliveryModuleOptions emits option codes as
+            // strtoupper($service->getCode()); mirror that here so the JS can
+            // match against checkout.deliveryModuleOptionCode directly.
+            $optionCode = strtoupper((string) $service->getCode());
+            if ($service->getRelayDelivery()) {
+                $relayCodes[] = $optionCode;
+            } else {
+                $homeCodes[] = $optionCode;
+            }
+        }
+
+        return new JsonResponse([
+            'success' => true,
+            'mfb_module_id' => MyFlyingBox::getModuleId(),
+            'relay_codes' => $relayCodes,
+            'home_codes' => $homeCodes,
+        ]);
+    }
+
+    /**
      * Get cart delivery estimation data via AJAX
      * Used by skeleton loader pattern on cart page
      */

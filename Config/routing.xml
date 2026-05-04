@@ -137,6 +137,10 @@
         <default key="_controller">MyFlyingBox\Controller\Front\RelayController::getRelayStatusAction</default>
     </route>
 
+    <route id="myflyingbox.front.options.meta" path="/myflyingbox/options-meta" methods="GET">
+        <default key="_controller">MyFlyingBox\Controller\Front\RelayController::getOptionsMetaAction</default>
+    </route>
+
     <!-- Webhook routes (external, no Thelia authentication required) -->
     <route id="myflyingbox.webhook.tracking" path="/myflyingbox/webhook/tracking" methods="POST">
         <default key="_controller">MyFlyingBox\Controller\WebhookController::trackingAction</default>
