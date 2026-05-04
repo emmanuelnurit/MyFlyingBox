@@ -43,8 +43,38 @@
     var state = { requires_relay: false, has_relay: false, has_offer: false, ready: false };
     var pollTimer = null;
 
+    // [THE-557] DOM probe: the MyFlyingBox offer widget renders only when MFB
+    // is the chosen delivery module in the React Checkout. Its presence is the
+    // most reliable client-side signal that MFB is active — the server-side
+    // Order::getDeliveryModuleId() is only persisted AFTER the very CTA we
+    // gate is clicked, so it cannot be used here.
+    function mfbWidgetActive() {
+        return !!document.querySelector(".mfb-offers-grid, #mfb-offers-container");
+    }
+
+    function checkedRelayOffer() {
+        return document.querySelector('.mfb-offer-radio:checked[data-relay-delivery="1"]');
+    }
+
+    function checkedAnyOffer() {
+        return document.querySelector('.mfb-offer-radio:checked');
+    }
+
     function isBlocking() {
-        return state.ready && state.has_offer && state.requires_relay && !state.has_relay;
+        // Server-confirmed flow (offer is recorded in session and requires relay
+        // but no relay is set yet). Authoritative when status has been polled.
+        if (state.ready && state.has_offer && state.requires_relay && !state.has_relay) {
+            return true;
+        }
+        // DOM-driven flow (covers the chicken-and-egg pre-offer window): MFB
+        // widget is on the page → user is in MFB context. Block if either:
+        //   (a) no offer picked yet at all, or
+        //   (b) the picked offer is a relay one but the cart has no relay.
+        if (mfbWidgetActive()) {
+            if (!checkedAnyOffer()) return true;
+            if (checkedRelayOffer() && !state.has_relay) return true;
+        }
+        return false;
     }
 
     function fetchStatus() {

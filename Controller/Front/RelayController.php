@@ -22,7 +22,6 @@ use Psr\Log\LoggerInterface;
 use Thelia\Core\Translation\Translator;
 use Thelia\Model\AddressQuery;
 use Thelia\Model\CountryQuery;
-use Thelia\Model\ModuleQuery;
 
 /**
  * Front-office controller for relay point selection and offer management
@@ -517,42 +516,29 @@ class RelayController extends BaseFrontController
             return new JsonResponse(['success' => false, 'message' => 'Invalid cart']);
         }
 
-        // [THE-557] Gate must engage as soon as MyFlyingBox is the chosen
-        // delivery module — not only after an MFB offer is picked. The modern
-        // checkout's React CTA enables on module selection alone, so we have
-        // to block during the in-between state where the user has chosen
-        // MFB but has not yet completed offer + relay selection.
-        $mfbModule = ModuleQuery::create()->findOneByCode('MyFlyingBox');
-        $mfbModuleId = $mfbModule ? $mfbModule->getId() : null;
-        $sessionOrder = $this->getSession()->getOrder();
-        $chosenDeliveryModuleId = $sessionOrder ? $sessionOrder->getDeliveryModuleId() : null;
-        $mfbActive = $mfbModuleId !== null && (int) $chosenDeliveryModuleId === (int) $mfbModuleId;
-
+        // [THE-557] Endpoint reports cart-side state only:
+        // - has_offer: a MyFlyingBox offer is recorded in the session
+        // - requires_relay: the picked offer is a pickup-style service
+        // - has_relay: a relay code is persisted on the cart
+        //
+        // We deliberately do NOT consult Order::getDeliveryModuleId() here:
+        // in the modern (React) checkout the chosen delivery module is only
+        // persisted server-side when the very CTA we want to gate is clicked
+        // — chicken-and-egg. The "is MFB the active widget?" signal lives
+        // in the DOM (the MFB widget renders only when MFB is chosen) and is
+        // detected client-side by the gate script.
         $selectedOfferId = $this->getSession()->get('mfb_selected_offer_id');
         $hasOffer = false;
         $requiresRelay = false;
 
-        if ($mfbActive) {
-            // MFB is the chosen carrier → engage gate. has_offer drives the
-            // client-side `isBlocking()` check, so always set it true here.
-            $hasOffer = true;
-
-            if ($selectedOfferId) {
-                $offer = MyFlyingBoxOfferQuery::create()
-                    ->joinWithMyFlyingBoxService()
-                    ->findPk($selectedOfferId);
-                if ($offer) {
-                    $service = $offer->getMyFlyingBoxService();
-                    // Picked offer with explicit relay flag → gate iff relay required.
-                    $requiresRelay = $service ? (bool) $service->getRelayDelivery() : false;
-                } else {
-                    // Stale id pointing at a vanished offer → safer to gate.
-                    $requiresRelay = true;
-                }
-            } else {
-                // MFB chosen but no offer picked yet → force the user to
-                // complete the in-widget selection before letting the CTA fire.
-                $requiresRelay = true;
+        if ($selectedOfferId) {
+            $offer = MyFlyingBoxOfferQuery::create()
+                ->joinWithMyFlyingBoxService()
+                ->findPk($selectedOfferId);
+            if ($offer) {
+                $hasOffer = true;
+                $service = $offer->getMyFlyingBoxService();
+                $requiresRelay = $service ? (bool) $service->getRelayDelivery() : false;
             }
         }
 
@@ -563,7 +549,6 @@ class RelayController extends BaseFrontController
 
         return new JsonResponse([
             'success' => true,
-            'mfb_active' => $mfbActive,
             'has_offer' => $hasOffer,
             'requires_relay' => $requiresRelay,
             'has_relay' => $hasRelay,
