@@ -1,12 +1,14 @@
-{* MyFlyingBox - Order Delivery Summary *}
+{* MyFlyingBox - Order Delivery Summary [THE-558 design pass] *}
 {* Hook: order-invoice.delivery-address - Displays selected carrier and relay point in order summary *}
+
+{include file="_mfb-tokens.html"}
 
 {if $selected_offer}
 <div class="mfb-delivery-summary" id="mfb-delivery-summary">
     <div class="mfb-summary-card">
         <div class="mfb-summary-header">
-            <i class="fa fa-truck"></i>
-            <h4>{intl l="Mode de livraison" d="myflyingbox"}</h4>
+            <i class="fa fa-truck" aria-hidden="true"></i>
+            <h4>{intl l="Delivery method" d="myflyingbox"}</h4>
         </div>
 
         <div class="mfb-summary-content">
@@ -19,7 +21,7 @@
                     <span class="mfb-service-name">{$selected_offer.service_name}</span>
                     {if $selected_offer.delivery_days}
                     <span class="mfb-delivery-time">
-                        <i class="fa fa-clock-o"></i>
+                        <i class="fa fa-clock-o" aria-hidden="true"></i>
                         {if $selected_offer.delivery_days|strpos:'-' !== false}
                             {$selected_offer.delivery_days} {intl l="days" d="myflyingbox"}
                         {else}
@@ -37,7 +39,7 @@
             {if $selected_offer.is_relay && $selected_relay}
             <div class="mfb-relay-summary">
                 <div class="mfb-relay-header">
-                    <i class="fa fa-map-marker"></i>
+                    <i class="fa fa-map-marker" aria-hidden="true"></i>
                     <span>{intl l="Relay Point" d="myflyingbox"}</span>
                 </div>
                 <div class="mfb-relay-address">
@@ -47,16 +49,16 @@
                 </div>
             </div>
             {elseif $selected_offer.is_relay && !$selected_relay}
-            <div class="mfb-relay-warning-block">
-                <div class="mfb-relay-warning-icon">
+            <div class="mfb-relay-warning-block" role="alert">
+                <div class="mfb-relay-warning-icon" aria-hidden="true">
                     <i class="fa fa-exclamation-triangle fa-2x"></i>
                 </div>
                 <div class="mfb-relay-warning-content">
-                    <strong>{intl l="Point relais non sélectionné" d="myflyingbox"}</strong>
-                    <p>{intl l="Vous devez sélectionner un point relais pour cette méthode de livraison." d="myflyingbox"}</p>
+                    <strong>{intl l="Relay point not selected" d="myflyingbox"}</strong>
+                    <p>{intl l="You must select a relay point for this delivery method." d="myflyingbox"}</p>
                     <a href="{url path="/order/delivery"}" class="mfb-btn-select-relay">
-                        <i class="fa fa-map-marker"></i>
-                        {intl l="Sélectionner un point relais" d="myflyingbox"}
+                        <i class="fa fa-map-marker" aria-hidden="true"></i>
+                        {intl l="Select a relay point" d="myflyingbox"}
                     </a>
                 </div>
             </div>
@@ -65,7 +67,7 @@
 
         <div class="mfb-summary-footer">
             <a href="{url path="/order/delivery"}" class="mfb-edit-link">
-                <i class="fa fa-pencil"></i>
+                <i class="fa fa-pencil" aria-hidden="true"></i>
                 {intl l="Change" d="myflyingbox"}
             </a>
         </div>
@@ -73,47 +75,49 @@
 </div>
 
 <style>
-/* Delivery Summary Styles */
+/* Delivery Summary — uses tokens from _mfb-tokens.html */
 .mfb-delivery-summary {
-    margin: 15px 0;
+    margin: var(--mfb-space-4) 0;
 }
 
 .mfb-summary-card {
-    background: #fff;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
+    background: var(--mfb-surface);
+    border: 1px solid var(--mfb-border);
+    border-radius: var(--mfb-radius-md);
     overflow: hidden;
+    box-shadow: var(--mfb-shadow-sm);
 }
 
 .mfb-summary-header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 12px 15px;
-    background: #f8f9fa;
-    border-bottom: 1px solid #e0e0e0;
+    gap: var(--mfb-space-3);
+    padding: var(--mfb-space-3) var(--mfb-space-4);
+    background: var(--mfb-surface-alt);
+    border-bottom: 1px solid var(--mfb-border);
 }
 
 .mfb-summary-header i {
-    color: #2196F3;
-    font-size: 1.1rem;
+    color: var(--mfb-color-primary);
+    font-size: var(--mfb-font-size-lg);
 }
 
 .mfb-summary-header h4 {
     margin: 0;
-    font-size: 1rem;
+    font-size: var(--mfb-font-size-base);
     font-weight: 600;
-    color: #333;
+    color: var(--mfb-text);
+    line-height: var(--mfb-line-height-tight);
 }
 
 .mfb-summary-content {
-    padding: 15px;
+    padding: var(--mfb-space-4);
 }
 
 .mfb-carrier-row {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: var(--mfb-space-4);
 }
 
 .mfb-carrier-badge {
@@ -123,82 +127,83 @@
 .mfb-carrier-code {
     display: inline-block;
     font-weight: 700;
-    font-size: 0.85rem;
-    color: #1565C0;
-    background: #e3f2fd;
-    padding: 4px 10px;
-    border-radius: 4px;
+    font-size: var(--mfb-font-size-sm);
+    color: var(--mfb-color-primary);
+    background: var(--mfb-color-primary-soft);
+    padding: var(--mfb-space-1) var(--mfb-space-3);
+    border-radius: var(--mfb-radius-sm);
+    letter-spacing: 0.02em;
 }
 
 .mfb-carrier-details {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: var(--mfb-space-1);
 }
 
 .mfb-service-name {
     font-weight: 500;
-    color: #333;
+    color: var(--mfb-text);
 }
 
 .mfb-delivery-time {
-    font-size: 0.85rem;
-    color: #666;
+    font-size: var(--mfb-font-size-sm);
+    color: var(--mfb-text-muted);
 }
 
 .mfb-delivery-time i {
-    margin-right: 5px;
-    color: #999;
+    margin-right: var(--mfb-space-1);
+    color: var(--mfb-text-muted);
 }
 
 .mfb-price {
     flex-shrink: 0;
-    font-size: 1.1rem;
+    font-size: var(--mfb-font-size-lg);
     font-weight: 700;
-    color: #2e7d32;
+    color: var(--mfb-color-success);
 }
 
 .mfb-relay-summary {
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px dashed #e0e0e0;
+    margin-top: var(--mfb-space-4);
+    padding-top: var(--mfb-space-4);
+    border-top: 1px dashed var(--mfb-border);
 }
 
 .mfb-relay-header {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-    color: #ff9800;
+    gap: var(--mfb-space-2);
+    margin-bottom: var(--mfb-space-2);
+    color: var(--mfb-color-accent);
     font-weight: 500;
-    font-size: 0.9rem;
+    font-size: var(--mfb-font-size-sm);
 }
 
 .mfb-relay-header i {
-    font-size: 1rem;
+    font-size: var(--mfb-font-size-base);
 }
 
 .mfb-relay-address {
-    padding-left: 22px;
-    font-size: 0.9rem;
-    color: #333;
-    line-height: 1.5;
+    padding-left: var(--mfb-space-6);
+    font-size: var(--mfb-font-size-sm);
+    color: var(--mfb-text);
+    line-height: var(--mfb-line-height-base);
 }
 
 .mfb-relay-warning-block {
-    margin-top: 15px;
-    padding: 15px;
-    background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
-    border: 2px solid #f97316;
-    border-radius: 8px;
+    margin-top: var(--mfb-space-4);
+    padding: var(--mfb-space-4);
+    background: linear-gradient(135deg, var(--mfb-color-accent-soft) 0%, #ffedd5 100%);
+    border: 2px solid var(--mfb-color-accent);
+    border-radius: var(--mfb-radius-md);
     display: flex;
     align-items: flex-start;
-    gap: 15px;
+    gap: var(--mfb-space-4);
 }
 
 .mfb-relay-warning-icon {
-    color: #ea580c;
+    color: var(--mfb-color-accent-hover);
     flex-shrink: 0;
     padding-top: 2px;
 }
@@ -209,56 +214,58 @@
 
 .mfb-relay-warning-content strong {
     display: block;
-    color: #c2410c;
-    font-size: 1rem;
-    margin-bottom: 4px;
+    color: var(--mfb-color-danger);
+    font-size: var(--mfb-font-size-base);
+    margin-bottom: var(--mfb-space-1);
 }
 
 .mfb-relay-warning-content p {
-    margin: 0 0 10px;
+    margin: 0 0 var(--mfb-space-3);
     color: #9a3412;
-    font-size: 0.9rem;
+    font-size: var(--mfb-font-size-sm);
 }
 
 .mfb-btn-select-relay {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    background: #f97316;
-    color: white !important;
-    border-radius: 6px;
-    font-size: 0.9rem;
+    gap: var(--mfb-space-2);
+    padding: var(--mfb-space-2) var(--mfb-space-4);
+    background: var(--mfb-color-accent);
+    color: #fff !important;
+    border-radius: var(--mfb-radius-sm);
+    font-size: var(--mfb-font-size-sm);
     font-weight: 600;
     text-decoration: none;
-    transition: background 0.2s;
+    transition: background var(--mfb-transition-base);
 }
 
-.mfb-btn-select-relay:hover {
-    background: #ea580c;
+.mfb-btn-select-relay:hover,
+.mfb-btn-select-relay:focus-visible {
+    background: var(--mfb-color-accent-hover);
     text-decoration: none;
-    color: white !important;
+    color: #fff !important;
 }
 
 .mfb-summary-footer {
-    padding: 10px 15px;
-    background: #f8f9fa;
-    border-top: 1px solid #e0e0e0;
+    padding: var(--mfb-space-2) var(--mfb-space-4);
+    background: var(--mfb-surface-alt);
+    border-top: 1px solid var(--mfb-border);
     text-align: right;
 }
 
 .mfb-edit-link {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    font-size: 0.85rem;
-    color: #2196F3;
+    gap: var(--mfb-space-1);
+    font-size: var(--mfb-font-size-sm);
+    color: var(--mfb-color-primary);
     text-decoration: none;
-    transition: color 0.2s;
+    transition: color var(--mfb-transition-base);
 }
 
-.mfb-edit-link:hover {
-    color: #1565C0;
+.mfb-edit-link:hover,
+.mfb-edit-link:focus-visible {
+    color: var(--mfb-color-primary-hover);
     text-decoration: underline;
 }
 
@@ -267,10 +274,11 @@
     .mfb-carrier-row {
         flex-direction: column;
         align-items: flex-start;
+        gap: var(--mfb-space-2);
     }
 
     .mfb-price {
-        margin-top: 10px;
+        margin-top: var(--mfb-space-2);
     }
 }
 </style>
