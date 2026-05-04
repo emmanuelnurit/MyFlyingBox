@@ -1,11 +1,13 @@
-{* MyFlyingBox - Order Confirmation Delivery Info *}
+{* MyFlyingBox - Order Confirmation Delivery Info [THE-558 design pass] *}
 {* Hook: order-placed.additional-info - Displays delivery info after order is placed *}
+
+{include file="_mfb-tokens.html"}
 
 {if $carrier_name}
 <div class="mfb-confirmation-delivery" id="mfb-confirmation-delivery">
     <div class="mfb-confirmation-card">
         <div class="mfb-confirmation-header">
-            <div class="mfb-confirmation-icon">
+            <div class="mfb-confirmation-icon" aria-hidden="true">
                 <i class="fa fa-check-circle"></i>
             </div>
             <h4>{intl l="Your delivery" d="myflyingbox"}</h4>
@@ -24,7 +26,7 @@
             {if $is_relay && $relay_address}
             <div class="mfb-delivery-address">
                 <div class="mfb-address-header">
-                    <i class="fa fa-map-marker"></i>
+                    <i class="fa fa-map-marker" aria-hidden="true"></i>
                     <span>{intl l="Relay point delivery" d="myflyingbox"}</span>
                 </div>
                 <div class="mfb-address-content">
@@ -35,15 +37,15 @@
             {else}
             <div class="mfb-delivery-address">
                 <div class="mfb-address-header">
-                    <i class="fa fa-home"></i>
+                    <i class="fa fa-home" aria-hidden="true"></i>
                     <span>{intl l="Home delivery" d="myflyingbox"}</span>
                 </div>
             </div>
             {/if}
 
             {* Tracking info message *}
-            <div class="mfb-tracking-message">
-                <i class="fa fa-envelope"></i>
+            <div class="mfb-tracking-message" role="status">
+                <i class="fa fa-envelope" aria-hidden="true"></i>
                 <p>
                     {intl l="You will receive an email with the tracking number once your parcel is shipped." d="myflyingbox"}
                 </p>
@@ -51,8 +53,8 @@
 
             {* Link to order tracking *}
             <div class="mfb-tracking-link-block">
-                <a href="{url path="/account/order"}" class="btn btn-outline-primary">
-                    <i class="fa fa-history"></i>
+                <a href="{url path="/account/order"}" class="btn btn-outline-primary mfb-tracking-link">
+                    <i class="fa fa-history" aria-hidden="true"></i>
                     {intl l="Track my orders" d="myflyingbox"}
                 </a>
             </div>
@@ -61,25 +63,25 @@
 </div>
 
 <style>
-/* Order Confirmation Delivery Styles */
+/* Order Confirmation Delivery — uses tokens from _mfb-tokens.html */
 .mfb-confirmation-delivery {
-    margin: 20px 0;
+    margin: var(--mfb-space-5) 0;
 }
 
 .mfb-confirmation-card {
-    background: #fff;
-    border: 1px solid #e0e0e0;
-    border-radius: 10px;
+    background: var(--mfb-surface);
+    border: 1px solid var(--mfb-border);
+    border-radius: var(--mfb-radius-md);
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--mfb-shadow-sm);
 }
 
 .mfb-confirmation-header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 15px 20px;
-    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    gap: var(--mfb-space-3);
+    padding: var(--mfb-space-4) var(--mfb-space-5);
+    background: linear-gradient(135deg, var(--mfb-color-success-soft) 0%, #c8e6c9 100%);
     border-bottom: 1px solid #a5d6a7;
 }
 
@@ -89,33 +91,34 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #fff;
-    border-radius: 50%;
-    box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+    background: var(--mfb-surface);
+    border-radius: var(--mfb-radius-pill);
+    box-shadow: var(--mfb-shadow-sm);
 }
 
 .mfb-confirmation-icon i {
     font-size: 1.5rem;
-    color: #4caf50;
+    color: var(--mfb-color-success);
 }
 
 .mfb-confirmation-header h4 {
     margin: 0;
-    font-size: 1.1rem;
+    font-size: var(--mfb-font-size-lg);
     font-weight: 600;
-    color: #2e7d32;
+    color: var(--mfb-color-success);
+    line-height: var(--mfb-line-height-tight);
 }
 
 .mfb-confirmation-content {
-    padding: 20px;
+    padding: var(--mfb-space-5);
 }
 
 .mfb-carrier-block {
     display: flex;
     align-items: center;
-    gap: 15px;
-    padding-bottom: 15px;
-    border-bottom: 1px dashed #e0e0e0;
+    gap: var(--mfb-space-4);
+    padding-bottom: var(--mfb-space-4);
+    border-bottom: 1px dashed var(--mfb-border);
 }
 
 .mfb-carrier-badge {
@@ -125,77 +128,79 @@
 .mfb-carrier-code {
     display: inline-block;
     font-weight: 700;
-    font-size: 0.9rem;
-    color: #1565C0;
-    background: #e3f2fd;
-    padding: 6px 12px;
-    border-radius: 6px;
+    font-size: var(--mfb-font-size-sm);
+    color: var(--mfb-color-primary);
+    background: var(--mfb-color-primary-soft);
+    padding: var(--mfb-space-1) var(--mfb-space-3);
+    border-radius: var(--mfb-radius-sm);
+    letter-spacing: 0.02em;
 }
 
 .mfb-carrier-name {
     font-weight: 500;
-    color: #333;
-    font-size: 1rem;
+    color: var(--mfb-text);
+    font-size: var(--mfb-font-size-base);
 }
 
 .mfb-delivery-address {
-    padding: 15px 0;
-    border-bottom: 1px dashed #e0e0e0;
+    padding: var(--mfb-space-4) 0;
+    border-bottom: 1px dashed var(--mfb-border);
 }
 
 .mfb-address-header {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: var(--mfb-space-2);
+    margin-bottom: var(--mfb-space-2);
     font-weight: 500;
-    color: #333;
+    color: var(--mfb-text);
 }
 
 .mfb-address-header i {
-    color: #ff9800;
-    font-size: 1.1rem;
+    color: var(--mfb-color-accent);
+    font-size: var(--mfb-font-size-lg);
 }
 
 .mfb-address-content {
-    padding-left: 24px;
-    color: #555;
-    line-height: 1.5;
+    padding-left: var(--mfb-space-6);
+    color: var(--mfb-text-soft);
+    line-height: var(--mfb-line-height-base);
 }
 
 .mfb-tracking-message {
     display: flex;
     align-items: flex-start;
-    gap: 12px;
-    padding: 15px;
-    margin: 15px 0;
-    background: #fff3e0;
-    border-radius: 8px;
+    gap: var(--mfb-space-3);
+    padding: var(--mfb-space-4);
+    margin: var(--mfb-space-4) 0;
+    background: var(--mfb-color-accent-soft);
+    border-radius: var(--mfb-radius-sm);
 }
 
 .mfb-tracking-message i {
     flex-shrink: 0;
-    color: #ff9800;
-    font-size: 1.2rem;
+    color: var(--mfb-color-accent);
+    font-size: var(--mfb-font-size-lg);
     margin-top: 2px;
 }
 
 .mfb-tracking-message p {
     margin: 0;
-    color: #e65100;
-    font-size: 0.9rem;
-    line-height: 1.4;
+    color: var(--mfb-color-danger);
+    font-size: var(--mfb-font-size-sm);
+    line-height: var(--mfb-line-height-base);
 }
 
 .mfb-tracking-link-block {
     text-align: center;
-    padding-top: 10px;
+    padding-top: var(--mfb-space-3);
 }
 
-.mfb-tracking-link-block .btn {
+.mfb-tracking-link-block .mfb-tracking-link {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--mfb-space-2);
+    transition: background var(--mfb-transition-base), color var(--mfb-transition-base);
 }
 
 /* Responsive */
@@ -203,11 +208,13 @@
     .mfb-confirmation-header {
         flex-direction: column;
         text-align: center;
+        gap: var(--mfb-space-2);
     }
 
     .mfb-carrier-block {
         flex-direction: column;
         text-align: center;
+        gap: var(--mfb-space-2);
     }
 
     .mfb-address-content {

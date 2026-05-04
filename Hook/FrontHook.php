@@ -7,6 +7,7 @@ namespace MyFlyingBox\Hook;
 use MyFlyingBox\Model\MyFlyingBoxCartRelayQuery;
 use MyFlyingBox\Model\MyFlyingBoxOfferQuery;
 use MyFlyingBox\Model\MyFlyingBoxParcelQuery;
+use MyFlyingBox\Model\MyFlyingBoxServiceQuery;
 use MyFlyingBox\Model\MyFlyingBoxShipmentEventQuery;
 use MyFlyingBox\Model\MyFlyingBoxShipmentQuery;
 use MyFlyingBox\MyFlyingBox;
@@ -70,6 +71,51 @@ class FrontHook extends BaseHook
             'cart_id' => $cart->getId(),
             'address_id' => $addressId,
             'google_maps_api_key' => MyFlyingBox::getConfigValue(MyFlyingBox::CONFIG_GOOGLE_MAPS_API_KEY, ''),
+        ]));
+    }
+
+    /**
+     * Hook for order-delivery.bottom - injects a script that gates the
+     * modern template's "next step" CTA when the chosen offer requires
+     * a relay point that has not been selected yet. Server-side validation
+     * already runs in OrderEventListener::onOrderBeforePayment; this is
+     * the UX layer so the user cannot click through.
+     */
+    public function onOrderDeliveryBottom(HookRenderEvent $event): void
+    {
+        $cart = $this->getCart();
+        if (!$cart) {
+            return;
+        }
+
+        // [THE-560] Inline the MFB option-code → mode metadata so the
+        // modern-template fetch monkey-patch in order-delivery-bottom.html
+        // can split the single MFB module into relay/home virtual entries
+        // synchronously, before React's first /open_api/delivery/modules
+        // call resolves.
+        $relayCodes = [];
+        $homeCodes = [];
+        try {
+            $services = MyFlyingBoxServiceQuery::create()
+                ->filterByActive(true)
+                ->find();
+            foreach ($services as $service) {
+                $optionCode = strtoupper((string) $service->getCode());
+                if ($service->getRelayDelivery()) {
+                    $relayCodes[] = $optionCode;
+                } else {
+                    $homeCodes[] = $optionCode;
+                }
+            }
+        } catch (\Exception $e) {
+            $this->logger->debug('MyFlyingBox: failed to load services for gate metadata', ['exception' => $e->getMessage()]);
+        }
+
+        $event->add($this->render('order-delivery-bottom.html', [
+            'cart_id' => $cart->getId(),
+            'mfb_module_id' => MyFlyingBox::getModuleId(),
+            'mfb_relay_codes_json' => json_encode($relayCodes, JSON_THROW_ON_ERROR),
+            'mfb_home_codes_json' => json_encode($homeCodes, JSON_THROW_ON_ERROR),
         ]));
     }
 

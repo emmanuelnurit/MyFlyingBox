@@ -1,0 +1,527 @@
+{* MyFlyingBox - Modern-template CTA gating [THE-558 design pass] *}
+{* Injected via order-delivery.bottom hook on every front template (default, modern, …). *}
+{* Polls /myflyingbox/relay-status and intercepts clicks on the next-step CTA when a   *}
+{* relay-delivery offer is selected without a relay point. Server-side validation       *}
+{* (OrderEventListener::onOrderBeforePayment → DeliveryException) is the source of      *}
+{* truth; this script is the UX layer.                                                  *}
+
+{include file="_mfb-tokens.html"}
+
+<style>
+.mfb-cta-relay-warning {
+    margin: var(--mfb-space-3) auto;
+    padding: var(--mfb-space-3) var(--mfb-space-4);
+    background: var(--mfb-color-warning-soft);
+    border: 2px solid var(--mfb-color-warning-border);
+    border-radius: var(--mfb-radius-md);
+    color: var(--mfb-color-warning);
+    font-size: 0.95rem;
+    font-weight: 500;
+    max-width: 720px;
+    text-align: center;
+    box-shadow: var(--mfb-shadow-sm);
+}
+</style>
+
+<script>
+(function () {
+    "use strict";
+
+    var cartId = parseInt("{$cart_id|default:0}", 10);
+    // [THE-560] Diagnostic logs (kept until board confirms the modern flow
+    // works end-to-end). They make it possible to tell, from a single console
+    // dump, whether the hook fired, whether the metadata reached the client,
+    // and whether the XHR patch is intercepting the React API call.
+    try { console.info("[MFB][gate] mount cartId=", cartId, "loc=", location.pathname); } catch (_) {}
+    if (!cartId) {
+        try { console.warn("[MFB][gate] no cartId — bailing (hook fired without an active cart)"); } catch (_) {}
+        return;
+    }
+
+    var POLL_INTERVAL_MS = 2000;
+    var BANNER_ID = "mfb-cta-relay-warning";
+    var WARNING_TEXT = "{intl l='Please select a relay point before continuing.' d='myflyingbox' js=1}";
+
+    // [THE-560] `isModern` distinguishes the React SPA checkout from the legacy
+    // Smarty (default) one. In modern, the MFB Smarty widget is never rendered
+    // (`order-delivery.extra` hook isn't called), so `mfbWidgetActive()` is
+    // always false and we must read the chosen module/option from
+    // /open_api/checkout instead of relying on DOM radios.
+    var isModern = (
+        document.body && (
+            document.body.classList.contains("page-order-delivery") ||
+            !!document.querySelector("body.page-order-delivery, .Checkout-footer")
+        )
+    );
+
+    // [THE-560] Modern-template MFB module split.
+    // -------------------------------------------------------------------
+    // Thelia core's React renders delivery modules grouped by `mode`
+    // (pickup vs delivery). MyFlyingBox is a single Thelia module that
+    // exposes both relay (pickup) and home (delivery) options. Without
+    // a per-option `deliveryMode`, the React app either hides the
+    // PickupMap (when MFB is treated as "delivery") or hides the home
+    // options (when treated as "pickup"). We cannot edit the React core
+    // (board: "on ne touche pas le core"), so we transparently split
+    // MFB into two virtual modules on the client by intercepting
+    // /open_api/delivery/modules responses. Both copies keep the real
+    // module id so the order/server flow is unchanged; only the
+    // client-side `code` and `deliveryMode` fields differ.
+    var MFB_RELAY_SUFFIX = "_RELAY";
+    var MFB_HOME_SUFFIX = "_HOME";
+    // Metadata is rendered inline by FrontHook so the fetch wrapper has it
+    // synchronously, before React kicks off its first delivery-modules call.
+    var optionsMeta = (function () {
+        try {
+            var moduleId = parseInt("{$mfb_module_id|default:0}", 10);
+            var relayCodes = {$mfb_relay_codes_json|default:'[]' nofilter};
+            var homeCodes = {$mfb_home_codes_json|default:'[]' nofilter};
+            if (!moduleId) return null;
+            var meta = {
+                mfb_module_id: moduleId,
+                relay_codes: new Set((relayCodes || []).map(function (c) { return String(c).toUpperCase(); })),
+                home_codes: new Set((homeCodes || []).map(function (c) { return String(c).toUpperCase(); }))
+            };
+            try {
+                console.info(
+                    "[MFB][gate] meta loaded — moduleId=", moduleId,
+                    "relay=", Array.from(meta.relay_codes),
+                    "home=", Array.from(meta.home_codes)
+                );
+            } catch (_) {}
+            return meta;
+        } catch (e) {
+            try { console.warn("[MFB][gate] meta parse failed", e); } catch (_) {}
+            return null;
+        }
+    })();
+
+    // [THE-560] When the React state has MFB selected with a relay option
+    // and no pickup address yet, the core API still surfaces the customer's
+    // default `deliveryAddressId`. React's gate (`useEnableCta`) treats that
+    // as "address present" and enables the CTA before the user picked a
+    // marker. We force `deliveryAddressId: null` in the response for that
+    // exact state so the gate stays disabled until pickupAddress fills.
+    function patchCheckoutResponse(checkout) {
+        if (!isModern || !optionsMeta) return checkout;
+        if (!checkout || typeof checkout !== "object") return checkout;
+        var moduleId = parseInt(checkout.deliveryModuleId, 10) || 0;
+        if (moduleId !== optionsMeta.mfb_module_id) return checkout;
+        var optionCode = String(checkout.deliveryModuleOptionCode || "").toUpperCase();
+        if (!optionCode) return checkout;
+        if (!optionsMeta.relay_codes.has(optionCode)) return checkout;
+        var pickup = checkout.pickupAddress;
+        var hasPickup = !!(pickup && (pickup.id || pickup.address1 || pickup.zipCode));
+        if (hasPickup) return checkout;
+        // Clone shallowly to avoid mutating cached objects.
+        var patched = Object.assign({}, checkout, { deliveryAddressId: null });
+        return patched;
+    }
+
+    function splitMfbModules(modules) {
+        if (!isModern || !optionsMeta || !Array.isArray(modules)) return modules;
+        // [THE-562] Emit ONE virtual module per option (not per relay/home
+        // group). Rationale: the modern template's DeliveryModules.tsx renders
+        // each option with React key set to module.code. When a virtual module
+        // exposed multiple options, all sibling ModuleOption entries shared
+        // the same React key — diffing broke and stale components survived
+        // across re-renders, leaking home-delivery rows into the pickup tab
+        // and duplicating entries on tab toggles. Producing one virtual
+        // module per option makes each module.code globally unique, so the
+        // existing key stays unique per rendered row without touching the
+        // template.
+        var out = [];
+        var seen = Object.create(null);
+        modules.forEach(function (m) {
+            if (!m || parseInt(m.id, 10) !== optionsMeta.mfb_module_id) {
+                out.push(m);
+                return;
+            }
+            var opts = Array.isArray(m.options) ? m.options : [];
+            var emitted = 0;
+            opts.forEach(function (o) {
+                if (!o || !o.code) return;
+                var codeUp = String(o.code).toUpperCase();
+                // De-dupe by option code to defend against any upstream
+                // duplication (cached quote, retry, etc.).
+                if (seen[codeUp]) return;
+                seen[codeUp] = true;
+                var isRelay = optionsMeta.relay_codes.has(codeUp);
+                var isHome = optionsMeta.home_codes.has(codeUp);
+                // Unknown codes default to home (safe — never pickup-only).
+                var mode = (isRelay && !isHome) ? "pickup" : "delivery";
+                var suffix = mode === "pickup" ? MFB_RELAY_SUFFIX : MFB_HOME_SUFFIX;
+                var virtualCode = (m.code || "MFB") + suffix + "__" + codeUp;
+                out.push(Object.assign({}, m, {
+                    code: virtualCode,
+                    deliveryMode: mode,
+                    valid: true,
+                    options: [o]
+                }));
+                emitted++;
+            });
+            // If no usable options, preserve the original so React still
+            // surfaces it (likely as invalid).
+            if (emitted === 0) {
+                out.push(m);
+            }
+        });
+        return out;
+    }
+
+    // [THE-560] React's fetcher (`@openstudio/thelia-api-utils`) uses **axios**
+    // which goes through XMLHttpRequest in browsers, NOT `window.fetch`. We
+    // therefore patch XMLHttpRequest. Strategy: capture (method, url) at
+    // open(), then on send() short-circuit the targeted call: do our own
+    // fetch to get the original payload, rewrite, and synthesize a complete
+    // XHR response state so axios sees a normal 200.
+    function installFetchPatch() {
+        try { console.info("[MFB][gate] installFetchPatch isModern=", isModern, "hasXHR=", typeof window.XMLHttpRequest !== "undefined"); } catch (_) {}
+        if (!isModern) return;
+        if (typeof window.XMLHttpRequest === "undefined") return;
+        if (window.__mfbDeliveryModulesPatched) {
+            try { console.info("[MFB][gate] XHR patch already installed — skipping"); } catch (_) {}
+            return;
+        }
+        window.__mfbDeliveryModulesPatched = true;
+        try { console.info("[MFB][gate] XHR patch installed"); } catch (_) {}
+
+        var XHR = window.XMLHttpRequest;
+        var origOpen = XHR.prototype.open;
+        var origSend = XHR.prototype.send;
+        var origSetRequestHeader = XHR.prototype.setRequestHeader;
+
+        XHR.prototype.open = function (method, url) {
+            try {
+                this.__mfbUrl = String(url || "");
+                this.__mfbMethod = String(method || "GET").toUpperCase();
+                this.__mfbHeaders = {};
+            } catch (e) { /* noop */ }
+            return origOpen.apply(this, arguments);
+        };
+
+        XHR.prototype.setRequestHeader = function (name, value) {
+            try {
+                if (this.__mfbHeaders) {
+                    this.__mfbHeaders[String(name)] = String(value);
+                }
+            } catch (e) { /* noop */ }
+            return origSetRequestHeader.apply(this, arguments);
+        };
+
+        XHR.prototype.send = function (body) {
+            var xhr = this;
+            var url = xhr.__mfbUrl || "";
+            var method = xhr.__mfbMethod || "GET";
+            var isGet = method === "GET";
+            var isPost = method === "POST";
+            var isModulesCall = isGet && /\/open_api\/delivery\/modules(\?|$)/.test(url);
+            // [THE-560] Intercept BOTH GET and POST /open_api/checkout.
+            // The core OpenApi backend silently fills `deliveryAddressId`
+            // with the customer's default address even when React sent null;
+            // useSetCheckout's onSuccess pushes the POST response straight
+            // into React Query cache, so the GET path alone is not enough.
+            // Patch both response paths to null `deliveryAddressId` when
+            // MFB is the chosen module, the option is a relay one, and
+            // no pickupAddress is set yet.
+            var isCheckoutCall = (isGet || isPost) && /\/open_api\/checkout(\?|$)/.test(url);
+            if (!isModulesCall && !isCheckoutCall) {
+                return origSend.apply(this, arguments);
+            }
+            try { console.info("[MFB][gate] XHR intercept —", method, url); } catch (_) {}
+
+            // Fetch original payload via window.fetch (same cookies → same auth).
+            var origFetch = window.fetch ? window.fetch.bind(window) : null;
+            if (!origFetch) {
+                return origSend.apply(this, arguments);
+            }
+
+            var fetchInit = {
+                method: method,
+                credentials: "same-origin",
+                headers: xhr.__mfbHeaders || {}
+            };
+            if (isPost && body !== undefined && body !== null) {
+                fetchInit.body = body;
+            }
+
+            origFetch(url, fetchInit)
+                .then(function (response) {
+                    return response.text().then(function (text) {
+                        return { text: text, status: response.status, statusText: response.statusText };
+                    });
+                })
+                .then(function (resp) {
+                    var data = null;
+                    try { data = JSON.parse(resp.text); } catch (e) { data = null; }
+                    var patched = data;
+                    if (isModulesCall && Array.isArray(data)) {
+                        patched = splitMfbModules(data);
+                    } else if (isCheckoutCall && data && typeof data === "object") {
+                        patched = patchCheckoutResponse(data);
+                    }
+                    var jsonText = (patched === null || patched === undefined) ? resp.text : JSON.stringify(patched);
+                    try {
+                        if (isModulesCall) {
+                            var summary = Array.isArray(patched)
+                                ? patched.map(function (m) { return (m && m.code) + "(" + (m && m.deliveryMode) + ")[" + (m && m.options ? m.options.length : 0) + "]"; })
+                                : "(non-array)";
+                            console.info("[MFB][gate] XHR patched response — modules=", summary);
+                        } else if (isCheckoutCall) {
+                            console.info(
+                                "[MFB][gate] XHR patched checkout —",
+                                "moduleId=", patched && patched.deliveryModuleId,
+                                "optionCode=", patched && patched.deliveryModuleOptionCode,
+                                "deliveryAddressId=", patched && patched.deliveryAddressId,
+                                "pickupAddress?", !!(patched && patched.pickupAddress && (patched.pickupAddress.id || patched.pickupAddress.address1))
+                            );
+                        }
+                    } catch (_) {}
+
+                    Object.defineProperty(xhr, "readyState", { value: 4, configurable: true });
+                    Object.defineProperty(xhr, "status", { value: resp.status || 200, configurable: true });
+                    Object.defineProperty(xhr, "statusText", { value: resp.statusText || "OK", configurable: true });
+                    Object.defineProperty(xhr, "responseText", { value: jsonText, configurable: true });
+                    Object.defineProperty(xhr, "response", { value: jsonText, configurable: true });
+                    Object.defineProperty(xhr, "responseURL", { value: url, configurable: true });
+                    xhr.getAllResponseHeaders = function () { return "content-type: application/json\r\n"; };
+                    xhr.getResponseHeader = function (name) {
+                        return String(name).toLowerCase() === "content-type" ? "application/json" : null;
+                    };
+
+                    if (typeof xhr.onreadystatechange === "function") {
+                        try { xhr.onreadystatechange(); } catch (e) { /* noop */ }
+                    }
+                    try { xhr.dispatchEvent(new Event("readystatechange")); } catch (e) { /* noop */ }
+                    if (typeof xhr.onload === "function") {
+                        try { xhr.onload(); } catch (e) { /* noop */ }
+                    }
+                    try { xhr.dispatchEvent(new Event("load")); } catch (e) { /* noop */ }
+                    if (typeof xhr.onloadend === "function") {
+                        try { xhr.onloadend(); } catch (e) { /* noop */ }
+                    }
+                    try { xhr.dispatchEvent(new Event("loadend")); } catch (e) { /* noop */ }
+                })
+                .catch(function () {
+                    Object.defineProperty(xhr, "readyState", { value: 4, configurable: true });
+                    Object.defineProperty(xhr, "status", { value: 0, configurable: true });
+                    if (typeof xhr.onerror === "function") {
+                        try { xhr.onerror(); } catch (e) { /* noop */ }
+                    }
+                    try { xhr.dispatchEvent(new Event("error")); } catch (e) { /* noop */ }
+                    try { xhr.dispatchEvent(new Event("loadend")); } catch (e) { /* noop */ }
+                });
+
+            // Skip the original send: we will resolve via the synthesized
+            // events above.
+            return;
+        };
+    }
+
+    var state = {
+        requires_relay: false,
+        has_relay: false,
+        has_offer: false,
+        ready: false,
+        // Modern-only: live snapshot from /open_api/checkout
+        modern_module_id: null,
+        modern_option_code: "",
+        modern_has_pickup: false
+    };
+    var mfbModuleId = null;
+    var pollTimer = null;
+
+    // [THE-557] DOM probe: the MyFlyingBox offer widget renders only when MFB
+    // is the chosen delivery module in the React Checkout. Its presence is the
+    // most reliable client-side signal that MFB is active — the server-side
+    // Order::getDeliveryModuleId() is only persisted AFTER the very CTA we
+    // gate is clicked, so it cannot be used here.
+    function mfbWidgetActive() {
+        return !!document.querySelector(".mfb-offers-grid, #mfb-offers-container");
+    }
+
+    function checkedRelayOffer() {
+        return document.querySelector('.mfb-offer-radio:checked[data-relay-delivery="1"]');
+    }
+
+    function checkedAnyOffer() {
+        return document.querySelector('.mfb-offer-radio:checked');
+    }
+
+    // [THE-560] Modern-only: MFB selected without a pickup address yet for a
+    // relay-delivery option. Server tells us if the option is relay (via
+    // /myflyingbox/relay-status?option_code=…); React holds pickupAddress in
+    // /open_api/checkout payload.
+    function isModernBlocking() {
+        if (!isModern || !state.ready) return false;
+        if (mfbModuleId === null) return false;
+        if (state.modern_module_id !== mfbModuleId) return false;
+        if (!state.requires_relay) return false;
+        return !state.modern_has_pickup && !state.has_relay;
+    }
+
+    function isBlocking() {
+        if (isModernBlocking()) return true;
+        // Server-confirmed flow (offer is recorded in session and requires relay
+        // but no relay is set yet). Authoritative when status has been polled.
+        if (state.ready && state.has_offer && state.requires_relay && !state.has_relay) {
+            return true;
+        }
+        // DOM-driven flow (covers the chicken-and-egg pre-offer window): MFB
+        // widget is on the page → user is in MFB context. Block if either:
+        //   (a) no offer picked yet at all, or
+        //   (b) the picked offer is a relay one but the cart has no relay.
+        if (mfbWidgetActive()) {
+            if (!checkedAnyOffer()) return true;
+            if (checkedRelayOffer() && !state.has_relay) return true;
+        }
+        return false;
+    }
+
+    function fetchModernCheckout() {
+        if (!isModern) return Promise.resolve();
+        return fetch("/open_api/checkout", { credentials: "same-origin" })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (data) {
+                if (!data) return;
+                state.modern_module_id = data.deliveryModuleId || null;
+                state.modern_option_code = data.deliveryModuleOptionCode || "";
+                // pickupAddress comes back as an object; treat empty/zero id as absent
+                var pickup = data.pickupAddress;
+                state.modern_has_pickup = !!(pickup && (pickup.id || pickup.address1 || pickup.zipCode));
+            })
+            .catch(function () { /* silent */ });
+    }
+
+    function fetchStatus() {
+        try {
+            // Refresh modern checkout state first, so the option_code is current.
+            fetchModernCheckout().then(function () {
+                var url = "/myflyingbox/relay-status?cart_id=" + cartId;
+                if (isModern && state.modern_option_code) {
+                    url += "&option_code=" + encodeURIComponent(state.modern_option_code);
+                }
+                return fetch(url, { credentials: "same-origin" })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (data && data.success) {
+                            state.requires_relay = !!data.requires_relay;
+                            state.has_relay = !!data.has_relay;
+                            state.has_offer = !!data.has_offer;
+                            if (data.mfb_module_id) {
+                                mfbModuleId = parseInt(data.mfb_module_id, 10);
+                            }
+                            state.ready = true;
+                            applyButtonState();
+                        }
+                    });
+            }).catch(function () { /* silent — server-side guard still enforces */ });
+        } catch (e) { /* noop */ }
+    }
+
+    function findCtaButtons() {
+        // Modern template: <footer class="Checkout-footer"> with a <button>.
+        // Default Smarty: <form id="form-cart-delivery"> with submit button (already
+        // gated by order-delivery-extra.html, but harmless to also tag here).
+        var nodes = [];
+        document.querySelectorAll(".Checkout-footer button").forEach(function (b) { nodes.push(b); });
+        var defaultForm = document.getElementById("form-cart-delivery");
+        if (defaultForm) {
+            defaultForm.querySelectorAll('button[type="submit"]').forEach(function (b) { nodes.push(b); });
+        }
+        return nodes;
+    }
+
+    function ensureWarning(anchor) {
+        var w = document.getElementById(BANNER_ID);
+        if (w) return w;
+        w = document.createElement("div");
+        w.id = BANNER_ID;
+        w.className = "mfb-cta-relay-warning";
+        w.setAttribute("role", "alert");
+        w.textContent = WARNING_TEXT;
+        if (anchor && anchor.parentNode) {
+            anchor.parentNode.insertBefore(w, anchor);
+        } else {
+            document.body.appendChild(w);
+        }
+        return w;
+    }
+
+    function applyButtonState() {
+        var blocking = isBlocking();
+        var buttons = findCtaButtons();
+        buttons.forEach(function (btn) {
+            if (blocking) {
+                btn.dataset.mfbBlocked = "1";
+                btn.setAttribute("aria-disabled", "true");
+                btn.style.opacity = "0.5";
+                btn.style.cursor = "not-allowed";
+            } else if (btn.dataset.mfbBlocked === "1") {
+                delete btn.dataset.mfbBlocked;
+                btn.removeAttribute("aria-disabled");
+                btn.style.opacity = "";
+                btn.style.cursor = "";
+            }
+        });
+
+        var existing = document.getElementById(BANNER_ID);
+        if (blocking) {
+            if (!existing && buttons[0]) {
+                var anchor = buttons[0].closest(".Checkout-footer") || buttons[0];
+                ensureWarning(anchor);
+            }
+        } else if (existing) {
+            existing.parentNode.removeChild(existing);
+        }
+    }
+
+    // Capture-phase click guard so we run before React's onClick.
+    document.addEventListener("click", function (e) {
+        if (!isBlocking()) return;
+        var target = e.target;
+        if (!target || !target.closest) return;
+        var btn = target.closest(".Checkout-footer button, #form-cart-delivery button[type=submit]");
+        if (!btn) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        ensureWarning(btn.closest(".Checkout-footer") || btn);
+        // Refresh status in case relay was just chosen.
+        fetchStatus();
+    }, true);
+
+    // Same guard for form submissions (Enter key, programmatic submit).
+    document.addEventListener("submit", function (e) {
+        if (!isBlocking()) return;
+        if (e.target && e.target.id === "form-cart-delivery") {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            fetchStatus();
+        }
+    }, true);
+
+    // MutationObserver keeps the disabled visual hint applied across React re-renders.
+    var observer = new MutationObserver(function () { applyButtonState(); });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    function startPolling() {
+        fetchStatus();
+        if (pollTimer) clearInterval(pollTimer);
+        pollTimer = setInterval(fetchStatus, POLL_INTERVAL_MS);
+    }
+
+    function bootstrap() {
+        // Install the fetch patch first (synchronously) so React's first
+        // /open_api/delivery/modules call already gets the split layout.
+        // Metadata is inlined above so the patch has everything it needs.
+        installFetchPatch();
+        startPolling();
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", bootstrap);
+    } else {
+        bootstrap();
+    }
+})();
+</script>

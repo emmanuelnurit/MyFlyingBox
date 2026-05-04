@@ -116,6 +116,7 @@
             <argument type="service" id="thelia.parser.asset.resolver"/>
             <argument type="service" id="event_dispatcher"/>
             <tag name="hook.event_listener" event="order-delivery.extra" type="front" method="onOrderDeliveryExtra"/>
+            <tag name="hook.event_listener" event="order-delivery.bottom" type="front" method="onOrderDeliveryBottom"/>
             <tag name="hook.event_listener" event="account-order.after-information" type="front" method="onAccountOrderAfterInformation"/>
             <tag name="hook.event_listener" event="cart.bottom" type="front" method="onCartBottom"/>
             <tag name="hook.event_listener" event="order-invoice.delivery-address" type="front" method="onOrderInvoiceDeliveryAddress"/>

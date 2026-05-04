@@ -8,6 +8,8 @@ use MyFlyingBox\Model\MyFlyingBoxCartRelay;
 use MyFlyingBox\Model\MyFlyingBoxCartRelayQuery;
 use MyFlyingBox\Model\MyFlyingBoxOfferQuery;
 use MyFlyingBox\Model\MyFlyingBoxQuoteQuery;
+use MyFlyingBox\Model\MyFlyingBoxServiceQuery;
+use MyFlyingBox\MyFlyingBox;
 use MyFlyingBox\Service\CarrierLogoProvider;
 use MyFlyingBox\Service\LceApiService;
 use MyFlyingBox\Service\PriceSurchargeService;
@@ -497,6 +499,115 @@ class RelayController extends BaseFrontController
                 'message' => Translator::getInstance()->trans('An error occurred', [], 'myflyingbox'),
             ]);
         }
+    }
+
+    /**
+     * Lightweight relay-status endpoint used by the order-delivery hook
+     * to gate the modern checkout's "next step" CTA in pickup mode.
+     * Returns DB-only state — no LCE API call, safe to poll.
+     */
+    public function getRelayStatusAction(Request $request, EventDispatcherInterface $dispatcher): JsonResponse
+    {
+        $cartId = (int) $request->get('cart_id', 0);
+        if ($cartId <= 0) {
+            return new JsonResponse(['success' => false, 'message' => 'Missing cart_id']);
+        }
+
+        $sessionCart = $this->getSession()->getSessionCart($dispatcher);
+        if (!$sessionCart || $sessionCart->getId() !== $cartId) {
+            return new JsonResponse(['success' => false, 'message' => 'Invalid cart']);
+        }
+
+        // [THE-557/THE-560] Endpoint reports cart-side state for the gate JS:
+        // - has_offer: a MyFlyingBox offer/option is recorded for the cart
+        // - requires_relay: the picked offer/option is a pickup-style service
+        // - has_relay: a relay code is persisted on the cart
+        //
+        // Two callers feed this endpoint:
+        //  1. Smarty (default) widget — sets `mfb_selected_offer_id` in session
+        //     via saveOfferAction. We resolve from the session offer id.
+        //  2. Modern (React) checkout — never calls our saveOfferAction; instead
+        //     the gate JS reads `deliveryModuleOptionCode` from /open_api/checkout
+        //     and forwards it as `option_code` here. We resolve to the matching
+        //     MyFlyingBoxService (option codes are upper(service.code), see
+        //     ApiListener::getDeliveryModuleOptions).
+        $optionCode = (string) $request->get('option_code', '');
+        $selectedOfferId = $this->getSession()->get('mfb_selected_offer_id');
+        $hasOffer = false;
+        $requiresRelay = false;
+
+        if ($optionCode !== '') {
+            // Modern flow — service code is uppercased in option codes.
+            $service = MyFlyingBoxServiceQuery::create()
+                ->filterByCode($optionCode)
+                ->_or()->filterByCode(strtolower($optionCode))
+                ->_or()->filterByCode(strtoupper($optionCode))
+                ->filterByActive(true)
+                ->findOne();
+            if ($service) {
+                $hasOffer = true;
+                $requiresRelay = (bool) $service->getRelayDelivery();
+            }
+        } elseif ($selectedOfferId) {
+            // Default (Smarty) flow.
+            $offer = MyFlyingBoxOfferQuery::create()
+                ->joinWithMyFlyingBoxService()
+                ->findPk($selectedOfferId);
+            if ($offer) {
+                $hasOffer = true;
+                $service = $offer->getMyFlyingBoxService();
+                $requiresRelay = $service ? (bool) $service->getRelayDelivery() : false;
+            }
+        }
+
+        $cartRelay = MyFlyingBoxCartRelayQuery::create()
+            ->filterByCartId($cartId)
+            ->findOne();
+        $hasRelay = $cartRelay !== null && !empty($cartRelay->getRelayCode());
+
+        return new JsonResponse([
+            'success' => true,
+            'has_offer' => $hasOffer,
+            'requires_relay' => $requiresRelay,
+            'has_relay' => $hasRelay,
+            'mfb_module_id' => MyFlyingBox::getModuleId(),
+        ]);
+    }
+
+    /**
+     * Lightweight metadata endpoint used by the modern-template gate JS to
+     * split the single MyFlyingBox delivery module into two virtual entries
+     * (relay vs home) on the client. Returns the MFB module id and a per-code
+     * relay-delivery flag so the JS can rewrite /open_api/delivery/modules
+     * responses without round-tripping per option.
+     */
+    public function getOptionsMetaAction(): JsonResponse
+    {
+        $relayCodes = [];
+        $homeCodes = [];
+
+        $services = MyFlyingBoxServiceQuery::create()
+            ->filterByActive(true)
+            ->find();
+
+        foreach ($services as $service) {
+            // ApiListener::getDeliveryModuleOptions emits option codes as
+            // strtoupper($service->getCode()); mirror that here so the JS can
+            // match against checkout.deliveryModuleOptionCode directly.
+            $optionCode = strtoupper((string) $service->getCode());
+            if ($service->getRelayDelivery()) {
+                $relayCodes[] = $optionCode;
+            } else {
+                $homeCodes[] = $optionCode;
+            }
+        }
+
+        return new JsonResponse([
+            'success' => true,
+            'mfb_module_id' => MyFlyingBox::getModuleId(),
+            'relay_codes' => $relayCodes,
+            'home_codes' => $homeCodes,
+        ]);
     }
 
     /**
