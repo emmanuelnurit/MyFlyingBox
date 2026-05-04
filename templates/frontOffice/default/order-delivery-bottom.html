@@ -120,50 +120,49 @@
 
     function splitMfbModules(modules) {
         if (!isModern || !optionsMeta || !Array.isArray(modules)) return modules;
+        // [THE-562] Emit ONE virtual module per option (not per relay/home
+        // group). Rationale: the modern template's DeliveryModules.tsx renders
+        // each option with `key={module.code}`. When a virtual module exposed
+        // multiple options, all sibling <ModuleOption> entries shared the same
+        // React key — diffing broke and stale components survived across
+        // re-renders, leaking home-delivery rows into the pickup tab and
+        // duplicating entries on tab toggles. Producing one virtual module
+        // per option makes each `module.code` globally unique, so the
+        // existing key stays unique per rendered row without touching the
+        // template.
         var out = [];
+        var seen = Object.create(null);
         modules.forEach(function (m) {
             if (!m || parseInt(m.id, 10) !== optionsMeta.mfb_module_id) {
                 out.push(m);
                 return;
             }
             var opts = Array.isArray(m.options) ? m.options : [];
-            var relayOpts = opts.filter(function (o) {
-                return o && o.code && optionsMeta.relay_codes.has(String(o.code).toUpperCase());
-            });
-            var homeOpts = opts.filter(function (o) {
-                return o && o.code && optionsMeta.home_codes.has(String(o.code).toUpperCase());
-            });
-            // Edge case: option whose code isn't in either set (carrier
-            // added in admin without active flag, etc.) — keep it on the
-            // home side as a safe default so it doesn't disappear silently.
+            var emitted = 0;
             opts.forEach(function (o) {
-                var c = o && o.code ? String(o.code).toUpperCase() : "";
-                if (c && !optionsMeta.relay_codes.has(c) && !optionsMeta.home_codes.has(c)) {
-                    homeOpts.push(o);
-                }
+                if (!o || !o.code) return;
+                var codeUp = String(o.code).toUpperCase();
+                // De-dupe by option code to defend against any upstream
+                // duplication (cached quote, retry, etc.).
+                if (seen[codeUp]) return;
+                seen[codeUp] = true;
+                var isRelay = optionsMeta.relay_codes.has(codeUp);
+                var isHome = optionsMeta.home_codes.has(codeUp);
+                // Unknown codes default to home (safe — never pickup-only).
+                var mode = (isRelay && !isHome) ? "pickup" : "delivery";
+                var suffix = mode === "pickup" ? MFB_RELAY_SUFFIX : MFB_HOME_SUFFIX;
+                var virtualCode = (m.code || "MFB") + suffix + "__" + codeUp;
+                out.push(Object.assign({}, m, {
+                    code: virtualCode,
+                    deliveryMode: mode,
+                    valid: true,
+                    options: [o]
+                }));
+                emitted++;
             });
-            if (relayOpts.length > 0) {
-                var relayCopy = Object.assign({}, m, {
-                    code: (m.code || "MFB") + MFB_RELAY_SUFFIX,
-                    deliveryMode: "pickup",
-                    valid: true,
-                    options: relayOpts
-                });
-                out.push(relayCopy);
-            }
-            if (homeOpts.length > 0) {
-                var homeCopy = Object.assign({}, m, {
-                    code: (m.code || "MFB") + MFB_HOME_SUFFIX,
-                    deliveryMode: "delivery",
-                    valid: true,
-                    options: homeOpts
-                });
-                out.push(homeCopy);
-            }
-            // If both lists are empty (no active services), preserve the
-            // original module unchanged so React still surfaces it (likely
-            // as invalid).
-            if (relayOpts.length === 0 && homeOpts.length === 0) {
+            // If no usable options, preserve the original so React still
+            // surfaces it (likely as invalid).
+            if (emitted === 0) {
                 out.push(m);
             }
         });
