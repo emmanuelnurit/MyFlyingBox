@@ -1,9 +1,11 @@
-{* MyFlyingBox - Order Tracking for Customer Order Page *}
+{* MyFlyingBox - Order Tracking for Customer Order Page [THE-558 design pass] *}
+
+{include file="_mfb-tokens.html"}
 
 {if $shipment}
-<div class="mfb-order-tracking" style="margin-top: 30px;">
+<div class="mfb-order-tracking">
     <h3 class="mfb-tracking-title">
-        <i class="fa fa-truck"></i>
+        <i class="fa fa-truck" aria-hidden="true"></i>
         {intl l="Track your delivery" d="myflyingbox"}
     </h3>
 
@@ -13,16 +15,16 @@
             <span class="mfb-status-badge">{$shipment.status_label}</span>
             {if $service}
             <span class="mfb-carrier-info">
-                <strong>{$service.carrier_code|upper}</strong> - {$service.name}
+                <strong>{$service.carrier_code|upper}</strong> &mdash; {$service.name}
             </span>
             {/if}
         </div>
 
         {if $shipment.date_booking}
         <div class="mfb-status-dates">
-            <span><i class="fa fa-calendar"></i> {intl l="Booked on" d="myflyingbox"} {$shipment.date_booking}</span>
+            <span><i class="fa fa-calendar" aria-hidden="true"></i> {intl l="Booked on" d="myflyingbox"} {$shipment.date_booking}</span>
             {if $shipment.collection_date}
-            <span><i class="fa fa-calendar-check-o"></i> {intl l="Collection scheduled for" d="myflyingbox"} {$shipment.collection_date}</span>
+            <span><i class="fa fa-calendar-check-o" aria-hidden="true"></i> {intl l="Collection scheduled for" d="myflyingbox"} {$shipment.collection_date}</span>
             {/if}
         </div>
         {/if}
@@ -31,7 +33,7 @@
     {* Relay Point Info *}
     {if $relay}
     <div class="mfb-relay-info">
-        <h4><i class="fa fa-map-marker"></i> {intl l="Relay delivery point" d="myflyingbox"}</h4>
+        <h4><i class="fa fa-map-marker" aria-hidden="true"></i> {intl l="Relay delivery point" d="myflyingbox"}</h4>
         <p>
             {$relay.street}<br>
             {$relay.postal_code} {$relay.city}
@@ -63,8 +65,8 @@
         {* External Tracking Link *}
         {if $tracking_url}
         <div class="mfb-tracking-link">
-            <a href="{$tracking_url}" target="_blank" rel="noopener" class="btn btn-primary">
-                <i class="fa fa-external-link"></i>
+            <a href="{$tracking_url}" target="_blank" rel="noopener" class="btn btn-primary mfb-tracking-cta">
+                <i class="fa fa-external-link" aria-hidden="true"></i>
                 {intl l="Track on carrier website" d="myflyingbox"}
             </a>
         </div>
@@ -76,190 +78,162 @@
     {if $events|@count > 0}
     <div class="mfb-timeline-section">
         <h4>{intl l="Tracking history" d="myflyingbox"}</h4>
-        <div class="mfb-timeline">
+        <ol class="mfb-timeline">
             {foreach $events as $event}
-            <div class="mfb-timeline-item">
-                <div class="mfb-timeline-marker"></div>
+            <li class="mfb-timeline-item">
+                <span class="mfb-timeline-marker" aria-hidden="true"></span>
                 <div class="mfb-timeline-content">
                     <div class="mfb-timeline-date">{$event.date}</div>
                     <div class="mfb-timeline-label">{$event.label}</div>
                     {if $event.location}
-                    <div class="mfb-timeline-location"><i class="fa fa-map-marker"></i> {$event.location}</div>
+                    <div class="mfb-timeline-location"><i class="fa fa-map-marker" aria-hidden="true"></i> {$event.location}</div>
                     {/if}
                 </div>
-            </div>
+            </li>
             {/foreach}
-        </div>
+        </ol>
     </div>
     {elseif $shipment.status == 'pending'}
-    <div class="mfb-no-tracking">
-        <p><i class="fa fa-info-circle"></i> {intl l="Tracking will be available once your parcel is shipped." d="myflyingbox"}</p>
+    <div class="mfb-no-tracking" role="status">
+        <p><i class="fa fa-info-circle" aria-hidden="true"></i> {intl l="Tracking will be available once your parcel is shipped." d="myflyingbox"}</p>
     </div>
     {/if}
 </div>
 
 <style>
-/* Order Tracking Styles */
+/* Order Tracking — uses tokens from _mfb-tokens.html */
 .mfb-order-tracking {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 20px;
+    background: var(--mfb-surface-alt);
+    border-radius: var(--mfb-radius-md);
+    padding: var(--mfb-space-5);
+    margin-top: var(--mfb-space-8);
 }
 
 .mfb-tracking-title {
-    font-size: 1.2rem;
+    font-size: var(--mfb-font-size-xl);
     font-weight: 600;
-    margin-bottom: 20px;
-    color: #333;
+    margin: 0 0 var(--mfb-space-5);
+    color: var(--mfb-text);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--mfb-space-2);
+    line-height: var(--mfb-line-height-tight);
 }
 
 .mfb-tracking-title i {
-    color: #2196F3;
+    color: var(--mfb-color-primary);
 }
 
 /* Status Card */
 .mfb-status-card {
-    background: #fff;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 20px;
-    border-left: 4px solid #ccc;
+    background: var(--mfb-surface);
+    border-radius: var(--mfb-radius-md);
+    padding: var(--mfb-space-4);
+    margin-bottom: var(--mfb-space-5);
+    border-left: 4px solid var(--mfb-border-strong);
+    box-shadow: var(--mfb-shadow-sm);
 }
 
-.mfb-status-card.mfb-status-pending {
-    border-left-color: #ff9800;
-}
-
-.mfb-status-card.mfb-status-booked {
-    border-left-color: #2196F3;
-}
-
-.mfb-status-card.mfb-status-shipped {
-    border-left-color: #9c27b0;
-}
-
-.mfb-status-card.mfb-status-delivered {
-    border-left-color: #4caf50;
-}
-
-.mfb-status-card.mfb-status-cancelled {
-    border-left-color: #f44336;
-}
+.mfb-status-card.mfb-status-pending   { border-left-color: var(--mfb-color-accent); }
+.mfb-status-card.mfb-status-booked    { border-left-color: var(--mfb-color-primary); }
+.mfb-status-card.mfb-status-shipped   { border-left-color: #9c27b0; }
+.mfb-status-card.mfb-status-delivered { border-left-color: var(--mfb-color-success); }
+.mfb-status-card.mfb-status-cancelled { border-left-color: #f44336; }
 
 .mfb-status-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 10px;
+    gap: var(--mfb-space-2);
+    margin-bottom: var(--mfb-space-2);
 }
 
 .mfb-status-badge {
     display: inline-block;
-    padding: 5px 12px;
-    border-radius: 20px;
+    padding: var(--mfb-space-1) var(--mfb-space-3);
+    border-radius: var(--mfb-radius-pill);
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: var(--mfb-font-size-sm);
     text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
-.mfb-status-pending .mfb-status-badge {
-    background: #fff3e0;
-    color: #e65100;
-}
-
-.mfb-status-booked .mfb-status-badge {
-    background: #e3f2fd;
-    color: #1565c0;
-}
-
-.mfb-status-shipped .mfb-status-badge {
-    background: #f3e5f5;
-    color: #7b1fa2;
-}
-
-.mfb-status-delivered .mfb-status-badge {
-    background: #e8f5e9;
-    color: #2e7d32;
-}
-
-.mfb-status-cancelled .mfb-status-badge {
-    background: #ffebee;
-    color: #c62828;
-}
+.mfb-status-pending   .mfb-status-badge { background: var(--mfb-color-accent-soft);  color: var(--mfb-color-danger); }
+.mfb-status-booked    .mfb-status-badge { background: var(--mfb-color-primary-soft); color: var(--mfb-color-primary); }
+.mfb-status-shipped   .mfb-status-badge { background: #f3e5f5;                       color: #7b1fa2; }
+.mfb-status-delivered .mfb-status-badge { background: var(--mfb-color-success-soft); color: var(--mfb-color-success); }
+.mfb-status-cancelled .mfb-status-badge { background: #ffebee;                       color: #c62828; }
 
 .mfb-carrier-info {
-    color: #666;
-    font-size: 0.9rem;
+    color: var(--mfb-text-muted);
+    font-size: var(--mfb-font-size-sm);
 }
 
 .mfb-status-dates {
     display: flex;
     flex-wrap: wrap;
-    gap: 15px;
-    color: #666;
-    font-size: 0.85rem;
+    gap: var(--mfb-space-4);
+    color: var(--mfb-text-muted);
+    font-size: var(--mfb-font-size-sm);
 }
 
 .mfb-status-dates i {
-    margin-right: 5px;
+    margin-right: var(--mfb-space-1);
 }
 
 /* Relay Info */
 .mfb-relay-info {
-    background: #fff;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 20px;
-    border: 1px solid #e0e0e0;
+    background: var(--mfb-surface);
+    border-radius: var(--mfb-radius-md);
+    padding: var(--mfb-space-4);
+    margin-bottom: var(--mfb-space-5);
+    border: 1px solid var(--mfb-border);
 }
 
 .mfb-relay-info h4 {
-    font-size: 1rem;
-    margin-bottom: 10px;
-    color: #ff9800;
+    font-size: var(--mfb-font-size-base);
+    margin: 0 0 var(--mfb-space-2);
+    color: var(--mfb-color-accent);
 }
 
 .mfb-relay-info p {
     margin: 0;
-    color: #333;
+    color: var(--mfb-text);
+    line-height: var(--mfb-line-height-base);
 }
 
 /* Parcels Section */
 .mfb-parcels-section {
-    background: #fff;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 20px;
+    background: var(--mfb-surface);
+    border-radius: var(--mfb-radius-md);
+    padding: var(--mfb-space-4);
+    margin-bottom: var(--mfb-space-5);
 }
 
 .mfb-parcels-section h4 {
-    font-size: 1rem;
-    margin-bottom: 15px;
-    color: #333;
+    font-size: var(--mfb-font-size-base);
+    margin: 0 0 var(--mfb-space-4);
+    color: var(--mfb-text);
 }
 
 .mfb-parcel-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px;
-    background: #f8f9fa;
-    border-radius: 6px;
-    margin-bottom: 8px;
+    padding: var(--mfb-space-3);
+    background: var(--mfb-surface-alt);
+    border-radius: var(--mfb-radius-sm);
+    margin-bottom: var(--mfb-space-2);
     flex-wrap: wrap;
-    gap: 10px;
+    gap: var(--mfb-space-2);
 }
 
 .mfb-parcel-info {
     display: flex;
-    gap: 15px;
-    color: #666;
-    font-size: 0.9rem;
+    gap: var(--mfb-space-4);
+    color: var(--mfb-text-muted);
+    font-size: var(--mfb-font-size-sm);
 }
 
 .mfb-parcel-weight {
@@ -267,56 +241,58 @@
 }
 
 .mfb-tracking-number {
-    background: #e3f2fd;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-family: monospace;
-    font-size: 0.9rem;
-    color: #1565c0;
+    background: var(--mfb-color-primary-soft);
+    padding: 2px var(--mfb-space-2);
+    border-radius: var(--mfb-radius-sm);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    font-size: var(--mfb-font-size-sm);
+    color: var(--mfb-color-primary);
 }
 
 .mfb-tracking-link {
-    margin-top: 15px;
+    margin-top: var(--mfb-space-4);
     text-align: center;
 }
 
-.mfb-tracking-link .btn {
+.mfb-tracking-link .mfb-tracking-cta {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--mfb-space-2);
 }
 
 /* Timeline */
 .mfb-timeline-section {
-    background: #fff;
-    border-radius: 8px;
-    padding: 15px;
+    background: var(--mfb-surface);
+    border-radius: var(--mfb-radius-md);
+    padding: var(--mfb-space-4);
 }
 
 .mfb-timeline-section h4 {
-    font-size: 1rem;
-    margin-bottom: 15px;
-    color: #333;
+    font-size: var(--mfb-font-size-base);
+    margin: 0 0 var(--mfb-space-4);
+    color: var(--mfb-text);
 }
 
 .mfb-timeline {
     position: relative;
-    padding-left: 30px;
+    padding-left: var(--mfb-space-8);
+    list-style: none;
+    margin: 0;
 }
 
 .mfb-timeline::before {
     content: '';
     position: absolute;
-    left: 8px;
+    left: var(--mfb-space-2);
     top: 0;
     bottom: 0;
     width: 2px;
-    background: #e0e0e0;
+    background: var(--mfb-border);
 }
 
 .mfb-timeline-item {
     position: relative;
-    padding-bottom: 20px;
+    padding-bottom: var(--mfb-space-5);
 }
 
 .mfb-timeline-item:last-child {
@@ -325,59 +301,59 @@
 
 .mfb-timeline-marker {
     position: absolute;
-    left: -26px;
+    left: calc(var(--mfb-space-6) * -1 - 2px);
     top: 0;
     width: 14px;
     height: 14px;
-    background: #2196F3;
-    border: 3px solid #fff;
-    border-radius: 50%;
-    box-shadow: 0 0 0 2px #2196F3;
+    background: var(--mfb-color-primary);
+    border: 3px solid var(--mfb-surface);
+    border-radius: var(--mfb-radius-pill);
+    box-shadow: 0 0 0 2px var(--mfb-color-primary);
 }
 
 .mfb-timeline-item:first-child .mfb-timeline-marker {
-    background: #4caf50;
-    box-shadow: 0 0 0 2px #4caf50;
+    background: var(--mfb-color-success);
+    box-shadow: 0 0 0 2px var(--mfb-color-success);
 }
 
 .mfb-timeline-content {
-    background: #f8f9fa;
-    padding: 12px;
-    border-radius: 6px;
+    background: var(--mfb-surface-alt);
+    padding: var(--mfb-space-3);
+    border-radius: var(--mfb-radius-sm);
 }
 
 .mfb-timeline-date {
-    font-size: 0.8rem;
-    color: #888;
-    margin-bottom: 5px;
+    font-size: var(--mfb-font-size-xs);
+    color: var(--mfb-text-muted);
+    margin-bottom: var(--mfb-space-1);
 }
 
 .mfb-timeline-label {
     font-weight: 500;
-    color: #333;
+    color: var(--mfb-text);
 }
 
 .mfb-timeline-location {
-    font-size: 0.85rem;
-    color: #666;
-    margin-top: 5px;
+    font-size: var(--mfb-font-size-sm);
+    color: var(--mfb-text-muted);
+    margin-top: var(--mfb-space-1);
 }
 
 .mfb-timeline-location i {
-    color: #2196F3;
-    margin-right: 5px;
+    color: var(--mfb-color-primary);
+    margin-right: var(--mfb-space-1);
 }
 
 /* No Tracking Message */
 .mfb-no-tracking {
-    background: #fff3e0;
-    border-radius: 8px;
-    padding: 15px;
-    color: #e65100;
+    background: var(--mfb-color-accent-soft);
+    border-radius: var(--mfb-radius-md);
+    padding: var(--mfb-space-4);
+    color: var(--mfb-color-danger);
 }
 
 .mfb-no-tracking i {
-    margin-right: 8px;
+    margin-right: var(--mfb-space-2);
 }
 
 /* Responsive */
