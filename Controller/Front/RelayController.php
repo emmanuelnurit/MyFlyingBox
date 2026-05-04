@@ -524,7 +524,8 @@ class RelayController extends BaseFrontController
         // MFB but has not yet completed offer + relay selection.
         $mfbModule = ModuleQuery::create()->findOneByCode('MyFlyingBox');
         $mfbModuleId = $mfbModule ? $mfbModule->getId() : null;
-        $chosenDeliveryModuleId = $this->getSession()->getOrder()?->getChoosenDeliveryModuleId();
+        $sessionOrder = $this->getSession()->getOrder();
+        $chosenDeliveryModuleId = $sessionOrder ? $sessionOrder->getDeliveryModuleId() : null;
         $mfbActive = $mfbModuleId !== null && (int) $chosenDeliveryModuleId === (int) $mfbModuleId;
 
         $selectedOfferId = $this->getSession()->get('mfb_selected_offer_id');
