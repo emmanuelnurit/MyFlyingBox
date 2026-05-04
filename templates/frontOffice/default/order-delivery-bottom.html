@@ -28,7 +28,13 @@
     "use strict";
 
     var cartId = parseInt("{$cart_id|default:0}", 10);
+    // [THE-560] Diagnostic logs (kept until board confirms the modern flow
+    // works end-to-end). They make it possible to tell, from a single console
+    // dump, whether the hook fired, whether the metadata reached the client,
+    // and whether the XHR patch is intercepting the React API call.
+    try { console.info("[MFB][gate] mount cartId=", cartId, "loc=", location.pathname); } catch (_) {}
     if (!cartId) {
+        try { console.warn("[MFB][gate] no cartId — bailing (hook fired without an active cart)"); } catch (_) {}
         return;
     }
 
@@ -71,12 +77,21 @@
             var relayCodes = {$mfb_relay_codes_json|default:'[]' nofilter};
             var homeCodes = {$mfb_home_codes_json|default:'[]' nofilter};
             if (!moduleId) return null;
-            return {
+            var meta = {
                 mfb_module_id: moduleId,
                 relay_codes: new Set((relayCodes || []).map(function (c) { return String(c).toUpperCase(); })),
                 home_codes: new Set((homeCodes || []).map(function (c) { return String(c).toUpperCase(); }))
             };
+            try {
+                console.info(
+                    "[MFB][gate] meta loaded — moduleId=", moduleId,
+                    "relay=", Array.from(meta.relay_codes),
+                    "home=", Array.from(meta.home_codes)
+                );
+            } catch (_) {}
+            return meta;
         } catch (e) {
+            try { console.warn("[MFB][gate] meta parse failed", e); } catch (_) {}
             return null;
         }
     })();
@@ -138,10 +153,15 @@
     // fetch to get the original payload, rewrite, and synthesize a complete
     // XHR response state so axios sees a normal 200.
     function installFetchPatch() {
+        try { console.info("[MFB][gate] installFetchPatch isModern=", isModern, "hasXHR=", typeof window.XMLHttpRequest !== "undefined"); } catch (_) {}
         if (!isModern) return;
         if (typeof window.XMLHttpRequest === "undefined") return;
-        if (window.__mfbDeliveryModulesPatched) return;
+        if (window.__mfbDeliveryModulesPatched) {
+            try { console.info("[MFB][gate] XHR patch already installed — skipping"); } catch (_) {}
+            return;
+        }
         window.__mfbDeliveryModulesPatched = true;
+        try { console.info("[MFB][gate] XHR patch installed"); } catch (_) {}
 
         var XHR = window.XMLHttpRequest;
         var origOpen = XHR.prototype.open;
@@ -162,6 +182,7 @@
             if (!isModulesCall) {
                 return origSend.apply(this, arguments);
             }
+            try { console.info("[MFB][gate] XHR intercept — url=", url); } catch (_) {}
 
             // Fetch original payload via window.fetch (same cookies → same auth).
             var origFetch = window.fetch ? window.fetch.bind(window) : null;
@@ -180,6 +201,12 @@
                     try { data = JSON.parse(resp.text); } catch (e) { data = null; }
                     var patched = Array.isArray(data) ? splitMfbModules(data) : data;
                     var jsonText = (patched === null || patched === undefined) ? resp.text : JSON.stringify(patched);
+                    try {
+                        var summary = Array.isArray(patched)
+                            ? patched.map(function (m) { return (m && m.code) + "(" + (m && m.deliveryMode) + ")[" + (m && m.options ? m.options.length : 0) + "]"; })
+                            : "(non-array)";
+                        console.info("[MFB][gate] XHR patched response — modules=", summary);
+                    } catch (_) {}
 
                     Object.defineProperty(xhr, "readyState", { value: 4, configurable: true });
                     Object.defineProperty(xhr, "status", { value: resp.status || 200, configurable: true });
