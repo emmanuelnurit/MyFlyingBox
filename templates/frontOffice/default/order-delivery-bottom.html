@@ -131,34 +131,93 @@
         return out;
     }
 
+    // [THE-560] React's fetcher (`@openstudio/thelia-api-utils`) uses **axios**
+    // which goes through XMLHttpRequest in browsers, NOT `window.fetch`. We
+    // therefore patch XMLHttpRequest. Strategy: capture (method, url) at
+    // open(), then on send() short-circuit the targeted call: do our own
+    // fetch to get the original payload, rewrite, and synthesize a complete
+    // XHR response state so axios sees a normal 200.
     function installFetchPatch() {
         if (!isModern) return;
-        if (typeof window.fetch !== "function") return;
+        if (typeof window.XMLHttpRequest === "undefined") return;
         if (window.__mfbDeliveryModulesPatched) return;
         window.__mfbDeliveryModulesPatched = true;
 
-        var origFetch = window.fetch.bind(window);
-        window.fetch = function (input, init) {
-            var url = "";
-            try { url = typeof input === "string" ? input : (input && input.url) || ""; } catch (e) { url = ""; }
-            var isModulesCall = /\/open_api\/delivery\/modules(\?|$)/.test(url);
-            var p = origFetch(input, init);
-            if (!isModulesCall) return p;
-            return p.then(function (response) {
-                if (!response || !response.ok) return response;
-                // Clone so other consumers can still read the body.
-                var cloned = response.clone();
-                return cloned.json().then(function (body) {
-                    if (!Array.isArray(body)) return response;
-                    var patched = splitMfbModules(body);
-                    var headers = new Headers(response.headers);
-                    return new Response(JSON.stringify(patched), {
-                        status: response.status,
-                        statusText: response.statusText,
-                        headers: headers
+        var XHR = window.XMLHttpRequest;
+        var origOpen = XHR.prototype.open;
+        var origSend = XHR.prototype.send;
+
+        XHR.prototype.open = function (method, url) {
+            try {
+                this.__mfbUrl = String(url || "");
+                this.__mfbMethod = String(method || "GET").toUpperCase();
+            } catch (e) { /* noop */ }
+            return origOpen.apply(this, arguments);
+        };
+
+        XHR.prototype.send = function () {
+            var xhr = this;
+            var url = xhr.__mfbUrl || "";
+            var isModulesCall = xhr.__mfbMethod === "GET" && /\/open_api\/delivery\/modules(\?|$)/.test(url);
+            if (!isModulesCall) {
+                return origSend.apply(this, arguments);
+            }
+
+            // Fetch original payload via window.fetch (same cookies → same auth).
+            var origFetch = window.fetch ? window.fetch.bind(window) : null;
+            if (!origFetch) {
+                return origSend.apply(this, arguments);
+            }
+
+            origFetch(url, { credentials: "same-origin" })
+                .then(function (response) {
+                    return response.text().then(function (text) {
+                        return { text: text, status: response.status, statusText: response.statusText };
                     });
-                }).catch(function () { return response; });
-            });
+                })
+                .then(function (resp) {
+                    var data = null;
+                    try { data = JSON.parse(resp.text); } catch (e) { data = null; }
+                    var patched = Array.isArray(data) ? splitMfbModules(data) : data;
+                    var jsonText = (patched === null || patched === undefined) ? resp.text : JSON.stringify(patched);
+
+                    Object.defineProperty(xhr, "readyState", { value: 4, configurable: true });
+                    Object.defineProperty(xhr, "status", { value: resp.status || 200, configurable: true });
+                    Object.defineProperty(xhr, "statusText", { value: resp.statusText || "OK", configurable: true });
+                    Object.defineProperty(xhr, "responseText", { value: jsonText, configurable: true });
+                    Object.defineProperty(xhr, "response", { value: jsonText, configurable: true });
+                    Object.defineProperty(xhr, "responseURL", { value: url, configurable: true });
+                    xhr.getAllResponseHeaders = function () { return "content-type: application/json\r\n"; };
+                    xhr.getResponseHeader = function (name) {
+                        return String(name).toLowerCase() === "content-type" ? "application/json" : null;
+                    };
+
+                    if (typeof xhr.onreadystatechange === "function") {
+                        try { xhr.onreadystatechange(); } catch (e) { /* noop */ }
+                    }
+                    try { xhr.dispatchEvent(new Event("readystatechange")); } catch (e) { /* noop */ }
+                    if (typeof xhr.onload === "function") {
+                        try { xhr.onload(); } catch (e) { /* noop */ }
+                    }
+                    try { xhr.dispatchEvent(new Event("load")); } catch (e) { /* noop */ }
+                    if (typeof xhr.onloadend === "function") {
+                        try { xhr.onloadend(); } catch (e) { /* noop */ }
+                    }
+                    try { xhr.dispatchEvent(new Event("loadend")); } catch (e) { /* noop */ }
+                })
+                .catch(function () {
+                    Object.defineProperty(xhr, "readyState", { value: 4, configurable: true });
+                    Object.defineProperty(xhr, "status", { value: 0, configurable: true });
+                    if (typeof xhr.onerror === "function") {
+                        try { xhr.onerror(); } catch (e) { /* noop */ }
+                    }
+                    try { xhr.dispatchEvent(new Event("error")); } catch (e) { /* noop */ }
+                    try { xhr.dispatchEvent(new Event("loadend")); } catch (e) { /* noop */ }
+                });
+
+            // Skip the original send: we will resolve via the synthesized
+            // events above.
+            return;
         };
     }
 
