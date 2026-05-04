@@ -28,11 +28,7 @@
     "use strict";
 
     var cartId = parseInt("{$cart_id|default:0}", 10);
-    // [THE-557] Instrumentation: confirm the gate script is mounted on the page.
-    // Remove once the regression on the modern checkout CTA is closed.
-    try { console.info("[MFB][relay-gate] mounted, cartId=", cartId); } catch (_) {}
     if (!cartId) {
-        try { console.warn("[MFB][relay-gate] no cartId — script bails. Hook fired without an active cart in session."); } catch (_) {}
         return;
     }
 
@@ -40,7 +36,24 @@
     var BANNER_ID = "mfb-cta-relay-warning";
     var WARNING_TEXT = "{intl l='Please select a relay point before continuing.' d='myflyingbox' js=1}";
 
-    var state = { requires_relay: false, has_relay: false, has_offer: false, ready: false };
+    // [THE-560] `isModern` distinguishes the React SPA checkout from the legacy
+    // Smarty (default) one. In modern, the MFB Smarty widget is never rendered
+    // (`order-delivery.extra` hook isn't called), so `mfbWidgetActive()` is
+    // always false and we must read the chosen module/option from
+    // /open_api/checkout instead of relying on DOM radios.
+    var isModern = !!document.querySelector("body.page-order-delivery .Checkout-footer");
+
+    var state = {
+        requires_relay: false,
+        has_relay: false,
+        has_offer: false,
+        ready: false,
+        // Modern-only: live snapshot from /open_api/checkout
+        modern_module_id: null,
+        modern_option_code: "",
+        modern_has_pickup: false
+    };
+    var mfbModuleId = null;
     var pollTimer = null;
 
     // [THE-557] DOM probe: the MyFlyingBox offer widget renders only when MFB
@@ -60,7 +73,20 @@
         return document.querySelector('.mfb-offer-radio:checked');
     }
 
+    // [THE-560] Modern-only: MFB selected without a pickup address yet for a
+    // relay-delivery option. Server tells us if the option is relay (via
+    // /myflyingbox/relay-status?option_code=…); React holds pickupAddress in
+    // /open_api/checkout payload.
+    function isModernBlocking() {
+        if (!isModern || !state.ready) return false;
+        if (mfbModuleId === null) return false;
+        if (state.modern_module_id !== mfbModuleId) return false;
+        if (!state.requires_relay) return false;
+        return !state.modern_has_pickup && !state.has_relay;
+    }
+
     function isBlocking() {
+        if (isModernBlocking()) return true;
         // Server-confirmed flow (offer is recorded in session and requires relay
         // but no relay is set yet). Authoritative when status has been polled.
         if (state.ready && state.has_offer && state.requires_relay && !state.has_relay) {
@@ -77,20 +103,44 @@
         return false;
     }
 
+    function fetchModernCheckout() {
+        if (!isModern) return Promise.resolve();
+        return fetch("/open_api/checkout", { credentials: "same-origin" })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (data) {
+                if (!data) return;
+                state.modern_module_id = data.deliveryModuleId || null;
+                state.modern_option_code = data.deliveryModuleOptionCode || "";
+                // pickupAddress comes back as an object; treat empty/zero id as absent
+                var pickup = data.pickupAddress;
+                state.modern_has_pickup = !!(pickup && (pickup.id || pickup.address1 || pickup.zipCode));
+            })
+            .catch(function () { /* silent */ });
+    }
+
     function fetchStatus() {
         try {
-            fetch("/myflyingbox/relay-status?cart_id=" + cartId, { credentials: "same-origin" })
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    if (data && data.success) {
-                        state.requires_relay = !!data.requires_relay;
-                        state.has_relay = !!data.has_relay;
-                        state.has_offer = !!data.has_offer;
-                        state.ready = true;
-                        applyButtonState();
-                    }
-                })
-                .catch(function () { /* silent — server-side guard still enforces */ });
+            // Refresh modern checkout state first, so the option_code is current.
+            fetchModernCheckout().then(function () {
+                var url = "/myflyingbox/relay-status?cart_id=" + cartId;
+                if (isModern && state.modern_option_code) {
+                    url += "&option_code=" + encodeURIComponent(state.modern_option_code);
+                }
+                return fetch(url, { credentials: "same-origin" })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (data && data.success) {
+                            state.requires_relay = !!data.requires_relay;
+                            state.has_relay = !!data.has_relay;
+                            state.has_offer = !!data.has_offer;
+                            if (data.mfb_module_id) {
+                                mfbModuleId = parseInt(data.mfb_module_id, 10);
+                            }
+                            state.ready = true;
+                            applyButtonState();
+                        }
+                    });
+            }).catch(function () { /* silent — server-side guard still enforces */ });
         } catch (e) { /* noop */ }
     }
 

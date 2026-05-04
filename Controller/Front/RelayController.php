@@ -8,6 +8,8 @@ use MyFlyingBox\Model\MyFlyingBoxCartRelay;
 use MyFlyingBox\Model\MyFlyingBoxCartRelayQuery;
 use MyFlyingBox\Model\MyFlyingBoxOfferQuery;
 use MyFlyingBox\Model\MyFlyingBoxQuoteQuery;
+use MyFlyingBox\Model\MyFlyingBoxServiceQuery;
+use MyFlyingBox\MyFlyingBox;
 use MyFlyingBox\Service\CarrierLogoProvider;
 use MyFlyingBox\Service\LceApiService;
 use MyFlyingBox\Service\PriceSurchargeService;
@@ -516,22 +518,38 @@ class RelayController extends BaseFrontController
             return new JsonResponse(['success' => false, 'message' => 'Invalid cart']);
         }
 
-        // [THE-557] Endpoint reports cart-side state only:
-        // - has_offer: a MyFlyingBox offer is recorded in the session
-        // - requires_relay: the picked offer is a pickup-style service
+        // [THE-557/THE-560] Endpoint reports cart-side state for the gate JS:
+        // - has_offer: a MyFlyingBox offer/option is recorded for the cart
+        // - requires_relay: the picked offer/option is a pickup-style service
         // - has_relay: a relay code is persisted on the cart
         //
-        // We deliberately do NOT consult Order::getDeliveryModuleId() here:
-        // in the modern (React) checkout the chosen delivery module is only
-        // persisted server-side when the very CTA we want to gate is clicked
-        // — chicken-and-egg. The "is MFB the active widget?" signal lives
-        // in the DOM (the MFB widget renders only when MFB is chosen) and is
-        // detected client-side by the gate script.
+        // Two callers feed this endpoint:
+        //  1. Smarty (default) widget — sets `mfb_selected_offer_id` in session
+        //     via saveOfferAction. We resolve from the session offer id.
+        //  2. Modern (React) checkout — never calls our saveOfferAction; instead
+        //     the gate JS reads `deliveryModuleOptionCode` from /open_api/checkout
+        //     and forwards it as `option_code` here. We resolve to the matching
+        //     MyFlyingBoxService (option codes are upper(service.code), see
+        //     ApiListener::getDeliveryModuleOptions).
+        $optionCode = (string) $request->get('option_code', '');
         $selectedOfferId = $this->getSession()->get('mfb_selected_offer_id');
         $hasOffer = false;
         $requiresRelay = false;
 
-        if ($selectedOfferId) {
+        if ($optionCode !== '') {
+            // Modern flow — service code is uppercased in option codes.
+            $service = MyFlyingBoxServiceQuery::create()
+                ->filterByCode($optionCode)
+                ->_or()->filterByCode(strtolower($optionCode))
+                ->_or()->filterByCode(strtoupper($optionCode))
+                ->filterByActive(true)
+                ->findOne();
+            if ($service) {
+                $hasOffer = true;
+                $requiresRelay = (bool) $service->getRelayDelivery();
+            }
+        } elseif ($selectedOfferId) {
+            // Default (Smarty) flow.
             $offer = MyFlyingBoxOfferQuery::create()
                 ->joinWithMyFlyingBoxService()
                 ->findPk($selectedOfferId);
@@ -552,6 +570,7 @@ class RelayController extends BaseFrontController
             'has_offer' => $hasOffer,
             'requires_relay' => $requiresRelay,
             'has_relay' => $hasRelay,
+            'mfb_module_id' => MyFlyingBox::getModuleId(),
         ]);
     }
 
