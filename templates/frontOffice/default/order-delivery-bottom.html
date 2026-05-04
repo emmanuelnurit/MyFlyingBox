@@ -96,6 +96,28 @@
         }
     })();
 
+    // [THE-560] When the React state has MFB selected with a relay option
+    // and no pickup address yet, the core API still surfaces the customer's
+    // default `deliveryAddressId`. React's gate (`useEnableCta`) treats that
+    // as "address present" and enables the CTA before the user picked a
+    // marker. We force `deliveryAddressId: null` in the response for that
+    // exact state so the gate stays disabled until pickupAddress fills.
+    function patchCheckoutResponse(checkout) {
+        if (!isModern || !optionsMeta) return checkout;
+        if (!checkout || typeof checkout !== "object") return checkout;
+        var moduleId = parseInt(checkout.deliveryModuleId, 10) || 0;
+        if (moduleId !== optionsMeta.mfb_module_id) return checkout;
+        var optionCode = String(checkout.deliveryModuleOptionCode || "").toUpperCase();
+        if (!optionCode) return checkout;
+        if (!optionsMeta.relay_codes.has(optionCode)) return checkout;
+        var pickup = checkout.pickupAddress;
+        var hasPickup = !!(pickup && (pickup.id || pickup.address1 || pickup.zipCode));
+        if (hasPickup) return checkout;
+        // Clone shallowly to avoid mutating cached objects.
+        var patched = Object.assign({}, checkout, { deliveryAddressId: null });
+        return patched;
+    }
+
     function splitMfbModules(modules) {
         if (!isModern || !optionsMeta || !Array.isArray(modules)) return modules;
         var out = [];
@@ -180,8 +202,19 @@
         XHR.prototype.send = function () {
             var xhr = this;
             var url = xhr.__mfbUrl || "";
-            var isModulesCall = xhr.__mfbMethod === "GET" && /\/open_api\/delivery\/modules(\?|$)/.test(url);
-            if (!isModulesCall) {
+            var isGet = xhr.__mfbMethod === "GET";
+            var isModulesCall = isGet && /\/open_api\/delivery\/modules(\?|$)/.test(url);
+            // [THE-560] Also intercept GET /open_api/checkout: the core
+            // OpenApi backend silently fills `deliveryAddressId` with the
+            // customer's default address even when React sent null. Result:
+            // useEnableCta's (deliveryAddressId || pickupAddress) OR fires
+            // on the default address before any relay marker is picked, so
+            // the CTA enables in pickup mode for MFB relay options. We
+            // null `deliveryAddressId` in the response when the chosen MFB
+            // option is a relay one and no pickupAddress is set yet, which
+            // is the gate React already encodes correctly.
+            var isCheckoutCall = isGet && /\/open_api\/checkout(\?|$)/.test(url);
+            if (!isModulesCall && !isCheckoutCall) {
                 return origSend.apply(this, arguments);
             }
             try { console.info("[MFB][gate] XHR intercept — url=", url); } catch (_) {}
@@ -201,13 +234,28 @@
                 .then(function (resp) {
                     var data = null;
                     try { data = JSON.parse(resp.text); } catch (e) { data = null; }
-                    var patched = Array.isArray(data) ? splitMfbModules(data) : data;
+                    var patched = data;
+                    if (isModulesCall && Array.isArray(data)) {
+                        patched = splitMfbModules(data);
+                    } else if (isCheckoutCall && data && typeof data === "object") {
+                        patched = patchCheckoutResponse(data);
+                    }
                     var jsonText = (patched === null || patched === undefined) ? resp.text : JSON.stringify(patched);
                     try {
-                        var summary = Array.isArray(patched)
-                            ? patched.map(function (m) { return (m && m.code) + "(" + (m && m.deliveryMode) + ")[" + (m && m.options ? m.options.length : 0) + "]"; })
-                            : "(non-array)";
-                        console.info("[MFB][gate] XHR patched response — modules=", summary);
+                        if (isModulesCall) {
+                            var summary = Array.isArray(patched)
+                                ? patched.map(function (m) { return (m && m.code) + "(" + (m && m.deliveryMode) + ")[" + (m && m.options ? m.options.length : 0) + "]"; })
+                                : "(non-array)";
+                            console.info("[MFB][gate] XHR patched response — modules=", summary);
+                        } else if (isCheckoutCall) {
+                            console.info(
+                                "[MFB][gate] XHR patched checkout —",
+                                "moduleId=", patched && patched.deliveryModuleId,
+                                "optionCode=", patched && patched.deliveryModuleOptionCode,
+                                "deliveryAddressId=", patched && patched.deliveryAddressId,
+                                "pickupAddress?", !!(patched && patched.pickupAddress && (patched.pickupAddress.id || patched.pickupAddress.address1))
+                            );
+                        }
                     } catch (_) {}
 
                     Object.defineProperty(xhr, "readyState", { value: 4, configurable: true });
