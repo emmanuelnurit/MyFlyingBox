@@ -6,7 +6,7 @@
     {* Page Title *}
     <div class="row">
         <div class="col-md-12 title title-without-tabs">
-            <h3><i class="glyphicon glyphicon-send"></i> {intl l="MyFlyingBox Configuration" d="myflyingbox"}</h3>
+            <h3><i class="glyphicon glyphicon-send" aria-hidden="true"></i> {intl l="MyFlyingBox Configuration" d="myflyingbox"}</h3>
         </div>
     </div>
 
@@ -26,7 +26,7 @@
                 {* Shipper Address *}
                 <div class="panel panel-default">
                     <div class="panel-heading">
-                        <h4 class="panel-title"><i class="glyphicon glyphicon-home"></i> {intl l="Shipper Address" d="myflyingbox"}</h4>
+                        <h4 class="panel-title"><i class="glyphicon glyphicon-home" aria-hidden="true"></i> {intl l="Shipper Address" d="myflyingbox"}</h4>
                     </div>
                     <div class="panel-body">
                         <div class="row">
@@ -104,9 +104,9 @@
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <h4 class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
-                            <span><i class="glyphicon glyphicon-envelope"></i> {intl l="Email Notifications" d="myflyingbox"}</span>
+                            <span><i class="glyphicon glyphicon-envelope" aria-hidden="true"></i> {intl l="Email Notifications" d="myflyingbox"}</span>
                             <a href="{url path="/admin/configuration/messages"}" class="btn btn-default btn-xs">
-                                <i class="glyphicon glyphicon-cog"></i> {intl l="Manage Email Templates" d="myflyingbox"}
+                                <i class="glyphicon glyphicon-cog" aria-hidden="true"></i> {intl l="Manage Email Templates" d="myflyingbox"}
                             </a>
                         </h4>
                     </div>
@@ -121,7 +121,7 @@
                             <p class="help-block">{intl l="When enabled, customers will receive emails when their shipment status changes" d="myflyingbox"}</p>
                         </div>
                         <div class="alert alert-info">
-                            <i class="glyphicon glyphicon-info-sign"></i>
+                            <i class="glyphicon glyphicon-info-sign" aria-hidden="true"></i>
                             {intl l="Customize the emails sent to customers for shipping notifications" d="myflyingbox"}
                         </div>
                     </div>
@@ -135,7 +135,7 @@
                 {* Price Settings *}
                 <div class="panel panel-default">
                     <div class="panel-heading">
-                        <h4 class="panel-title"><i class="glyphicon glyphicon-euro"></i> {intl l="Price Settings" d="myflyingbox"}</h4>
+                        <h4 class="panel-title"><i class="glyphicon glyphicon-euro" aria-hidden="true"></i> {intl l="Price Settings" d="myflyingbox"}</h4>
                     </div>
                     <div class="panel-body">
                         <div class="row">
@@ -201,7 +201,7 @@
                 {* Google Maps API *}
                 <div class="panel panel-default">
                     <div class="panel-heading">
-                        <h4 class="panel-title"><i class="glyphicon glyphicon-map-marker"></i> {intl l="Google Maps" d="myflyingbox"}</h4>
+                        <h4 class="panel-title"><i class="glyphicon glyphicon-map-marker" aria-hidden="true"></i> {intl l="Google Maps" d="myflyingbox"}</h4>
                     </div>
                     <div class="panel-body">
                         <div class="form-group">
@@ -212,7 +212,7 @@
                             <p class="help-block">{intl l="Required for relay point map display" d="myflyingbox"}</p>
                         </div>
                         <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener" class="btn btn-default btn-sm">
-                            <i class="glyphicon glyphicon-new-window"></i>
+                            <i class="glyphicon glyphicon-new-window" aria-hidden="true"></i>
                             {intl l="Google Cloud Console" d="myflyingbox"}
                         </a>
                     </div>
@@ -227,9 +227,9 @@
                             <span>
                                 <span class="mfb-webhook-icon" id="webhook-status-icon">
                                     {if $webhook_configured}
-                                    <i class="glyphicon glyphicon-ok-sign" style="color: #3c763d; font-size: 18px;"></i>
+                                    <i class="glyphicon glyphicon-ok-sign" style="color: #3c763d; font-size: 18px;" aria-hidden="true"></i>
                                     {else}
-                                    <i class="glyphicon glyphicon-warning-sign" style="color: #8a6d3b; font-size: 18px;"></i>
+                                    <i class="glyphicon glyphicon-warning-sign" style="color: #8a6d3b; font-size: 18px;" aria-hidden="true"></i>
                                     {/if}
                                 </span>
                                 {intl l="Webhook Configuration" d="myflyingbox"}
@@ -238,11 +238,11 @@
                             <span id="webhook-status-text">
                                 {if $webhook_configured}
                                     <span class="text-success">
-                                        <i class="glyphicon glyphicon-ok"></i> {intl l="Connected" d="myflyingbox"}
+                                        <i class="glyphicon glyphicon-ok" aria-hidden="true"></i> {intl l="Connected" d="myflyingbox"}
                                     </span>
                                 {else}
                                     <span class="text-warning">
-                                        <i class="glyphicon glyphicon-exclamation-sign"></i> {intl l="Click to configure" d="myflyingbox"}
+                                        <i class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></i> {intl l="Click to configure" d="myflyingbox"}
                                     </span>
                                 {/if}
                             </span>
@@ -251,7 +251,7 @@
                     <div class="collapse" id="webhookConfigCollapse">
                         <div class="panel-body">
                             <div class="alert alert-info">
-                                <i class="glyphicon glyphicon-info-sign"></i>
+                                <i class="glyphicon glyphicon-info-sign" aria-hidden="true"></i>
                                 {intl l="Webhooks allow MyFlyingBox to notify your store in real-time about shipment status changes, tracking updates, and delivery confirmations." d="myflyingbox"}
                             </div>
 
@@ -262,7 +262,7 @@
                                     <input type="text" id="mfb-webhook-url" class="form-control" value="{url path="/myflyingbox/webhook/tracking"}" readonly/>
                                     <span class="input-group-btn">
                                         <button type="button" class="btn btn-default" id="mfb-copy-webhook-url" title="{intl l='Copy to clipboard' d='myflyingbox'}">
-                                            <i class="glyphicon glyphicon-copy"></i> {intl l="Copy" d="myflyingbox"}
+                                            <i class="glyphicon glyphicon-copy" aria-hidden="true"></i> {intl l="Copy" d="myflyingbox"}
                                         </button>
                                     </span>
                                 </div>
@@ -270,7 +270,7 @@
                                     {intl l="Use this URL in your" d="myflyingbox"}
                                     <a href="https://dashboard.myflyingbox.com/" target="_blank" rel="noopener">
                                         {intl l="MyFlyingBox dashboard" d="myflyingbox"}
-                                        <i class="glyphicon glyphicon-new-window" style="font-size: 10px;"></i>
+                                        <i class="glyphicon glyphicon-new-window" style="font-size: 10px;" aria-hidden="true"></i>
                                     </a>
                                 </p>
                             </div>
@@ -294,7 +294,7 @@
                                         <input type="text" id="mfb-webhook-secret" name="{$name}" value="{$value}" class="form-control" placeholder="whsec_xxxxxxxxxxxxxxxx"/>
                                         <span class="input-group-btn">
                                             <button type="button" class="btn btn-default" id="mfb-copy-webhook-secret" title="{intl l='Copy to clipboard' d='myflyingbox'}">
-                                                <i class="glyphicon glyphicon-copy"></i> {intl l="Copy" d="myflyingbox"}
+                                                <i class="glyphicon glyphicon-copy" aria-hidden="true"></i> {intl l="Copy" d="myflyingbox"}
                                             </button>
                                         </span>
                                     </div>
@@ -302,7 +302,7 @@
                                         {intl l="Secret key used to verify webhook signatures" d="myflyingbox"}
                                         &mdash;
                                         <a href="#" id="mfb-generate-secret">
-                                            <i class="glyphicon glyphicon-refresh"></i> {intl l="Generate new secret" d="myflyingbox"}
+                                            <i class="glyphicon glyphicon-refresh" aria-hidden="true"></i> {intl l="Generate new secret" d="myflyingbox"}
                                         </a>
                                     </p>
                                 {/form_field}
@@ -311,7 +311,7 @@
                             {* Validate Button *}
                             <div class="text-center" style="padding-top: 15px; border-top: 1px solid #ddd;">
                                 <button type="button" id="mfb-test-webhook" class="btn btn-default">
-                                    <i class="glyphicon glyphicon-ok-circle"></i> {intl l="Validate Configuration" d="myflyingbox"}
+                                    <i class="glyphicon glyphicon-ok-circle" aria-hidden="true"></i> {intl l="Validate Configuration" d="myflyingbox"}
                                 </button>
                                 <div id="webhook-test-result" style="margin-top: 10px;"></div>
                             </div>
@@ -325,7 +325,7 @@
         {* API Configuration — Full Width *}
         <div class="panel panel-default" id="mfb-api-card">
             <div class="panel-heading">
-                <h4 class="panel-title"><i class="glyphicon glyphicon-lock"></i> {intl l="API Configuration" d="myflyingbox"}</h4>
+                <h4 class="panel-title"><i class="glyphicon glyphicon-lock" aria-hidden="true"></i> {intl l="API Configuration" d="myflyingbox"}</h4>
             </div>
             <div class="panel-body">
                 <div class="row">
@@ -360,19 +360,19 @@
                         <label>&nbsp;</label>
                         <div>
                             <button type="button" id="mfb-test-api" class="btn btn-default">
-                                <i class="glyphicon glyphicon-flash"></i> {intl l="Test" d="myflyingbox"}
+                                <i class="glyphicon glyphicon-flash" aria-hidden="true"></i> {intl l="Test" d="myflyingbox"}
                             </button>
                             <button type="button" id="mfb-refresh-services" class="btn btn-default">
-                                <i class="glyphicon glyphicon-refresh"></i> {intl l="Refresh" d="myflyingbox"}
+                                <i class="glyphicon glyphicon-refresh" aria-hidden="true"></i> {intl l="Refresh" d="myflyingbox"}
                                 <span id="mfb-services-badge" class="badge">{$active_services_count}/{$total_services_count}</span>
                             </button>
                             <button type="button" id="mfb-diagnostic" class="btn btn-default">
-                                <i class="glyphicon glyphicon-search"></i> {intl l="Diagnostic" d="myflyingbox"}
+                                <i class="glyphicon glyphicon-search" aria-hidden="true"></i> {intl l="Diagnostic" d="myflyingbox"}
                             </button>
                             <a href="https://dashboard.myflyingbox.com/" target="_blank" rel="noopener" class="btn btn-default">
                                 <img src="{mfb_logo}" alt="MyFlyingBox" width="18" height="18" style="vertical-align: middle;"/>
                                 {intl l="Dashboard" d="myflyingbox"}
-                                <i class="glyphicon glyphicon-new-window" style="font-size: 10px;"></i>
+                                <i class="glyphicon glyphicon-new-window" style="font-size: 10px;" aria-hidden="true"></i>
                             </a>
                         </div>
                     </div>
@@ -386,14 +386,14 @@
         <div class="panel panel-default" id="mfb-services-card">
             <div class="panel-heading" style="cursor: pointer;" id="mfb-services-header">
                 <h4 class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
-                    <span><i class="glyphicon glyphicon-transfer"></i> {intl l="Available Services" d="myflyingbox"}</span>
+                    <span><i class="glyphicon glyphicon-transfer" aria-hidden="true"></i> {intl l="Available Services" d="myflyingbox"}</span>
                     <span style="display: flex; align-items: center; gap: 10px;">
                         <span id="mfb-services-summary" class="{if $active_services_count > 0}text-success{else}text-danger{/if}">
-                            <i class="glyphicon {if $active_services_count > 0}glyphicon-ok-sign{else}glyphicon-exclamation-sign{/if}"></i>
+                            <i class="glyphicon {if $active_services_count > 0}glyphicon-ok-sign{else}glyphicon-exclamation-sign{/if}" aria-hidden="true"></i>
                             <span id="mfb-summary-count">{$active_services_count}</span> {intl l="active service(s)" d="myflyingbox"}
                         </span>
                         <button type="button" id="mfb-toggle-services" class="btn btn-default btn-sm">
-                            <i class="glyphicon glyphicon-chevron-down" id="mfb-toggle-icon"></i> {intl l="Details" d="myflyingbox"}
+                            <i class="glyphicon glyphicon-chevron-down" id="mfb-toggle-icon" aria-hidden="true"></i> {intl l="Details" d="myflyingbox"}
                         </button>
                     </span>
                 </h4>
@@ -401,7 +401,7 @@
                 {* Alert when no services selected *}
                 {if $active_services_count == 0}
                 <div id="mfb-no-services-alert" class="alert alert-warning" style="margin-top: 10px; margin-bottom: 0;">
-                    <i class="glyphicon glyphicon-warning-sign"></i>
+                    <i class="glyphicon glyphicon-warning-sign" aria-hidden="true"></i>
                     <strong>{intl l="No carrier service selected!" d="myflyingbox"}</strong>
                 </div>
                 {/if}
@@ -409,13 +409,13 @@
                 {* Inline summary of active services *}
                 {if $active_services_count > 0}
                 <div id="mfb-services-inline-summary" style="margin-top: 10px;">
-                    <span style="color: #3c763d; font-weight: 600; font-size: 12px;"><i class="glyphicon glyphicon-ok"></i> {intl l="Selected:" d="myflyingbox"}</span>
+                    <span style="color: #3c763d; font-weight: 600; font-size: 12px;"><i class="glyphicon glyphicon-ok" aria-hidden="true"></i> {intl l="Selected:" d="myflyingbox"}</span>
                     {loop type="myflyingbox.services" name="active_services_summary" active="true"}
                     <span class="mfb-summary-badge" data-id="{$ID}">
                         {if $CARRIER_LOGO}
                         <img src="{$CARRIER_LOGO}" alt="{$CARRIER_CODE}" data-fallback="{$CARRIER_LOGO_FALLBACK}" onerror="this.onerror=null; this.src=this.dataset.fallback;"/>
                         {else}
-                        <i class="glyphicon glyphicon-transfer" style="color: #5cb85c;"></i>
+                        <i class="glyphicon glyphicon-transfer" style="color: #5cb85c;" aria-hidden="true"></i>
                         {/if}
                         <span style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: middle;">{$NAME}</span>
                         {if $DELIVERY_DELAY}<span class="text-muted">({$DELIVERY_DELAY}h)</span>{/if}
@@ -433,10 +433,10 @@
                     </div>
                     <div class="col-md-4">
                         <button type="button" id="mfb-select-all" class="btn btn-default btn-sm">
-                            <i class="glyphicon glyphicon-check"></i> {intl l="Select all" d="myflyingbox"}
+                            <i class="glyphicon glyphicon-check" aria-hidden="true"></i> {intl l="Select all" d="myflyingbox"}
                         </button>
                         <button type="button" id="mfb-deselect-all" class="btn btn-default btn-sm">
-                            <i class="glyphicon glyphicon-unchecked"></i> {intl l="Deselect all" d="myflyingbox"}
+                            <i class="glyphicon glyphicon-unchecked" aria-hidden="true"></i> {intl l="Deselect all" d="myflyingbox"}
                         </button>
                     </div>
                     <div class="col-md-2 text-right">
@@ -480,9 +480,9 @@
                                         </div>
                                     </td>
                                     <td>
-                                        {if $PICKUP_AVAILABLE}<span class="label label-info" title="{intl l='Pickup available' d='myflyingbox'}"><i class="glyphicon glyphicon-hand-up"></i> Pickup</span>{/if}
-                                        {if $DROPOFF_AVAILABLE}<span class="label label-default" title="{intl l='Drop-off available' d='myflyingbox'}"><i class="glyphicon glyphicon-log-in"></i> Drop-off</span>{/if}
-                                        {if $RELAY_DELIVERY}<span class="label label-success" title="{intl l='Relay point delivery' d='myflyingbox'}"><i class="glyphicon glyphicon-map-marker"></i> Relay</span>{/if}
+                                        {if $PICKUP_AVAILABLE}<span class="label label-info" title="{intl l='Pickup available' d='myflyingbox'}"><i class="glyphicon glyphicon-hand-up" aria-hidden="true"></i> Pickup</span>{/if}
+                                        {if $DROPOFF_AVAILABLE}<span class="label label-default" title="{intl l='Drop-off available' d='myflyingbox'}"><i class="glyphicon glyphicon-log-in" aria-hidden="true"></i> Drop-off</span>{/if}
+                                        {if $RELAY_DELIVERY}<span class="label label-success" title="{intl l='Relay point delivery' d='myflyingbox'}"><i class="glyphicon glyphicon-map-marker" aria-hidden="true"></i> Relay</span>{/if}
                                     </td>
                                 </tr>
                             {/loop}
@@ -490,7 +490,7 @@
                     </table>
                 </div>
                 <p class="help-block">
-                    <i class="glyphicon glyphicon-info-sign"></i> {intl l="Click 'Refresh Services' to update the list from MyFlyingBox API" d="myflyingbox"}
+                    <i class="glyphicon glyphicon-info-sign" aria-hidden="true"></i> {intl l="Click 'Refresh Services' to update the list from MyFlyingBox API" d="myflyingbox"}
                 </p>
             </div>
         </div>
@@ -499,9 +499,9 @@
         <div class="panel panel-default" id="dimensions-card">
             <div class="panel-heading">
                 <h4 class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
-                    <span><i class="glyphicon glyphicon-resize-full"></i> {intl l="Weight to Dimensions Mapping" d="myflyingbox"}</span>
+                    <span><i class="glyphicon glyphicon-resize-full" aria-hidden="true"></i> {intl l="Weight to Dimensions Mapping" d="myflyingbox"}</span>
                     <button type="button" class="btn btn-primary btn-xs" id="mfb-add-dimension">
-                        <i class="glyphicon glyphicon-plus"></i> {intl l="Add" d="myflyingbox"}
+                        <i class="glyphicon glyphicon-plus" aria-hidden="true"></i> {intl l="Add" d="myflyingbox"}
                     </button>
                 </h4>
             </div>
@@ -528,10 +528,10 @@
                                     <td>{$HEIGHT}</td>
                                     <td class="actions-cell">
                                         <button type="button" class="btn btn-default btn-xs mfb-edit-dimension" title="{intl l='Edit' d='myflyingbox'}">
-                                            <i class="glyphicon glyphicon-pencil"></i>
+                                            <i class="glyphicon glyphicon-pencil" aria-hidden="true"></i>
                                         </button>
                                         <button type="button" class="btn btn-danger btn-xs mfb-delete-dimension" title="{intl l='Delete' d='myflyingbox'}">
-                                            <i class="glyphicon glyphicon-trash"></i>
+                                            <i class="glyphicon glyphicon-trash" aria-hidden="true"></i>
                                         </button>
                                     </td>
                                 </tr>
@@ -546,7 +546,7 @@
         <div class="row">
             <div class="col-md-12 text-right">
                 <button type="submit" class="btn btn-primary btn-lg">
-                    <i class="glyphicon glyphicon-floppy-disk"></i> {intl l="Save Configuration" d="myflyingbox"}
+                    <i class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></i> {intl l="Save Configuration" d="myflyingbox"}
                 </button>
             </div>
         </div>

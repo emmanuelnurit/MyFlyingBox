@@ -7,26 +7,26 @@
     <div class="panel panel-default mfb-delivery-picker" id="mfb-delivery-picker" style="display: none;">
         <div class="panel-heading">
             <h4 class="panel-title">
-                <span class="glyphicon glyphicon-road"></span> {intl l="Delivery mode" d="myflyingbox.bo"}
+                <span class="glyphicon glyphicon-road" aria-hidden="true"></span> {intl l="Delivery mode" d="myflyingbox.bo"}
             </h4>
         </div>
         <div class="panel-body">
             {* Locked banner (set when API returns data.locked=true) *}
             <div class="alert alert-warning mfb-picker-locked" id="mfb-picker-locked" style="display: none;">
-                <span class="glyphicon glyphicon-lock"></span>
+                <span class="glyphicon glyphicon-lock" aria-hidden="true"></span>
                 <strong>{intl l="This shipment is locked: it has already been booked." d="myflyingbox.bo"}</strong><br>
                 <small>{intl l="Modifications will be possible again if the shipment is cancelled." d="myflyingbox.bo"}</small>
             </div>
 
             {* Loader while /options is in flight *}
             <p class="text-muted mfb-picker-loading" id="mfb-picker-loading">
-                <span class="glyphicon glyphicon-refresh mfb-spin"></span>
+                <span class="glyphicon glyphicon-refresh mfb-spin" aria-hidden="true"></span>
                 {intl l="Loading available delivery modes..." d="myflyingbox.bo"}
             </p>
 
             {* Empty state when /options returns 0 eligible offers *}
             <div class="alert alert-info mfb-picker-empty" id="mfb-picker-empty" style="display: none;">
-                <span class="glyphicon glyphicon-info-sign"></span>
+                <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
                 {intl l="No eligible delivery mode for this order" d="myflyingbox.bo"}
             </div>
 
@@ -43,7 +43,7 @@
                 <div class="mfb-picker-relay-section" id="mfb-picker-relay-section" style="display: none;">
                     <hr>
                     <label>
-                        <span class="glyphicon glyphicon-map-marker"></span>
+                        <span class="glyphicon glyphicon-map-marker" aria-hidden="true"></span>
                         {intl l="Relay point" d="myflyingbox.bo"}
                     </label>
 
@@ -52,13 +52,13 @@
                                placeholder="{intl l='Search by address or postal code' d='myflyingbox.bo'}">
                         <span class="input-group-btn">
                             <button type="button" class="btn btn-default" id="mfb-picker-relay-search-btn">
-                                <span class="glyphicon glyphicon-search"></span> {intl l="Search" d="myflyingbox.bo"}
+                                <span class="glyphicon glyphicon-search" aria-hidden="true"></span> {intl l="Search" d="myflyingbox.bo"}
                             </button>
                         </span>
                     </div>
 
                     <p class="text-muted mfb-picker-relay-loading" id="mfb-picker-relay-loading" style="display: none;">
-                        <span class="glyphicon glyphicon-refresh mfb-spin"></span>
+                        <span class="glyphicon glyphicon-refresh mfb-spin" aria-hidden="true"></span>
                         {intl l="Loading relay points..." d="myflyingbox.bo"}
                     </p>
 
@@ -68,7 +68,7 @@
 
                     {* Currently selected relay summary *}
                     <div class="well well-sm mfb-picker-relay-selected" id="mfb-picker-relay-selected" style="display: none;">
-                        <strong><span class="glyphicon glyphicon-ok-circle text-success"></span>
+                        <strong><span class="glyphicon glyphicon-ok-circle text-success" aria-hidden="true"></span>
                             {intl l="Selected relay point" d="myflyingbox.bo"} :</strong>
                         <span id="mfb-picker-relay-selected-text"></span>
                     </div>
@@ -87,7 +87,7 @@
 
                 <div class="form-group" style="margin-top: 15px;">
                     <button type="submit" class="btn btn-primary" id="mfb-picker-save-btn">
-                        <span class="glyphicon glyphicon-floppy-disk"></span>
+                        <span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span>
                         {intl l="Save delivery mode" d="myflyingbox.bo"}
                     </button>
                 </div>
@@ -102,7 +102,7 @@
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h4 class="panel-title">
-                    <span class="glyphicon glyphicon-send"></span> {intl l="Shipment" d="myflyingbox"} #{$shipment->getId()}
+                    <span class="glyphicon glyphicon-send" aria-hidden="true"></span> {intl l="Shipment" d="myflyingbox"} #{$shipment->getId()}
                     {if $shipment->getStatus() == 'pending'}
                         <span class="label label-warning pull-right">{intl l="Pending" d="myflyingbox"}</span>
                     {elseif $shipment->getStatus() == 'booked'}
@@ -120,19 +120,19 @@
                 <div class="row">
                     {* Recipient info *}
                     <div class="col-md-6">
-                        <h5><span class="glyphicon glyphicon-user"></span> {intl l="Recipient" d="myflyingbox"}</h5>
+                        <h5><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {intl l="Recipient" d="myflyingbox"}</h5>
                         <address>
                             <strong>{$shipment->getRecipientName()}</strong><br>
                             {if $shipment->getRecipientCompany()}{$shipment->getRecipientCompany()}<br>{/if}
                             {$shipment->getRecipientStreet()|nl2br}<br>
                             {$shipment->getRecipientPostalCode()} {$shipment->getRecipientCity()}<br>
                             {$shipment->getRecipientCountry()}
-                            {if $shipment->getRecipientPhone()}<br><span class="glyphicon glyphicon-earphone"></span> {$shipment->getRecipientPhone()}{/if}
+                            {if $shipment->getRecipientPhone()}<br><span class="glyphicon glyphicon-earphone" aria-hidden="true"></span> {$shipment->getRecipientPhone()}{/if}
                         </address>
                     </div>
                     {* Parcel info *}
                     <div class="col-md-6">
-                        <h5><span class="glyphicon glyphicon-gift"></span> {intl l="Parcel" d="myflyingbox"}</h5>
+                        <h5><span class="glyphicon glyphicon-gift" aria-hidden="true"></span> {intl l="Parcel" d="myflyingbox"}</h5>
                         {loop type="myflyingbox.parcels" name="header_parcels" shipment_id=$shipment->getId() limit="1"}
                         <p>
                             <strong>{$LENGTH}&times;{$WIDTH}&times;{$HEIGHT} cm</strong><br>
@@ -155,7 +155,7 @@
             {if $shipment->getStatus() == 'delivered'}{assign var="status_pct" value="100"}{/if}
 
             {if $shipment->getStatus() == 'cancelled'}
-                <p><span class="label label-danger"><span class="glyphicon glyphicon-remove"></span> {intl l="Cancelled" d="myflyingbox"}</span></p>
+                <p><span class="label label-danger"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> {intl l="Cancelled" d="myflyingbox"}</span></p>
             {else}
                 <div class="progress" style="margin-bottom: 10px;">
                     <div class="progress-bar {if $shipment->getStatus() == 'delivered'}progress-bar-success{else}progress-bar-info{/if}"
@@ -166,22 +166,22 @@
                 </div>
                 <p>
                     <span class="label {if $shipment->getStatus() == 'pending' || $shipment->getStatus() == 'booked' || $shipment->getStatus() == 'shipped' || $shipment->getStatus() == 'delivered'}label-success{else}label-default{/if}">
-                        <span class="glyphicon glyphicon-pencil"></span> {intl l="Pending" d="myflyingbox"}
+                        <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span> {intl l="Pending" d="myflyingbox"}
                     </span>
                     &rarr;
                     <span class="label {if $shipment->getStatus() == 'booked' || $shipment->getStatus() == 'shipped' || $shipment->getStatus() == 'delivered'}label-success{else}label-default{/if}">
-                        <span class="glyphicon glyphicon-ok"></span> {intl l="Booked" d="myflyingbox"}
+                        <span class="glyphicon glyphicon-ok" aria-hidden="true"></span> {intl l="Booked" d="myflyingbox"}
                     </span>
                     {if $shipment->getDateBooking()}
                         <small class="text-muted">({format_date date=$shipment->getDateBooking() output="date"})</small>
                     {/if}
                     &rarr;
                     <span class="label {if $shipment->getStatus() == 'shipped' || $shipment->getStatus() == 'delivered'}label-success{else}label-default{/if}">
-                        <span class="glyphicon glyphicon-send"></span> {intl l="Shipped" d="myflyingbox"}
+                        <span class="glyphicon glyphicon-send" aria-hidden="true"></span> {intl l="Shipped" d="myflyingbox"}
                     </span>
                     &rarr;
                     <span class="label {if $shipment->getStatus() == 'delivered'}label-success{else}label-default{/if}">
-                        <span class="glyphicon glyphicon-home"></span> {intl l="Delivered" d="myflyingbox"}
+                        <span class="glyphicon glyphicon-home" aria-hidden="true"></span> {intl l="Delivered" d="myflyingbox"}
                     </span>
                 </p>
             {/if}
@@ -193,7 +193,7 @@
             <div class="col-md-8">
                 <div class="panel panel-default">
                     <div class="panel-heading">
-                        <h4 class="panel-title"><span class="glyphicon glyphicon-info-sign"></span> {intl l="Shipment Details" d="myflyingbox"}</h4>
+                        <h4 class="panel-title"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> {intl l="Shipment Details" d="myflyingbox"}</h4>
                     </div>
                     <div class="panel-body">
                         <dl class="dl-horizontal">
@@ -216,15 +216,15 @@
                                 <dt>{intl l="Delivery type" d="myflyingbox"}</dt>
                                 <dd>
                                     {if $RELAY_DELIVERY}
-                                        <span class="label label-info"><span class="glyphicon glyphicon-map-marker"></span> {intl l="Relay point delivery" d="myflyingbox"}</span>
+                                        <span class="label label-info"><span class="glyphicon glyphicon-map-marker" aria-hidden="true"></span> {intl l="Relay point delivery" d="myflyingbox"}</span>
                                     {else}
-                                        <span class="label label-default"><span class="glyphicon glyphicon-home"></span> {intl l="Home delivery" d="myflyingbox"}</span>
+                                        <span class="label label-default"><span class="glyphicon glyphicon-home" aria-hidden="true"></span> {intl l="Home delivery" d="myflyingbox"}</span>
                                     {/if}
                                 </dd>
 
                                 {if $DELIVERY_DELAY}
                                 <dt>{intl l="Delivery time" d="myflyingbox"}</dt>
-                                <dd><span class="glyphicon glyphicon-time"></span> {$DELIVERY_DELAY}</dd>
+                                <dd><span class="glyphicon glyphicon-time" aria-hidden="true"></span> {$DELIVERY_DELAY}</dd>
                                 {/if}
                                 {/loop}
                             {/if}
@@ -233,7 +233,7 @@
                             <dt>{intl l="Relay Point" d="myflyingbox"}</dt>
                             <dd>
                                 <div class="well well-sm" style="margin-bottom: 0;">
-                                    <span class="glyphicon glyphicon-map-marker text-info"></span>
+                                    <span class="glyphicon glyphicon-map-marker text-info" aria-hidden="true"></span>
                                     <strong>{$shipment->getRelayDeliveryCode()}</strong>
                                     {if $shipment->getRelayName()}<br>{$shipment->getRelayName()}{/if}
                                     {if $shipment->getRelayStreet()}<br><small class="text-muted">{$shipment->getRelayStreet()}</small>{/if}
@@ -245,7 +245,7 @@
 
                             {if $shipment->getCollectionDate()}
                             <dt>{intl l="Collection Date" d="myflyingbox"}</dt>
-                            <dd><span class="glyphicon glyphicon-calendar"></span> {format_date date=$shipment->getCollectionDate() output="date"}</dd>
+                            <dd><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span> {format_date date=$shipment->getCollectionDate() output="date"}</dd>
                             {/if}
 
                             {* Tracking numbers *}
@@ -256,11 +256,11 @@
                                     <code>{$TRACKING_NUMBER}</code>
                                     {if $LABEL_URL}
                                     <a href="{$LABEL_URL}" target="_blank" class="btn btn-xs btn-default" title="{intl l='Download label' d='myflyingbox'}">
-                                        <span class="glyphicon glyphicon-download-alt"></span> {intl l="Label" d="myflyingbox"}
+                                        <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span> {intl l="Label" d="myflyingbox"}
                                     </a>
                                     {/if}
                                 {else}
-                                    <span class="text-muted"><span class="glyphicon glyphicon-time"></span> {intl l="Awaiting booking" d="myflyingbox"}</span>
+                                    <span class="text-muted"><span class="glyphicon glyphicon-time" aria-hidden="true"></span> {intl l="Awaiting booking" d="myflyingbox"}</span>
                                 {/if}
                             </dd>
                             {/loop}
@@ -278,47 +278,47 @@
             <div class="col-md-4">
                 <div class="panel panel-default">
                     <div class="panel-heading">
-                        <h4 class="panel-title"><span class="glyphicon glyphicon-cog"></span> {intl l="Actions" d="myflyingbox"}</h4>
+                        <h4 class="panel-title"><span class="glyphicon glyphicon-cog" aria-hidden="true"></span> {intl l="Actions" d="myflyingbox"}</h4>
                     </div>
                     <div class="panel-body">
                         {if $shipment->getStatus() == 'pending'}
                             <button type="button" class="btn btn-primary btn-block mfb-action-book" data-shipment-id="{$shipment->getId()}" style="margin-bottom: 8px;">
-                                <span class="glyphicon glyphicon-ok-circle"></span>
+                                <span class="glyphicon glyphicon-ok-circle" aria-hidden="true"></span>
                                 {intl l="Confirm & Book Shipment" d="myflyingbox"}
                             </button>
                         {/if}
 
                         {if $shipment->getStatus() == 'booked'}
                             <button type="button" class="btn btn-success btn-block mfb-action-ship" data-shipment-id="{$shipment->getId()}" style="margin-bottom: 8px;">
-                                <span class="glyphicon glyphicon-send"></span>
+                                <span class="glyphicon glyphicon-send" aria-hidden="true"></span>
                                 {intl l="Mark as Shipped" d="myflyingbox"}
                             </button>
                         {/if}
 
                         {if $shipment->getStatus() == 'booked' || $shipment->getStatus() == 'shipped'}
                             <button type="button" class="btn btn-default btn-block mfb-action-labels" data-shipment-id="{$shipment->getId()}" style="margin-bottom: 8px;">
-                                <span class="glyphicon glyphicon-print"></span>
+                                <span class="glyphicon glyphicon-print" aria-hidden="true"></span>
                                 {intl l="Download Labels" d="myflyingbox"}
                             </button>
                         {/if}
 
                         {if $shipment->getStatus() == 'shipped'}
                             <button type="button" class="btn btn-default btn-block mfb-action-tracking" data-shipment-id="{$shipment->getId()}" style="margin-bottom: 8px;">
-                                <span class="glyphicon glyphicon-refresh"></span>
+                                <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
                                 {intl l="Refresh Tracking Status" d="myflyingbox"}
                             </button>
                         {/if}
 
                         {if $shipment->getStatus() == 'shipped' || $shipment->getStatus() == 'delivered'}
                             <button type="button" class="btn btn-warning btn-block mfb-action-create-return" data-shipment-id="{$shipment->getId()}" data-toggle="modal" data-target="#mfb-return-modal" style="margin-bottom: 8px;">
-                                <span class="glyphicon glyphicon-share-alt"></span>
+                                <span class="glyphicon glyphicon-share-alt" aria-hidden="true"></span>
                                 {intl l="Create Return Label" d="myflyingbox"}
                             </button>
                         {/if}
 
                         {if $shipment->getStatus() == 'pending' || $shipment->getStatus() == 'booked'}
                             <button type="button" class="btn btn-danger btn-block mfb-action-cancel" data-shipment-id="{$shipment->getId()}">
-                                <span class="glyphicon glyphicon-remove"></span>
+                                <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
                                 {intl l="Cancel Shipment" d="myflyingbox"}
                             </button>
                         {/if}
@@ -330,11 +330,11 @@
         {* === SHIPMENT HISTORY === *}
         <div class="panel panel-default">
             <div class="panel-heading">
-                <h4 class="panel-title"><span class="glyphicon glyphicon-time"></span> {intl l="Tracking History" d="myflyingbox"}</h4>
+                <h4 class="panel-title"><span class="glyphicon glyphicon-time" aria-hidden="true"></span> {intl l="Tracking History" d="myflyingbox"}</h4>
             </div>
             <div class="panel-body" id="mfb-tracking-timeline">
                 <p class="text-center text-muted">
-                    <span class="glyphicon glyphicon-refresh mfb-spin"></span> {intl l="Loading history..." d="myflyingbox"}
+                    <span class="glyphicon glyphicon-refresh mfb-spin" aria-hidden="true"></span> {intl l="Loading history..." d="myflyingbox"}
                 </p>
             </div>
         </div>
@@ -344,7 +344,7 @@
         <div class="panel panel-warning">
             <div class="panel-heading">
                 <h4 class="panel-title">
-                    <span class="glyphicon glyphicon-share-alt"></span> {intl l="Return Shipments" d="myflyingbox"}
+                    <span class="glyphicon glyphicon-share-alt" aria-hidden="true"></span> {intl l="Return Shipments" d="myflyingbox"}
                     <span class="badge">{$return_shipments->count()}</span>
                 </h4>
             </div>
@@ -386,7 +386,7 @@
                                     <code>{$TRACKING_NUMBER}</code>
                                     {if $LABEL_URL}
                                     <a href="{$LABEL_URL}" target="_blank" class="btn btn-xs btn-default" title="{intl l='Download label' d='myflyingbox'}">
-                                        <span class="glyphicon glyphicon-download-alt"></span>
+                                        <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
                                     </a>
                                     {/if}
                                 {else}
@@ -399,18 +399,18 @@
                             <div class="btn-group" style="margin-top: 10px;">
                                 {if $return_shipment->getStatus() == 'pending'}
                                     <button type="button" class="btn btn-xs btn-primary mfb-action-book" data-shipment-id="{$return_shipment->getId()}">
-                                        <span class="glyphicon glyphicon-ok"></span> {intl l="Book" d="myflyingbox"}
+                                        <span class="glyphicon glyphicon-ok" aria-hidden="true"></span> {intl l="Book" d="myflyingbox"}
                                     </button>
                                     <button type="button" class="btn btn-xs btn-danger mfb-action-cancel" data-shipment-id="{$return_shipment->getId()}">
-                                        <span class="glyphicon glyphicon-remove"></span> {intl l="Cancel" d="myflyingbox"}
+                                        <span class="glyphicon glyphicon-remove" aria-hidden="true"></span> {intl l="Cancel" d="myflyingbox"}
                                     </button>
                                 {/if}
                                 {if $return_shipment->getStatus() == 'booked' || $return_shipment->getStatus() == 'shipped'}
                                     <button type="button" class="btn btn-xs btn-default mfb-action-labels" data-shipment-id="{$return_shipment->getId()}">
-                                        <span class="glyphicon glyphicon-print"></span> {intl l="Labels" d="myflyingbox"}
+                                        <span class="glyphicon glyphicon-print" aria-hidden="true"></span> {intl l="Labels" d="myflyingbox"}
                                     </button>
                                     <button type="button" class="btn btn-xs btn-default mfb-action-tracking" data-shipment-id="{$return_shipment->getId()}">
-                                        <span class="glyphicon glyphicon-refresh"></span> {intl l="Tracking" d="myflyingbox"}
+                                        <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span> {intl l="Tracking" d="myflyingbox"}
                                     </button>
                                 {/if}
                             </div>
@@ -428,14 +428,14 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                        <h4 class="modal-title"><span class="glyphicon glyphicon-share-alt"></span> {intl l="Create Return Shipment" d="myflyingbox"}</h4>
+                        <h4 class="modal-title"><span class="glyphicon glyphicon-share-alt" aria-hidden="true"></span> {intl l="Create Return Shipment" d="myflyingbox"}</h4>
                     </div>
                     <div class="modal-body">
                         <form id="mfb-create-return-form">
                             <input type="hidden" name="shipment_id" value="{$shipment->getId()}">
 
                             <div class="alert alert-info">
-                                <span class="glyphicon glyphicon-info-sign"></span>
+                                <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
                                 {intl l="A return shipment will be created with the customer as shipper and your store as recipient." d="myflyingbox"}
                             </div>
 
@@ -461,7 +461,7 @@
                                         <small>{$shipment->getRecipientCity()}, {$shipment->getRecipientCountry()}</small>
                                     </div>
                                     <div class="col-xs-2 text-center" style="padding-top: 15px;">
-                                        <span class="glyphicon glyphicon-arrow-right text-muted"></span>
+                                        <span class="glyphicon glyphicon-arrow-right text-muted" aria-hidden="true"></span>
                                     </div>
                                     <div class="col-xs-5">
                                         <small class="text-muted">{intl l="To (Store)" d="myflyingbox"}</small><br>
@@ -475,7 +475,7 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">{intl l="Cancel" d="myflyingbox"}</button>
                         <button type="button" class="btn btn-warning" id="mfb-confirm-return">
-                            <span class="glyphicon glyphicon-share-alt"></span> {intl l="Create Return" d="myflyingbox"}
+                            <span class="glyphicon glyphicon-share-alt" aria-hidden="true"></span> {intl l="Create Return" d="myflyingbox"}
                         </button>
                     </div>
                 </div>
@@ -485,13 +485,13 @@
     {else}
         {* No shipment yet - Show create form *}
         <div class="alert alert-info">
-            <span class="glyphicon glyphicon-info-sign"></span>
+            <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
             {intl l="No shipment has been created for this order yet." d="myflyingbox"}
         </div>
 
         <div class="panel panel-primary">
             <div class="panel-heading">
-                <h4 class="panel-title"><span class="glyphicon glyphicon-plus"></span> {intl l="Create Shipment" d="myflyingbox"}</h4>
+                <h4 class="panel-title"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {intl l="Create Shipment" d="myflyingbox"}</h4>
             </div>
             <div class="panel-body">
                 <form id="mfb-create-shipment-form">
@@ -519,7 +519,7 @@
 
                     <div class="form-group">
                         <button type="submit" class="btn btn-success btn-lg btn-block">
-                            <span class="glyphicon glyphicon-send"></span> {intl l="Create Shipment" d="myflyingbox"}
+                            <span class="glyphicon glyphicon-send" aria-hidden="true"></span> {intl l="Create Shipment" d="myflyingbox"}
                         </button>
                     </div>
                 </form>
@@ -530,7 +530,7 @@
         <div id="mfb-quote-preview" style="display: none;">
             <div class="panel panel-info">
                 <div class="panel-heading">
-                    <h4 class="panel-title"><span class="glyphicon glyphicon-list-alt"></span> {intl l="Available Offers" d="myflyingbox"}</h4>
+                    <h4 class="panel-title"><span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span> {intl l="Available Offers" d="myflyingbox"}</h4>
                 </div>
                 <div class="panel-body" id="mfb-quote-offers">
                 </div>
