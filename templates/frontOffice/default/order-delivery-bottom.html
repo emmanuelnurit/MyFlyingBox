@@ -124,6 +124,7 @@
                 var relayCopy = Object.assign({}, m, {
                     code: (m.code || "MFB") + MFB_RELAY_SUFFIX,
                     deliveryMode: "pickup",
+                    valid: true,
                     options: relayOpts
                 });
                 out.push(relayCopy);
@@ -132,6 +133,7 @@
                 var homeCopy = Object.assign({}, m, {
                     code: (m.code || "MFB") + MFB_HOME_SUFFIX,
                     deliveryMode: "delivery",
+                    valid: true,
                     options: homeOpts
                 });
                 out.push(homeCopy);
