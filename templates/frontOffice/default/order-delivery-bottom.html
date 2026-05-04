@@ -1,9 +1,28 @@
-{* MyFlyingBox - Modern-template CTA gating *}
+{* MyFlyingBox - Modern-template CTA gating [THE-558 design pass] *}
 {* Injected via order-delivery.bottom hook on every front template (default, modern, …). *}
 {* Polls /myflyingbox/relay-status and intercepts clicks on the next-step CTA when a   *}
 {* relay-delivery offer is selected without a relay point. Server-side validation       *}
 {* (OrderEventListener::onOrderBeforePayment → DeliveryException) is the source of      *}
 {* truth; this script is the UX layer.                                                  *}
+
+{include file="_mfb-tokens.html"}
+
+<style>
+.mfb-cta-relay-warning {
+    margin: var(--mfb-space-3) auto;
+    padding: var(--mfb-space-3) var(--mfb-space-4);
+    background: var(--mfb-color-warning-soft);
+    border: 2px solid var(--mfb-color-warning-border);
+    border-radius: var(--mfb-radius-md);
+    color: var(--mfb-color-warning);
+    font-size: 0.95rem;
+    font-weight: 500;
+    max-width: 720px;
+    text-align: center;
+    box-shadow: var(--mfb-shadow-sm);
+}
+</style>
+
 <script>
 (function () {
     "use strict";
@@ -57,8 +76,8 @@
         if (w) return w;
         w = document.createElement("div");
         w.id = BANNER_ID;
+        w.className = "mfb-cta-relay-warning";
         w.setAttribute("role", "alert");
-        w.style.cssText = "margin: 12px auto; padding: 12px 16px; background: #fef3c7; border: 2px solid #fbbf24; border-radius: 10px; color: #92400e; font-size: 0.95rem; font-weight: 500; max-width: 720px; text-align: center;";
         w.textContent = WARNING_TEXT;
         if (anchor && anchor.parentNode) {
             anchor.parentNode.insertBefore(w, anchor);
