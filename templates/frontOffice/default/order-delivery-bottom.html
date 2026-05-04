@@ -122,12 +122,12 @@
         if (!isModern || !optionsMeta || !Array.isArray(modules)) return modules;
         // [THE-562] Emit ONE virtual module per option (not per relay/home
         // group). Rationale: the modern template's DeliveryModules.tsx renders
-        // each option with `key={module.code}`. When a virtual module exposed
-        // multiple options, all sibling <ModuleOption> entries shared the same
-        // React key — diffing broke and stale components survived across
-        // re-renders, leaking home-delivery rows into the pickup tab and
-        // duplicating entries on tab toggles. Producing one virtual module
-        // per option makes each `module.code` globally unique, so the
+        // each option with React key set to module.code. When a virtual module
+        // exposed multiple options, all sibling ModuleOption entries shared
+        // the same React key — diffing broke and stale components survived
+        // across re-renders, leaking home-delivery rows into the pickup tab
+        // and duplicating entries on tab toggles. Producing one virtual
+        // module per option makes each module.code globally unique, so the
         // existing key stays unique per rendered row without touching the
         // template.
         var out = [];
