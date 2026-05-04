@@ -28,7 +28,13 @@
     "use strict";
 
     var cartId = parseInt("{$cart_id|default:0}", 10);
-    if (!cartId) return;
+    // [THE-557] Instrumentation: confirm the gate script is mounted on the page.
+    // Remove once the regression on the modern checkout CTA is closed.
+    try { console.info("[MFB][relay-gate] mounted, cartId=", cartId); } catch (_) {}
+    if (!cartId) {
+        try { console.warn("[MFB][relay-gate] no cartId — script bails. Hook fired without an active cart in session."); } catch (_) {}
+        return;
+    }
 
     var POLL_INTERVAL_MS = 2000;
     var BANNER_ID = "mfb-cta-relay-warning";

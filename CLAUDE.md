@@ -8,6 +8,37 @@
 
 ---
 
+## ⚠️ RÈGLE CRITIQUE — Vidage de cache après TOUTE modification
+
+Après **toute** modification de code (PHP, templates Smarty, config XML, traductions, assets), il est **OBLIGATOIRE** de vider les caches **avant** de demander à l'utilisateur de tester. Sans cela, le navigateur reçoit l'ancien rendu et le board ne voit pas le correctif.
+
+### Commandes à exécuter systématiquement
+
+```bash
+# 1. Cache Symfony (Twig, Smarty, container, routing, traductions)
+ddev exec "cd Thelia2.6 && php Thelia cache:clear"
+
+# 2. Cache web compilé (assets, .spc, images générées) — au besoin
+ddev exec "cd Thelia2.6 && rm -rf web/assets/frontOffice/* web/assets/backOffice/* web/cache/*.spc"
+```
+
+### Quand vider
+
+| Modification | `cache:clear` | Wipe `web/assets` |
+|--------------|---------------|-------------------|
+| Template `.html` (Smarty) | ✅ | ❌ |
+| PHP (Controller, Hook, Loop, Service) | ✅ | ❌ |
+| `Config/*.xml` (services, routes, hooks) | ✅ | ❌ |
+| `I18n/*.php` (traductions) | ✅ | ❌ |
+| CSS/JS dans `templates/.../assets/` | ✅ | ✅ |
+| Schéma Propel | ✅ + `propel:model:build` | ❌ |
+
+### Vérification rapide
+
+Après vidage, recharger la page concernée en **navigation privée** ou avec `Cmd+Shift+R` (hard reload) pour bypasser le cache navigateur.
+
+---
+
 ## Protocole de Travail Obligatoire (Superpowers)
 
 ### Phase 1 : Brainstorming (Jamais coder directement)
