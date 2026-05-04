@@ -1,6 +1,8 @@
-{* MyFlyingBox - Shipping Options & Relay Point Selection *}
+{* MyFlyingBox - Shipping Options & Relay Point Selection [THE-558 design pass] *}
 {* This hook is rendered inside a <tbody>, so we must use <tr><td> wrapper *}
 {* Skeleton shown immediately, offers loaded via AJAX for better UX *}
+
+{include file="_mfb-tokens.html"}
 
 {* Critical skeleton CSS - must load BEFORE skeleton HTML for instant display *}
 <style>
@@ -24,12 +26,12 @@
 .mfb-loading-banner {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 18px 24px;
-    margin-bottom: 20px;
+    gap: var(--mfb-space-4);
+    padding: 18px var(--mfb-space-6);
+    margin-bottom: var(--mfb-space-5);
     background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
     border: 2px solid #93c5fd;
-    border-radius: 12px;
+    border-radius: var(--mfb-radius-lg);
 }
 .mfb-loading-spinner {
     flex-shrink: 0;
@@ -37,41 +39,41 @@
     height: 32px;
     border: 3px solid #bfdbfe;
     border-top-color: #3b82f6;
-    border-radius: 50%;
+    border-radius: var(--mfb-radius-pill);
     animation: mfb-spin 0.8s linear infinite;
 }
 .mfb-loading-text {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: var(--mfb-space-1);
 }
 .mfb-loading-text strong {
     font-size: 1.05rem;
     color: #1e40af;
 }
 .mfb-loading-text span {
-    font-size: 0.9rem;
+    font-size: var(--mfb-font-size-sm);
     color: #3b82f6;
 }
 .mfb-container {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    border-radius: 16px;
-    padding: 24px;
-    margin: 16px 0;
+    background: linear-gradient(135deg, var(--mfb-surface-alt) 0%, var(--mfb-border) 100%);
+    border-radius: var(--mfb-radius-lg);
+    padding: var(--mfb-space-6);
+    margin: var(--mfb-space-4) 0;
 }
 .mfb-header {
     display: flex;
     align-items: center;
-    gap: 16px;
-    margin-bottom: 24px;
-    padding-bottom: 20px;
+    gap: var(--mfb-space-4);
+    margin-bottom: var(--mfb-space-6);
+    padding-bottom: var(--mfb-space-5);
     border-bottom: 2px solid rgba(0,0,0,0.06);
 }
 .mfb-offers-grid {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--mfb-space-3);
 }
 .mfb-skeleton-line,
 .mfb-skeleton-icon,
@@ -241,10 +243,10 @@
                         </svg>
                         <input type="text" id="mfb-search-location"
                                placeholder="{intl l='Enter a city or postal code...' d='myflyingbox'}"
-                               aria-label="{intl l='Rechercher un point relais' d='myflyingbox'}"
+                               aria-label="{intl l='Search for a relay point' d='myflyingbox'}"
                                autocomplete="postal-code">
                         <button type="button" id="mfb-search-btn" class="mfb-btn mfb-btn-primary">
-                            {intl l="Rechercher" d="myflyingbox"}
+                            {intl l="Search" d="myflyingbox"}
                         </button>
                     </div>
 
@@ -1362,7 +1364,7 @@
                 if (data.success && data.relays && data.relays.length > 0) {
                     displayRelayPoints(data.relays);
                 } else {
-                    var errorMsg = data.message || '{intl l="Aucun point relais trouvé" d="myflyingbox" js=1}';
+                    var errorMsg = data.message || '{intl l="No relay points found" d="myflyingbox" js=1}';
                     relayList.innerHTML = '<div style="padding: 24px; text-align: center; color: #64748b; background: #f8fafc; border-radius: 12px;">' +
                         '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 12px; display: block; color: #94a3b8;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>' +
                         '<p style="margin: 0 0 12px; font-weight: 600; color: #475569;">{intl l="Relay point search unavailable" d="myflyingbox" js=1}</p>' +
