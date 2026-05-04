@@ -415,4 +415,12 @@ return [
 
     // BO order shipment actions
     'This shipment has already been booked. Cancel the booking before changing the delivery option.' => 'This shipment has already been booked. Cancel the booking before changing the delivery option.',
+
+    // FO design pass [THE-558] - canonical EN keys
+    'Delivery method' => 'Delivery method',
+    'Relay point not selected' => 'Relay point not selected',
+    'You must select a relay point for this delivery method.' => 'You must select a relay point for this delivery method.',
+    'Shipping cost estimate' => 'Shipping cost estimate',
+    'Starting from' => 'Starting from',
+    'Choose delivery' => 'Choose delivery',
 ];

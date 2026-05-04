@@ -415,4 +415,12 @@ return [
 
     // BO order shipment actions
     'This shipment has already been booked. Cancel the booking before changing the delivery option.' => 'Cette expédition a déjà été réservée. Annulez la réservation avant de modifier le mode de livraison.',
+
+    // FO design pass [THE-558] - traductions canoniques
+    'Delivery method' => 'Mode de livraison',
+    'Relay point not selected' => 'Point relais non sélectionné',
+    'You must select a relay point for this delivery method.' => 'Vous devez sélectionner un point relais pour cette méthode de livraison.',
+    'Shipping cost estimate' => 'Estimation des frais de port',
+    'Starting from' => 'À partir de',
+    'Choose delivery' => 'Choisir la livraison',
 ];
