@@ -1,0 +1,74 @@
+{* MyFlyingBox - Front-Office design tokens [THE-558] *}
+{* Included at the top of every MFB FO template to provide a single source of truth *}
+{* for spacing, radii, colors, shadows and focus rings. Duplicate :root blocks across *}
+{* simultaneously rendered hooks are harmless (CSS cascade). *}
+<style>
+:root {
+    /* Spacing scale (4px base, multiples of 4/8) */
+    --mfb-space-1: 4px;
+    --mfb-space-2: 8px;
+    --mfb-space-3: 12px;
+    --mfb-space-4: 16px;
+    --mfb-space-5: 20px;
+    --mfb-space-6: 24px;
+    --mfb-space-8: 32px;
+
+    /* Radii */
+    --mfb-radius-sm: 6px;
+    --mfb-radius-md: 10px;
+    --mfb-radius-lg: 14px;
+    --mfb-radius-pill: 999px;
+
+    /* Brand & semantic colors */
+    --mfb-color-primary: #1565C0;
+    --mfb-color-primary-hover: #0D47A1;
+    --mfb-color-primary-soft: #e3f2fd;
+    --mfb-color-accent: #f97316;
+    --mfb-color-accent-hover: #ea580c;
+    --mfb-color-accent-soft: #fff7ed;
+    --mfb-color-success: #2e7d32;
+    --mfb-color-success-soft: #e8f5e9;
+    --mfb-color-warning: #92400e;
+    --mfb-color-warning-soft: #fef3c7;
+    --mfb-color-warning-border: #fbbf24;
+    --mfb-color-danger: #c2410c;
+
+    /* Text & surfaces */
+    --mfb-text: #1f2937;
+    --mfb-text-muted: #64748b;
+    --mfb-text-soft: #475569;
+    --mfb-surface: #ffffff;
+    --mfb-surface-alt: #f8fafc;
+    --mfb-border: #e2e8f0;
+    --mfb-border-strong: #cbd5e1;
+
+    /* Elevation */
+    --mfb-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+    --mfb-shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+    --mfb-shadow-lg: 0 10px 24px rgba(15, 23, 42, 0.12);
+
+    /* Interaction */
+    --mfb-focus-ring: 0 0 0 3px rgba(21, 101, 192, 0.35);
+    --mfb-transition-fast: 0.15s ease;
+    --mfb-transition-base: 0.2s ease;
+
+    /* Typography (Thelia 2.6 default theme inherits body font) */
+    --mfb-font-size-xs: 0.78rem;
+    --mfb-font-size-sm: 0.875rem;
+    --mfb-font-size-base: 1rem;
+    --mfb-font-size-lg: 1.125rem;
+    --mfb-font-size-xl: 1.25rem;
+    --mfb-line-height-tight: 1.3;
+    --mfb-line-height-base: 1.5;
+}
+
+/* Shared focus visibility for all MFB interactive elements */
+.mfb-delivery-summary :focus-visible,
+.mfb-confirmation-delivery :focus-visible,
+.mfb-cart-delivery-estimation :focus-visible,
+.mfb-tracking :focus-visible,
+.mfb-extra :focus-visible {
+    outline: none;
+    box-shadow: var(--mfb-focus-ring);
+}
+</style>
