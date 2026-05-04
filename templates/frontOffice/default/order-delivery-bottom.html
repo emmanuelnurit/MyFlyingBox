@@ -190,34 +190,46 @@
         var XHR = window.XMLHttpRequest;
         var origOpen = XHR.prototype.open;
         var origSend = XHR.prototype.send;
+        var origSetRequestHeader = XHR.prototype.setRequestHeader;
 
         XHR.prototype.open = function (method, url) {
             try {
                 this.__mfbUrl = String(url || "");
                 this.__mfbMethod = String(method || "GET").toUpperCase();
+                this.__mfbHeaders = {};
             } catch (e) { /* noop */ }
             return origOpen.apply(this, arguments);
         };
 
-        XHR.prototype.send = function () {
+        XHR.prototype.setRequestHeader = function (name, value) {
+            try {
+                if (this.__mfbHeaders) {
+                    this.__mfbHeaders[String(name)] = String(value);
+                }
+            } catch (e) { /* noop */ }
+            return origSetRequestHeader.apply(this, arguments);
+        };
+
+        XHR.prototype.send = function (body) {
             var xhr = this;
             var url = xhr.__mfbUrl || "";
-            var isGet = xhr.__mfbMethod === "GET";
+            var method = xhr.__mfbMethod || "GET";
+            var isGet = method === "GET";
+            var isPost = method === "POST";
             var isModulesCall = isGet && /\/open_api\/delivery\/modules(\?|$)/.test(url);
-            // [THE-560] Also intercept GET /open_api/checkout: the core
-            // OpenApi backend silently fills `deliveryAddressId` with the
-            // customer's default address even when React sent null. Result:
-            // useEnableCta's (deliveryAddressId || pickupAddress) OR fires
-            // on the default address before any relay marker is picked, so
-            // the CTA enables in pickup mode for MFB relay options. We
-            // null `deliveryAddressId` in the response when the chosen MFB
-            // option is a relay one and no pickupAddress is set yet, which
-            // is the gate React already encodes correctly.
-            var isCheckoutCall = isGet && /\/open_api\/checkout(\?|$)/.test(url);
+            // [THE-560] Intercept BOTH GET and POST /open_api/checkout.
+            // The core OpenApi backend silently fills `deliveryAddressId`
+            // with the customer's default address even when React sent null;
+            // useSetCheckout's onSuccess pushes the POST response straight
+            // into React Query cache, so the GET path alone is not enough.
+            // Patch both response paths to null `deliveryAddressId` when
+            // MFB is the chosen module, the option is a relay one, and
+            // no pickupAddress is set yet.
+            var isCheckoutCall = (isGet || isPost) && /\/open_api\/checkout(\?|$)/.test(url);
             if (!isModulesCall && !isCheckoutCall) {
                 return origSend.apply(this, arguments);
             }
-            try { console.info("[MFB][gate] XHR intercept — url=", url); } catch (_) {}
+            try { console.info("[MFB][gate] XHR intercept —", method, url); } catch (_) {}
 
             // Fetch original payload via window.fetch (same cookies → same auth).
             var origFetch = window.fetch ? window.fetch.bind(window) : null;
@@ -225,7 +237,16 @@
                 return origSend.apply(this, arguments);
             }
 
-            origFetch(url, { credentials: "same-origin" })
+            var fetchInit = {
+                method: method,
+                credentials: "same-origin",
+                headers: xhr.__mfbHeaders || {}
+            };
+            if (isPost && body !== undefined && body !== null) {
+                fetchInit.body = body;
+            }
+
+            origFetch(url, fetchInit)
                 .then(function (response) {
                     return response.text().then(function (text) {
                         return { text: text, status: response.status, statusText: response.statusText };
