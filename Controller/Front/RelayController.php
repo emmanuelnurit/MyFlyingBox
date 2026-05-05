@@ -85,9 +85,25 @@ class RelayController extends BaseFrontController
             // Save selected offer ID to session
             $this->getSession()->set('mfb_selected_offer_id', $offerId);
 
+            // Recalculate price with surcharges and update session Order postage
+            /** @var PriceSurchargeService $surchargeService */
+            $surchargeService = $this->container->get('myflyingbox.price_surcharge.service');
+            $price = $surchargeService->apply($offer->getTotalPriceInCents() / 100);
+            $price = round($price, 2);
+
+            $order = $this->getSession()->getOrder();
+            if ($order) {
+                $order->setPostage($price);
+                $order->setPostageTax(0.0);
+                $order->setPostageTaxRuleTitle('');
+                $this->getSession()->setOrder($order);
+            }
+
             return new JsonResponse([
                 'success' => true,
                 'message' => 'Offer selection saved',
+                'price' => $price,
+                'price_formatted' => number_format($price, 2, ',', ' ') . ' €',
             ]);
 
         } catch (\Exception $e) {

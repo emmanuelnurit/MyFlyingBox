@@ -1314,6 +1314,27 @@
         // Mettre à jour l'ID de l'offre sélectionnée
         selectedOfferId = radio.value;
 
+        // Update MFB delivery summary card if present (e.g. on payment step)
+        var summaryEl = document.getElementById('mfb-delivery-summary');
+        if (summaryEl && card) {
+            console.log('[MFB] Updating #mfb-delivery-summary with selected offer data');
+            var srcPriceEl = card.querySelector('.mfb-price-value');
+            var dstPriceEl = summaryEl.querySelector('.mfb-price');
+            if (srcPriceEl && dstPriceEl) {
+                dstPriceEl.textContent = srcPriceEl.textContent;
+            }
+            var srcCarrierEl = card.querySelector('[data-carrier]');
+            var dstCarrierEl = summaryEl.querySelector('.mfb-carrier-code');
+            if (srcCarrierEl && dstCarrierEl) {
+                dstCarrierEl.textContent = srcCarrierEl.getAttribute('data-carrier').toUpperCase();
+            }
+            var srcServiceEl = card.querySelector('.mfb-service-name');
+            var dstServiceEl = summaryEl.querySelector('.mfb-service-name');
+            if (dstServiceEl) {
+                dstServiceEl.textContent = srcServiceEl ? srcServiceEl.textContent : '';
+            }
+        }
+
         // Update submit button state based on relay requirement
         updateSubmitButtonState();
     }
@@ -1327,7 +1348,7 @@
     }
 
     /**
-     * Save offer selection to server
+     * Save offer selection to server, update session Order postage, refresh summary column
      */
     function saveOfferSelection(offerId) {
         fetch('/myflyingbox/offer/save', {
@@ -1337,11 +1358,55 @@
         })
         .then(function(response) { return response.json(); })
         .then(function(data) {
-            console.log('MFB: Offer saved', data);
+            console.log('[MFB] Offer saved', data);
+            if (data.success) {
+                // Update any visible delivery price elements immediately from server response
+                if (data.price_formatted) {
+                    updateDeliveryPriceDisplay(data.price_formatted, data.price);
+                }
+                // Refresh React Query cart cache (modern/React checkout Recap component)
+                // queryClient is exposed via window.__theliaQueryClient from Checkout.tsx
+                // invalidateQueries forces an immediate refetch even with staleTime: Infinity
+                setTimeout(function() {
+                    try {
+                        if (window.__theliaQueryClient) {
+                            window.__theliaQueryClient.invalidateQueries('cart');
+                            console.log('[MFB] Invalidated React Query cart cache');
+                        }
+                    } catch(e) { /* noop */ }
+                }, 200);
+            }
         })
         .catch(function(error) {
-            console.error('MFB: Error saving offer', error);
+            console.error('[MFB] Error saving offer', error);
         });
+    }
+
+    /**
+     * Update all visible delivery price display elements after offer selection
+     */
+    function updateDeliveryPriceDisplay(priceFormatted, priceRaw) {
+        // Update the Thelia delivery module table row price cell.
+        // The widget is inside <tr id="myflyingbox-options-row">; the price
+        // cell <div class="price"> is in the preceding <tr id="delivery-module-X">.
+        var ourRow = document.getElementById('myflyingbox-options-row');
+        if (ourRow) {
+            var moduleRow = ourRow.previousElementSibling;
+            if (moduleRow) {
+                var priceCell = moduleRow.querySelector('.price');
+                if (priceCell) {
+                    priceCell.textContent = priceFormatted;
+                    console.log('[MFB] Updated delivery module price cell to', priceFormatted);
+                }
+            }
+        }
+        // Update MFB delivery summary card (e.g. on payment step)
+        var summaryEl = document.getElementById('mfb-delivery-summary');
+        if (summaryEl) {
+            var dstPriceEl = summaryEl.querySelector('.mfb-price');
+            if (dstPriceEl) dstPriceEl.textContent = priceFormatted;
+        }
+        console.log('[MFB] Delivery price display updated to', priceFormatted);
     }
 
     /**
