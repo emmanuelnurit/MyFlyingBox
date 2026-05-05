@@ -146,6 +146,10 @@
                 // duplication (cached quote, retry, etc.).
                 if (seen[codeUp]) return;
                 seen[codeUp] = true;
+                // Cache postage for client-side cart update after checkout selection
+                if (typeof o.postage === 'number') {
+                    mfbOptionPostageMap[codeUp] = o.postage;
+                }
                 var isRelay = optionsMeta.relay_codes.has(codeUp);
                 var isHome = optionsMeta.home_codes.has(codeUp);
                 // Unknown codes default to home (safe — never pickup-only).
@@ -275,6 +279,29 @@
                                 "deliveryAddressId=", patched && patched.deliveryAddressId,
                                 "pickupAddress?", !!(patched && patched.pickupAddress && (patched.pickupAddress.id || patched.pickupAddress.address1))
                             );
+                            // [THE-563] For POST /open_api/checkout with an MFB option,
+                            // directly update the React Query cart cache with the correct
+                            // delivery price. This ensures the Recap total updates for ALL
+                            // clicks (not just the first), bypassing PHP session timing issues.
+                            if (isPost && body && optionsMeta && resp.status >= 200 && resp.status < 300) {
+                                try {
+                                    var reqData = JSON.parse(String(body));
+                                    var reqModuleId = parseInt(reqData.deliveryModuleId, 10) || 0;
+                                    var reqOptionCode = String(reqData.deliveryModuleOptionCode || "").toUpperCase();
+                                    if (reqModuleId === optionsMeta.mfb_module_id && reqOptionCode && mfbOptionPostageMap[reqOptionCode] !== undefined) {
+                                        var newDelivery = mfbOptionPostageMap[reqOptionCode];
+                                        var qc = window.__theliaQueryClient;
+                                        if (qc) {
+                                            var existingCart = qc.getQueryData('cart');
+                                            if (existingCart && typeof existingCart === 'object') {
+                                                var updatedCart = Object.assign({}, existingCart, { delivery: newDelivery });
+                                                qc.setQueryData('cart', updatedCart);
+                                                console.info("[MFB][gate] Cart delivery updated to", newDelivery, "for option", reqOptionCode);
+                                            }
+                                        }
+                                    }
+                                } catch (_e) { /* noop */ }
+                            }
                         }
                     } catch (_) {}
 
@@ -330,6 +357,8 @@
     };
     var mfbModuleId = null;
     var pollTimer = null;
+    // Cache of MFB option code → postage (populated when delivery modules are fetched)
+    var mfbOptionPostageMap = Object.create(null);
 
     // [THE-557] DOM probe: the MyFlyingBox offer widget renders only when MFB
     // is the chosen delivery module in the React Checkout. Its presence is the

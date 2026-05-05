@@ -276,23 +276,57 @@ class MyFlyingBox extends AbstractDeliveryModuleWithState
             );
         }
 
-        // Check if user has selected a specific offer
-        $selectedOfferId = $session->get('mfb_selected_offer_id');
         $price = null;
 
-        if ($selectedOfferId) {
-            // Get the selected offer price
-            $offer = \MyFlyingBox\Model\MyFlyingBoxOfferQuery::create()
-                ->filterById($selectedOfferId)
-                ->filterByQuoteId($quote->getId())
-                ->findOne();
+        // --- React checkout flow (POST /open_api/checkout) ---
+        // When the user selects a virtual MFB module, React POSTs with
+        // deliveryModuleId + deliveryModuleOptionCode (e.g. "DPDE").
+        // We map the option code to the matching offer, return its price,
+        // and persist it so subsequent GET /open_api/cart calls also see it.
+        $requestContent = $request->getContent();
+        if ($requestContent && $request->getMethod() === 'POST') {
+            $requestData = json_decode($requestContent, true);
+            $postModuleId = (int) ($requestData['deliveryModuleId'] ?? 0);
+            $optionCode   = strtoupper($requestData['deliveryModuleOptionCode'] ?? '');
 
-            if ($offer) {
-                $price = $offer->getTotalPriceInCents() / 100;
+            if ($postModuleId === (int) self::getModuleId() && $optionCode) {
+                $matchingOffer = \MyFlyingBox\Model\MyFlyingBoxOfferQuery::create()
+                    ->useMyFlyingBoxServiceQuery()
+                        ->filterByCode([$optionCode, strtolower($optionCode)])
+                    ->endUse()
+                    ->filterByQuoteId($quote->getId())
+                    ->findOne();
+
+                if ($matchingOffer) {
+                    $price = $matchingOffer->getTotalPriceInCents() / 100;
+                    // Persist so GET /open_api/cart re-fetch shows correct price
+                    $session->set('mfb_selected_offer_id', $matchingOffer->getId());
+                }
             }
         }
 
-        // Fallback to best (cheapest) price if no selection or invalid selection
+        // --- Explicit offer selected by user (Smarty widget or persisted from React) ---
+        // Only apply when MFB is the currently selected delivery module in session,
+        // so the cart-page estimate (no module selected yet) always shows cheapest.
+        if ($price === null) {
+            $selectedOfferId   = $session->get('mfb_selected_offer_id');
+            $sessionModuleId   = (int) ($session->getOrder()?->getDeliveryModuleId() ?? 0);
+            $mfbIsChosen       = $sessionModuleId === (int) self::getModuleId();
+
+            if ($selectedOfferId && $mfbIsChosen) {
+                $offer = \MyFlyingBox\Model\MyFlyingBoxOfferQuery::create()
+                    ->filterById($selectedOfferId)
+                    ->filterByQuoteId($quote->getId())
+                    ->findOne();
+
+                if ($offer) {
+                    $price = $offer->getTotalPriceInCents() / 100;
+                }
+            }
+        }
+
+        // --- Fallback: cheapest available offer ---
+        // Covers: cart-page estimate, no module selected, or unknown option code.
         if ($price === null) {
             $price = $quoteService->getBestOfferPrice($quote);
         }
