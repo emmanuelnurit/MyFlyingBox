@@ -74,7 +74,7 @@
                                 <div class="form-group">
                                     {form_field form=$form field="shipper_country"}
                                         <label>{$label}</label>
-                                        <input type="text" name="{$name}" value="{$value}" class="form-control" maxlength="2" style="text-transform: uppercase;"/>
+                                        <input type="text" name="{$name}" value="{$value}" class="form-control mfb-uppercase" maxlength="2"/>
                                     {/form_field}
                                 </div>
                             </div>
@@ -103,7 +103,7 @@
                 {* Email Notifications *}
                 <div class="panel panel-default">
                     <div class="panel-heading">
-                        <h4 class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
+                        <h4 class="panel-title mfb-panel-title-flex">
                             <span><i class="glyphicon glyphicon-envelope" aria-hidden="true"></i> {intl l="Email Notifications" d="myflyingbox.bo.default"}</span>
                             <a href="{url path="/admin/configuration/messages"}" class="btn btn-default btn-xs">
                                 <i class="glyphicon glyphicon-cog" aria-hidden="true"></i> {intl l="Manage Email Templates" d="myflyingbox.bo.default"}
@@ -222,18 +222,18 @@
                 {assign var="webhook_configured" value=false}
                 {form_field form=$form field="webhook_enabled"}{if $value == '1'}{assign var="webhook_configured" value=true}{/if}{/form_field}
                 <div class="panel {if $webhook_configured}panel-success{else}panel-warning{/if}" id="webhook-config-card">
-                    <div class="panel-heading" style="cursor: pointer;" data-toggle="collapse" data-target="#webhookConfigCollapse" aria-expanded="false" aria-controls="webhookConfigCollapse">
-                        <h4 class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="panel-heading mfb-clickable" data-toggle="collapse" data-target="#webhookConfigCollapse" aria-expanded="false" aria-controls="webhookConfigCollapse">
+                        <h4 class="panel-title mfb-panel-title-flex">
                             <span>
                                 <span class="mfb-webhook-icon" id="webhook-status-icon">
                                     {if $webhook_configured}
-                                    <i class="glyphicon glyphicon-ok-sign" style="color: #3c763d; font-size: 18px;" aria-hidden="true"></i>
+                                    <i class="glyphicon glyphicon-ok-sign mfb-status-icon-ok" aria-hidden="true"></i>
                                     {else}
-                                    <i class="glyphicon glyphicon-warning-sign" style="color: #8a6d3b; font-size: 18px;" aria-hidden="true"></i>
+                                    <i class="glyphicon glyphicon-warning-sign mfb-status-icon-warn" aria-hidden="true"></i>
                                     {/if}
                                 </span>
                                 {intl l="Webhook Configuration" d="myflyingbox.bo.default"}
-                                <span class="label label-warning" style="font-size: 9px; vertical-align: middle; margin-left: 5px;">BETA</span>
+                                <span class="label label-warning mfb-beta-label">BETA</span>
                             </span>
                             <span id="webhook-status-text">
                                 {if $webhook_configured}
@@ -270,7 +270,7 @@
                                     {intl l="Use this URL in your" d="myflyingbox.bo.default"}
                                     <a href="https://dashboard.myflyingbox.com/" target="_blank" rel="noopener">
                                         {intl l="MyFlyingBox dashboard" d="myflyingbox.bo.default"}
-                                        <i class="glyphicon glyphicon-new-window" style="font-size: 10px;" aria-hidden="true"></i>
+                                        <i class="glyphicon glyphicon-new-window mfb-text-xs" aria-hidden="true"></i>
                                     </a>
                                 </p>
                             </div>
@@ -279,7 +279,7 @@
                             <div class="form-group">
                                 {form_field form=$form field="webhook_enabled"}
                                     <label>{intl l="Enable Webhooks" d="myflyingbox.bo.default"}</label>
-                                    <select name="{$name}" id="mfb-webhook-enabled" class="form-control" style="max-width: 200px;">
+                                    <select name="{$name}" id="mfb-webhook-enabled" class="form-control mfb-select-narrow">
                                         <option value="0" {if $value != '1'}selected{/if}>{intl l="Disabled" d="myflyingbox.bo.default"}</option>
                                         <option value="1" {if $value == '1'}selected{/if}>{intl l="Enabled" d="myflyingbox.bo.default"}</option>
                                     </select>
@@ -309,11 +309,11 @@
                             </div>
 
                             {* Validate Button *}
-                            <div class="text-center" style="padding-top: 15px; border-top: 1px solid #ddd;">
+                            <div class="text-center mfb-webhook-validate-footer">
                                 <button type="button" id="mfb-test-webhook" class="btn btn-default">
                                     <i class="glyphicon glyphicon-ok-circle" aria-hidden="true"></i> {intl l="Validate Configuration" d="myflyingbox.bo.default"}
                                 </button>
-                                <div id="webhook-test-result" style="margin-top: 10px;"></div>
+                                <div id="webhook-test-result" class="mfb-mt-sm"></div>
                             </div>
                         </div>
                     </div>
@@ -370,24 +370,24 @@
                                 <i class="glyphicon glyphicon-search" aria-hidden="true"></i> {intl l="Diagnostic" d="myflyingbox.bo.default"}
                             </button>
                             <a href="https://dashboard.myflyingbox.com/" target="_blank" rel="noopener" class="btn btn-default">
-                                <img src="{mfb_logo}" alt="MyFlyingBox" width="18" height="18" style="vertical-align: middle;"/>
+                                <img src="{mfb_logo}" alt="MyFlyingBox" width="18" height="18" class="mfb-align-middle"/>
                                 {intl l="Dashboard" d="myflyingbox.bo.default"}
-                                <i class="glyphicon glyphicon-new-window" style="font-size: 10px;" aria-hidden="true"></i>
+                                <i class="glyphicon glyphicon-new-window mfb-text-xs" aria-hidden="true"></i>
                             </a>
                         </div>
                     </div>
                 </div>
-                <div id="mfb-api-result" style="margin-top: 10px;"></div>
+                <div id="mfb-api-result" class="mfb-mt-sm"></div>
                 <div id="mfb-diagnostic-result"></div>
             </div>
         </div>
 
         {* Services List — Collapsible *}
         <div class="panel panel-default" id="mfb-services-card">
-            <div class="panel-heading" style="cursor: pointer;" id="mfb-services-header">
-                <h4 class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="panel-heading mfb-clickable" id="mfb-services-header">
+                <h4 class="panel-title mfb-panel-title-flex">
                     <span><i class="glyphicon glyphicon-transfer" aria-hidden="true"></i> {intl l="Available Services" d="myflyingbox.bo.default"}</span>
-                    <span style="display: flex; align-items: center; gap: 10px;">
+                    <span class="mfb-inline-actions">
                         <span id="mfb-services-summary" class="{if $active_services_count > 0}text-success{else}text-danger{/if}">
                             <i class="glyphicon {if $active_services_count > 0}glyphicon-ok-sign{else}glyphicon-exclamation-sign{/if}" aria-hidden="true"></i>
                             <span id="mfb-summary-count">{$active_services_count}</span> {intl l="active service(s)" d="myflyingbox.bo.default"}
@@ -400,7 +400,7 @@
 
                 {* Alert when no services selected *}
                 {if $active_services_count == 0}
-                <div id="mfb-no-services-alert" class="alert alert-warning" style="margin-top: 10px; margin-bottom: 0;">
+                <div id="mfb-no-services-alert" class="alert alert-warning mfb-no-services-alert">
                     <i class="glyphicon glyphicon-warning-sign" aria-hidden="true"></i>
                     <strong>{intl l="No carrier service selected!" d="myflyingbox.bo.default"}</strong>
                 </div>
@@ -408,8 +408,8 @@
 
                 {* Inline summary of active services *}
                 {if $active_services_count > 0}
-                <div id="mfb-services-inline-summary" style="margin-top: 10px;">
-                    <span style="color: #3c763d; font-weight: 600; font-size: 12px;"><i class="glyphicon glyphicon-ok" aria-hidden="true"></i> {intl l="Selected:" d="myflyingbox.bo.default"}</span>
+                <div id="mfb-services-inline-summary" class="mfb-mt-sm">
+                    <span class="mfb-services-inline-summary-label"><i class="glyphicon glyphicon-ok" aria-hidden="true"></i> {intl l="Selected:" d="myflyingbox.bo.default"}</span>
                     {loop type="myflyingbox.services" name="active_services_summary" active="true"}
                     <span class="mfb-summary-badge" data-id="{$ID}">
                         {if $CARRIER_LOGO}
@@ -417,7 +417,7 @@
                         {else}
                         <i class="glyphicon glyphicon-transfer" style="color: #5cb85c;" aria-hidden="true"></i>
                         {/if}
-                        <span style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: middle;">{$NAME}</span>
+                        <span class="mfb-summary-badge-name">{$NAME}</span>
                         {if $DELIVERY_DELAY}<span class="text-muted">({$DELIVERY_DELAY}h)</span>{/if}
                     </span>
                     {/loop}
@@ -427,7 +427,7 @@
                 {/if}
             </div>
             <div class="panel-body" id="mfb-services-body" style="display: none;">
-                <div class="row" style="margin-bottom: 15px;">
+                <div class="row mfb-mb-md">
                     <div class="col-md-6">
                         <input type="text" id="mfb-service-search" class="form-control" placeholder="{intl l='Search services...' d='myflyingbox.bo.default'}"/>
                     </div>
@@ -447,11 +447,11 @@
                     <table class="table table-striped table-hover table-condensed" id="mfb-services-table">
                         <thead>
                             <tr>
-                                <th style="width: 60px;">{intl l="Active" d="myflyingbox.bo.default"}</th>
+                                <th class="mfb-col-narrow">{intl l="Active" d="myflyingbox.bo.default"}</th>
                                 <th>{intl l="Carrier" d="myflyingbox.bo.default"}</th>
                                 <th>{intl l="Code" d="myflyingbox.bo.default"}</th>
                                 <th>{intl l="Name" d="myflyingbox.bo.default"}</th>
-                                <th style="width: 100px;">{intl l="Delay" d="myflyingbox.bo.default"}</th>
+                                <th class="mfb-col-medium">{intl l="Delay" d="myflyingbox.bo.default"}</th>
                                 <th>{intl l="Features" d="myflyingbox.bo.default"}</th>
                             </tr>
                         </thead>
@@ -463,7 +463,7 @@
                                     </td>
                                     <td>
                                         {if $CARRIER_LOGO}
-                                        <img src="{$CARRIER_LOGO}" alt="{$CARRIER_CODE}" style="height: 24px; width: auto; max-width: 60px; vertical-align: middle; margin-right: 5px;" data-fallback="{$CARRIER_LOGO_FALLBACK}" onerror="this.onerror=null; this.src=this.dataset.fallback;"/>
+                                        <img src="{$CARRIER_LOGO}" alt="{$CARRIER_CODE}" class="mfb-carrier-logo-sm" data-fallback="{$CARRIER_LOGO_FALLBACK}" onerror="this.onerror=null; this.src=this.dataset.fallback;"/>
                                         {/if}
                                         <strong>{$CARRIER_CODE|upper}</strong>
                                     </td>
@@ -498,7 +498,7 @@
         {* Dimensions Table *}
         <div class="panel panel-default" id="dimensions-card">
             <div class="panel-heading">
-                <h4 class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <h4 class="panel-title mfb-panel-title-flex">
                     <span><i class="glyphicon glyphicon-resize-full" aria-hidden="true"></i> {intl l="Weight to Dimensions Mapping" d="myflyingbox.bo.default"}</span>
                     <button type="button" class="btn btn-primary btn-xs" id="mfb-add-dimension">
                         <i class="glyphicon glyphicon-plus" aria-hidden="true"></i> {intl l="Add" d="myflyingbox.bo.default"}
@@ -515,7 +515,7 @@
                                 <th>{intl l="Length (cm)" d="myflyingbox.bo.default"}</th>
                                 <th>{intl l="Width (cm)" d="myflyingbox.bo.default"}</th>
                                 <th>{intl l="Height (cm)" d="myflyingbox.bo.default"}</th>
-                                <th style="width: 100px;">{intl l="Actions" d="myflyingbox.bo.default"}</th>
+                                <th class="mfb-col-medium">{intl l="Actions" d="myflyingbox.bo.default"}</th>
                             </tr>
                         </thead>
                         <tbody>

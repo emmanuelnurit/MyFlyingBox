@@ -136,3 +136,39 @@
     from { transform: rotate(0deg); }
     to   { transform: rotate(360deg); }
 }
+
+/* === Spacing utilities ===
+ * Thelia 2.6 back-office runs Bootstrap 3, which ships no spacing utility
+ * classes. These module-scoped helpers replace the inline style="margin-*"
+ * attributes so spacing stays consistent and overridable from one place.
+ */
+.mfb-mt-sm { margin-top: 10px; }
+.mfb-mt-md { margin-top: 15px; }
+.mfb-mb-0  { margin-bottom: 0; }
+.mfb-mb-xs { margin-bottom: 5px; }
+.mfb-mb-btn { margin-bottom: 8px; }
+.mfb-mb-sm { margin-bottom: 10px; }
+.mfb-mb-md { margin-bottom: 15px; }
+.mfb-pt-md { padding-top: 15px; }
+
+/* === Small helpers === */
+.mfb-clickable { cursor: pointer; }
+.mfb-uppercase { text-transform: uppercase; }
+.mfb-text-xs { font-size: 10px; }
+.mfb-align-middle { vertical-align: middle; }
+.mfb-inline-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.mfb-status-icon-ok {
+    color: #3c763d;
+    font-size: 18px;
+}
+.mfb-status-icon-warn {
+    color: #8a6d3b;
+    font-size: 18px;
+}
+.mfb-col-narrow { width: 60px; }
+.mfb-col-medium { width: 100px; }
+.mfb-select-narrow { max-width: 200px; }

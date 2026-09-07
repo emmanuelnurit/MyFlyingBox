@@ -47,7 +47,7 @@
                         {intl l="Relay point" d="myflyingbox.bo.default"}
                     </label>
 
-                    <div class="input-group" style="margin-bottom: 10px;">
+                    <div class="input-group mfb-mb-sm">
                         <input type="text" class="form-control" id="mfb-picker-relay-query"
                                placeholder="{intl l='Search by address or postal code' d='myflyingbox.bo.default'}">
                         <span class="input-group-btn">
@@ -85,7 +85,7 @@
                     <input type="hidden" id="mfb-picker-relay-country" name="relay_country" value="">
                 </div>
 
-                <div class="form-group" style="margin-top: 15px;">
+                <div class="form-group mfb-mt-md">
                     <button type="submit" class="btn btn-primary" id="mfb-picker-save-btn">
                         <span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span>
                         {intl l="Save delivery mode" d="myflyingbox.bo.default"}
@@ -157,7 +157,7 @@
             {if $shipment->getStatus() == 'cancelled'}
                 <p><span class="label label-danger"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> {intl l="Cancelled" d="myflyingbox.bo.default"}</span></p>
             {else}
-                <div class="progress" style="margin-bottom: 10px;">
+                <div class="progress mfb-mb-sm">
                     <div class="progress-bar {if $shipment->getStatus() == 'delivered'}progress-bar-success{else}progress-bar-info{/if}"
                          role="progressbar" style="width: {$status_pct}%; min-width: 2em;"
                          aria-valuenow="{$status_pct}" aria-valuemin="0" aria-valuemax="100">
@@ -208,7 +208,7 @@
                                     <img src="{$CARRIER_LOGO}" alt="{$CARRIER_CODE}"
                                          data-fallback="{$CARRIER_LOGO_FALLBACK}"
                                          onerror="this.onerror=null; this.src=this.dataset.fallback;"
-                                         style="height: 20px; width: auto; margin-right: 5px; vertical-align: middle;"/>
+                                         class="mfb-carrier-logo-xs"/>
                                     {/if}
                                     <strong>{$CARRIER_CODE|upper}</strong> - {$NAME}
                                 </dd>
@@ -232,7 +232,7 @@
                             {if $shipment->getRelayDeliveryCode()}
                             <dt>{intl l="Relay Point" d="myflyingbox.bo.default"}</dt>
                             <dd>
-                                <div class="well well-sm" style="margin-bottom: 0;">
+                                <div class="well well-sm mfb-mb-0">
                                     <span class="glyphicon glyphicon-map-marker text-info" aria-hidden="true"></span>
                                     <strong>{$shipment->getRelayDeliveryCode()}</strong>
                                     {if $shipment->getRelayName()}<br>{$shipment->getRelayName()}{/if}
@@ -282,35 +282,35 @@
                     </div>
                     <div class="panel-body">
                         {if $shipment->getStatus() == 'pending'}
-                            <button type="button" class="btn btn-primary btn-block mfb-action-book" data-shipment-id="{$shipment->getId()}" style="margin-bottom: 8px;">
+                            <button type="button" class="btn btn-primary btn-block mfb-action-book mfb-mb-btn" data-shipment-id="{$shipment->getId()}">
                                 <span class="glyphicon glyphicon-ok-circle" aria-hidden="true"></span>
                                 {intl l="Confirm & Book Shipment" d="myflyingbox.bo.default"}
                             </button>
                         {/if}
 
                         {if $shipment->getStatus() == 'booked'}
-                            <button type="button" class="btn btn-success btn-block mfb-action-ship" data-shipment-id="{$shipment->getId()}" style="margin-bottom: 8px;">
+                            <button type="button" class="btn btn-success btn-block mfb-action-ship mfb-mb-btn" data-shipment-id="{$shipment->getId()}">
                                 <span class="glyphicon glyphicon-send" aria-hidden="true"></span>
                                 {intl l="Mark as Shipped" d="myflyingbox.bo.default"}
                             </button>
                         {/if}
 
                         {if $shipment->getStatus() == 'booked' || $shipment->getStatus() == 'shipped'}
-                            <button type="button" class="btn btn-default btn-block mfb-action-labels" data-shipment-id="{$shipment->getId()}" style="margin-bottom: 8px;">
+                            <button type="button" class="btn btn-default btn-block mfb-action-labels mfb-mb-btn" data-shipment-id="{$shipment->getId()}">
                                 <span class="glyphicon glyphicon-print" aria-hidden="true"></span>
                                 {intl l="Download Labels" d="myflyingbox.bo.default"}
                             </button>
                         {/if}
 
                         {if $shipment->getStatus() == 'shipped'}
-                            <button type="button" class="btn btn-default btn-block mfb-action-tracking" data-shipment-id="{$shipment->getId()}" style="margin-bottom: 8px;">
+                            <button type="button" class="btn btn-default btn-block mfb-action-tracking mfb-mb-btn" data-shipment-id="{$shipment->getId()}">
                                 <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
                                 {intl l="Refresh Tracking Status" d="myflyingbox.bo.default"}
                             </button>
                         {/if}
 
                         {if $shipment->getStatus() == 'shipped' || $shipment->getStatus() == 'delivered'}
-                            <button type="button" class="btn btn-warning btn-block mfb-action-create-return" data-shipment-id="{$shipment->getId()}" data-toggle="modal" data-target="#mfb-return-modal" style="margin-bottom: 8px;">
+                            <button type="button" class="btn btn-warning btn-block mfb-action-create-return mfb-mb-btn" data-shipment-id="{$shipment->getId()}" data-toggle="modal" data-target="#mfb-return-modal">
                                 <span class="glyphicon glyphicon-share-alt" aria-hidden="true"></span>
                                 {intl l="Create Return Label" d="myflyingbox.bo.default"}
                             </button>
@@ -350,7 +350,7 @@
             </div>
             <div class="panel-body">
                 {foreach from=$return_shipments item=return_shipment}
-                <div class="well well-sm" style="margin-bottom: 15px;">
+                <div class="well well-sm mfb-mb-md">
                     <div class="row">
                         <div class="col-md-6">
                             <h5>
@@ -367,7 +367,7 @@
                                     <span class="label label-danger">{intl l="Cancelled" d="myflyingbox.bo.default"}</span>
                                 {/if}
                             </h5>
-                            <dl class="dl-horizontal" style="margin-bottom: 0;">
+                            <dl class="dl-horizontal mfb-mb-0">
                                 <dt>{intl l="Created" d="myflyingbox.bo.default"}</dt>
                                 <dd>{format_date date=$return_shipment->getCreatedAt() output="datetime"}</dd>
 
@@ -381,7 +381,7 @@
                         <div class="col-md-6 text-right">
                             {* Return shipment parcels *}
                             {loop type="myflyingbox.parcels" name="return_parcels_{$return_shipment->getId()}" shipment_id=$return_shipment->getId()}
-                            <div style="margin-bottom: 5px;">
+                            <div class="mfb-mb-xs">
                                 {if $TRACKING_NUMBER}
                                     <code>{$TRACKING_NUMBER}</code>
                                     {if $LABEL_URL}
@@ -396,7 +396,7 @@
                             {/loop}
 
                             {* Return shipment actions *}
-                            <div class="btn-group" style="margin-top: 10px;">
+                            <div class="btn-group mfb-mt-sm">
                                 {if $return_shipment->getStatus() == 'pending'}
                                     <button type="button" class="btn btn-xs btn-primary mfb-action-book" data-shipment-id="{$return_shipment->getId()}">
                                         <span class="glyphicon glyphicon-ok" aria-hidden="true"></span> {intl l="Book" d="myflyingbox.bo.default"}
@@ -454,13 +454,13 @@
 
                             <div class="well well-sm">
                                 <strong>{intl l="Return addresses:" d="myflyingbox.bo.default"}</strong>
-                                <div class="row" style="margin-top: 10px;">
+                                <div class="row mfb-mt-sm">
                                     <div class="col-xs-5">
                                         <small class="text-muted">{intl l="From (Customer)" d="myflyingbox.bo.default"}</small><br>
                                         <strong>{$shipment->getRecipientName()}</strong><br>
                                         <small>{$shipment->getRecipientCity()}, {$shipment->getRecipientCountry()}</small>
                                     </div>
-                                    <div class="col-xs-2 text-center" style="padding-top: 15px;">
+                                    <div class="col-xs-2 text-center mfb-pt-md">
                                         <span class="glyphicon glyphicon-arrow-right text-muted" aria-hidden="true"></span>
                                     </div>
                                     <div class="col-xs-5">
