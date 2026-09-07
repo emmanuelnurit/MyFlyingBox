@@ -44,17 +44,17 @@
 
     // Translations for modals and statuses
     var MFB_ORDER_TRANSLATIONS = {
-        cancel: '{intl l="Cancel" d="myflyingbox"|escape:"javascript"}',
-        confirm: '{intl l="Confirm" d="myflyingbox"|escape:"javascript"}',
+        cancel: '{intl l="Cancel" d="myflyingbox.bo.default"|escape:"javascript"}',
+        confirm: '{intl l="Confirm" d="myflyingbox.bo.default"|escape:"javascript"}',
         // Status translations
         statuses: {
-            'CREATED': '{intl l="Created" d="myflyingbox"|escape:"javascript"}',
-            'BOOKED': '{intl l="Booked" d="myflyingbox"|escape:"javascript"}',
-            'SHIPPED': '{intl l="Shipped" d="myflyingbox"|escape:"javascript"}',
-            'DELIVERED': '{intl l="Delivered" d="myflyingbox"|escape:"javascript"}',
-            'CANCELLED': '{intl l="Cancelled" d="myflyingbox"|escape:"javascript"}',
-            'STATUS_CHANGE': '{intl l="Status change" d="myflyingbox"|escape:"javascript"}',
-            'PENDING': '{intl l="Pending" d="myflyingbox"|escape:"javascript"}'
+            'CREATED': '{intl l="Created" d="myflyingbox.bo.default"|escape:"javascript"}',
+            'BOOKED': '{intl l="Booked" d="myflyingbox.bo.default"|escape:"javascript"}',
+            'SHIPPED': '{intl l="Shipped" d="myflyingbox.bo.default"|escape:"javascript"}',
+            'DELIVERED': '{intl l="Delivered" d="myflyingbox.bo.default"|escape:"javascript"}',
+            'CANCELLED': '{intl l="Cancelled" d="myflyingbox.bo.default"|escape:"javascript"}',
+            'STATUS_CHANGE': '{intl l="Status change" d="myflyingbox.bo.default"|escape:"javascript"}',
+            'PENDING': '{intl l="Pending" d="myflyingbox.bo.default"|escape:"javascript"}'
         }
     };
 
@@ -118,7 +118,7 @@
 
     function showLoading($btn) {
         $btn.prop('disabled', true).data('original-html', $btn.html());
-        $btn.html('<span class="glyphicon glyphicon-refresh mfb-spin"></span> {intl l="Please wait..." d="myflyingbox"|escape:"javascript"}');
+        $btn.html('<span class="glyphicon glyphicon-refresh mfb-spin"></span> {intl l="Please wait..." d="myflyingbox.bo.default"|escape:"javascript"}');
     }
 
     function hideLoading($btn) {
@@ -135,7 +135,7 @@
         var collectionDate = $form.find('input[name="collection_date"]').val();
 
         if (!serviceId) {
-            showMessage('warning', '{intl l="Please select a carrier service" d="myflyingbox"|escape:"javascript"}');
+            showMessage('warning', '{intl l="Please select a carrier service" d="myflyingbox.bo.default"|escape:"javascript"}');
             return;
         }
 
@@ -153,17 +153,17 @@
         })
         .done(function(response) {
             if (response.success) {
-                showMessage('success', '{intl l="Shipment created successfully!" d="myflyingbox"|escape:"javascript"}');
+                showMessage('success', '{intl l="Shipment created successfully!" d="myflyingbox.bo.default"|escape:"javascript"}');
                 // Reload the tab content
                 setTimeout(function() {
                     location.reload();
                 }, 1000);
             } else {
-                showMessage('danger', response.message || '{intl l="An error occurred" d="myflyingbox"|escape:"javascript"}');
+                showMessage('danger', response.message || '{intl l="An error occurred" d="myflyingbox.bo.default"|escape:"javascript"}');
             }
         })
         .fail(function(xhr) {
-            var msg = '{intl l="An error occurred" d="myflyingbox"|escape:"javascript"}';
+            var msg = '{intl l="An error occurred" d="myflyingbox.bo.default"|escape:"javascript"}';
             if (xhr.responseJSON && xhr.responseJSON.message) {
                 msg = xhr.responseJSON.message;
             }
@@ -180,8 +180,8 @@
         var shipmentId = $btn.data('shipment-id');
 
         showConfirmModal(
-            '{intl l="Book Shipment" d="myflyingbox"|escape:"javascript"}',
-            '{intl l="Are you sure you want to book this shipment? This action cannot be undone." d="myflyingbox"|escape:"javascript"}',
+            '{intl l="Book Shipment" d="myflyingbox.bo.default"|escape:"javascript"}',
+            '{intl l="Are you sure you want to book this shipment? This action cannot be undone." d="myflyingbox.bo.default"|escape:"javascript"}',
             function() {
                 showLoading($btn);
 
@@ -193,12 +193,12 @@
                 })
                 .done(function(response) {
                     if (response.success) {
-                        showMessage('success', '{intl l="Shipment booked successfully!" d="myflyingbox"|escape:"javascript"}');
+                        showMessage('success', '{intl l="Shipment booked successfully!" d="myflyingbox.bo.default"|escape:"javascript"}');
                         setTimeout(function() {
                             location.reload();
                         }, 1000);
                     } else {
-                        var errorHtml = response.message || '{intl l="Failed to book shipment" d="myflyingbox"|escape:"javascript"}';
+                        var errorHtml = response.message || '{intl l="Failed to book shipment" d="myflyingbox.bo.default"|escape:"javascript"}';
                         if (response.error_detail && response.error_detail !== response.message) {
                             errorHtml += '<br><small class="text-muted">'
                                 + '<span class="glyphicon glyphicon-console"></span> API : '
@@ -209,7 +209,7 @@
                     }
                 })
                 .fail(function(xhr) {
-                    var msg = '{intl l="An error occurred" d="myflyingbox"|escape:"javascript"}';
+                    var msg = '{intl l="An error occurred" d="myflyingbox.bo.default"|escape:"javascript"}';
                     if (xhr.responseJSON && xhr.responseJSON.message) {
                         msg = xhr.responseJSON.message;
                     }
@@ -221,7 +221,7 @@
             },
             {
                 type: 'info',
-                confirmText: '{intl l="Book" d="myflyingbox"|escape:"javascript"}',
+                confirmText: '{intl l="Book" d="myflyingbox.bo.default"|escape:"javascript"}',
                 confirmClass: 'btn-primary'
             }
         );
@@ -247,8 +247,8 @@
         var shipmentId = $btn.data('shipment-id');
 
         showConfirmModal(
-            '{intl l="Mark as Shipped" d="myflyingbox"|escape:"javascript"}',
-            '{intl l="Are you sure you want to mark this shipment as shipped?" d="myflyingbox"|escape:"javascript"}',
+            '{intl l="Mark as Shipped" d="myflyingbox.bo.default"|escape:"javascript"}',
+            '{intl l="Are you sure you want to mark this shipment as shipped?" d="myflyingbox.bo.default"|escape:"javascript"}',
             function() {
                 showLoading($btn);
 
@@ -260,16 +260,16 @@
                 })
                 .done(function(response) {
                     if (response.success) {
-                        showMessage('success', '{intl l="Shipment marked as shipped!" d="myflyingbox"|escape:"javascript"}');
+                        showMessage('success', '{intl l="Shipment marked as shipped!" d="myflyingbox.bo.default"|escape:"javascript"}');
                         setTimeout(function() {
                             location.reload();
                         }, 1000);
                     } else {
-                        showMessage('danger', response.message || '{intl l="Failed to update shipment status" d="myflyingbox"|escape:"javascript"}');
+                        showMessage('danger', response.message || '{intl l="Failed to update shipment status" d="myflyingbox.bo.default"|escape:"javascript"}');
                     }
                 })
                 .fail(function(xhr) {
-                    var msg = '{intl l="An error occurred" d="myflyingbox"|escape:"javascript"}';
+                    var msg = '{intl l="An error occurred" d="myflyingbox.bo.default"|escape:"javascript"}';
                     if (xhr.responseJSON && xhr.responseJSON.message) {
                         msg = xhr.responseJSON.message;
                     }
@@ -281,7 +281,7 @@
             },
             {
                 type: 'info',
-                confirmText: '{intl l="Confirm" d="myflyingbox"|escape:"javascript"}',
+                confirmText: '{intl l="Confirm" d="myflyingbox.bo.default"|escape:"javascript"}',
                 confirmClass: 'btn-success'
             }
         );
@@ -302,7 +302,7 @@
         })
         .done(function(response) {
             if (response.success) {
-                showMessage('success', '{intl l="Tracking updated successfully!" d="myflyingbox"|escape:"javascript"}');
+                showMessage('success', '{intl l="Tracking updated successfully!" d="myflyingbox.bo.default"|escape:"javascript"}');
                 loadTrackingTimeline(shipmentId);
                 if (response.status_changed) {
                     setTimeout(function() {
@@ -310,11 +310,11 @@
                     }, 1500);
                 }
             } else {
-                showMessage('info', response.message || '{intl l="No tracking updates available" d="myflyingbox"|escape:"javascript"}');
+                showMessage('info', response.message || '{intl l="No tracking updates available" d="myflyingbox.bo.default"|escape:"javascript"}');
             }
         })
         .fail(function() {
-            showMessage('danger', '{intl l="Failed to update tracking" d="myflyingbox"|escape:"javascript"}');
+            showMessage('danger', '{intl l="Failed to update tracking" d="myflyingbox.bo.default"|escape:"javascript"}');
         })
         .always(function() {
             hideLoading($btn);
@@ -327,8 +327,8 @@
         var shipmentId = $btn.data('shipment-id');
 
         showConfirmModal(
-            '{intl l="Cancel Shipment" d="myflyingbox"|escape:"javascript"}',
-            '{intl l="Are you sure you want to cancel this shipment?" d="myflyingbox"|escape:"javascript"}',
+            '{intl l="Cancel Shipment" d="myflyingbox.bo.default"|escape:"javascript"}',
+            '{intl l="Are you sure you want to cancel this shipment?" d="myflyingbox.bo.default"|escape:"javascript"}',
             function() {
                 showLoading($btn);
 
@@ -340,16 +340,16 @@
                 })
                 .done(function(response) {
                     if (response.success) {
-                        showMessage('success', '{intl l="Shipment cancelled" d="myflyingbox"|escape:"javascript"}');
+                        showMessage('success', '{intl l="Shipment cancelled" d="myflyingbox.bo.default"|escape:"javascript"}');
                         setTimeout(function() {
                             location.reload();
                         }, 1000);
                     } else {
-                        showMessage('danger', response.message || '{intl l="Failed to cancel shipment" d="myflyingbox"|escape:"javascript"}');
+                        showMessage('danger', response.message || '{intl l="Failed to cancel shipment" d="myflyingbox.bo.default"|escape:"javascript"}');
                     }
                 })
                 .fail(function() {
-                    showMessage('danger', '{intl l="An error occurred" d="myflyingbox"|escape:"javascript"}');
+                    showMessage('danger', '{intl l="An error occurred" d="myflyingbox.bo.default"|escape:"javascript"}');
                 })
                 .always(function() {
                     hideLoading($btn);
@@ -357,7 +357,7 @@
             },
             {
                 type: 'danger',
-                confirmText: '{intl l="Cancel Shipment" d="myflyingbox"|escape:"javascript"}',
+                confirmText: '{intl l="Cancel Shipment" d="myflyingbox.bo.default"|escape:"javascript"}',
                 confirmClass: 'btn-danger'
             }
         );
@@ -399,9 +399,9 @@
                     // Display shipment-level events first
                     if (shipment.events && shipment.events.length > 0) {
                         hasContent = true;
-                        html += '<h5><span class="glyphicon glyphicon-send"></span> {intl l="Shipment History" d="myflyingbox"|escape:"javascript"}</h5>';
+                        html += '<h5><span class="glyphicon glyphicon-send"></span> {intl l="Shipment History" d="myflyingbox.bo.default"|escape:"javascript"}</h5>';
                         html += '<table class="table table-condensed">';
-                        html += '<thead><tr><th style="width:120px;">{intl l="Status" d="myflyingbox"|escape:"javascript"}</th><th>{intl l="Details" d="myflyingbox"|escape:"javascript"}</th><th style="width:160px;">{intl l="Date" d="myflyingbox"|escape:"javascript"}</th></tr></thead>';
+                        html += '<thead><tr><th style="width:120px;">{intl l="Status" d="myflyingbox.bo.default"|escape:"javascript"}</th><th>{intl l="Details" d="myflyingbox.bo.default"|escape:"javascript"}</th><th style="width:160px;">{intl l="Date" d="myflyingbox.bo.default"|escape:"javascript"}</th></tr></thead>';
                         html += '<tbody>';
                         shipment.events.forEach(function(event) {
                             var style = getEventStyle(event.status);
@@ -429,7 +429,7 @@
                             html += '</h5>';
                             if (parcel.events && parcel.events.length > 0) {
                                 html += '<table class="table table-condensed">';
-                                html += '<thead><tr><th style="width:120px;">{intl l="Status" d="myflyingbox"|escape:"javascript"}</th><th>{intl l="Details" d="myflyingbox"|escape:"javascript"}</th><th style="width:160px;">{intl l="Date" d="myflyingbox"|escape:"javascript"}</th></tr></thead>';
+                                html += '<thead><tr><th style="width:120px;">{intl l="Status" d="myflyingbox.bo.default"|escape:"javascript"}</th><th>{intl l="Details" d="myflyingbox.bo.default"|escape:"javascript"}</th><th style="width:160px;">{intl l="Date" d="myflyingbox.bo.default"|escape:"javascript"}</th></tr></thead>';
                                 html += '<tbody>';
                                 parcel.events.forEach(function(event) {
                                     var style = getEventStyle(event.status);
@@ -444,7 +444,7 @@
                                 });
                                 html += '</tbody></table>';
                             } else {
-                                html += '<p class="text-muted"><span class="glyphicon glyphicon-info-sign"></span> {intl l="No tracking events yet" d="myflyingbox"|escape:"javascript"}</p>';
+                                html += '<p class="text-muted"><span class="glyphicon glyphicon-info-sign"></span> {intl l="No tracking events yet" d="myflyingbox.bo.default"|escape:"javascript"}</p>';
                             }
                         }
                     });
@@ -453,15 +453,15 @@
                 if (hasContent) {
                     $timeline.html(html);
                 } else {
-                    $timeline.html('<p class="text-muted"><span class="glyphicon glyphicon-info-sign"></span> {intl l="No history events yet" d="myflyingbox"|escape:"javascript"}</p>');
+                    $timeline.html('<p class="text-muted"><span class="glyphicon glyphicon-info-sign"></span> {intl l="No history events yet" d="myflyingbox.bo.default"|escape:"javascript"}</p>');
                 }
             } else {
-                $timeline.html('<p class="text-muted"><span class="glyphicon glyphicon-info-sign"></span> {intl l="No history events yet" d="myflyingbox"|escape:"javascript"}</p>');
+                $timeline.html('<p class="text-muted"><span class="glyphicon glyphicon-info-sign"></span> {intl l="No history events yet" d="myflyingbox.bo.default"|escape:"javascript"}</p>');
             }
         })
         .fail(function(xhr, status, error) {
             console.error('MFB Tracking error:', status, error, xhr.responseText);
-            $timeline.html('<p class="text-danger"><span class="glyphicon glyphicon-exclamation-sign"></span> {intl l="Failed to load history" d="myflyingbox"|escape:"javascript"}</p>');
+            $timeline.html('<p class="text-danger"><span class="glyphicon glyphicon-exclamation-sign"></span> {intl l="Failed to load history" d="myflyingbox.bo.default"|escape:"javascript"}</p>');
         });
     }
 
@@ -491,16 +491,16 @@
         .done(function(response) {
             if (response.success) {
                 $('#mfb-return-modal').modal('hide');
-                showMessage('success', '{intl l="Return shipment created successfully!" d="myflyingbox"|escape:"javascript"}');
+                showMessage('success', '{intl l="Return shipment created successfully!" d="myflyingbox.bo.default"|escape:"javascript"}');
                 setTimeout(function() {
                     location.reload();
                 }, 1000);
             } else {
-                showMessage('danger', response.message || "{intl l='Failed to create return shipment' d='myflyingbox'|escape:'javascript'}");
+                showMessage('danger', response.message || "{intl l='Failed to create return shipment' d='myflyingbox.bo.default'|escape:'javascript'}");
             }
         })
         .fail(function(xhr) {
-            var msg = '{intl l="An error occurred" d="myflyingbox"|escape:"javascript"}';
+            var msg = '{intl l="An error occurred" d="myflyingbox.bo.default"|escape:"javascript"}';
             if (xhr.responseJSON && xhr.responseJSON.message) {
                 msg = xhr.responseJSON.message;
             }
@@ -605,7 +605,7 @@
                 pickerOptionsById[opt.id] = opt;
                 var label = (opt.carrier_code ? opt.carrier_code.toUpperCase() + ' — ' : '')
                     + (opt.service_name || '')
-                    + (opt.relay_delivery ? ' ({intl l="Relay" d="myflyingbox.bo"|escape:"javascript"})' : '')
+                    + (opt.relay_delivery ? ' ({intl l="Relay" d="myflyingbox.bo.default"|escape:"javascript"})' : '')
                     + ' — ' + (opt.price_formatted || '');
                 $offerSelect.append($('<option/>').val(opt.id).text(label));
 
@@ -625,7 +625,7 @@
         })
         .fail(function(xhr) {
             $pickerLoading.hide();
-            var msg = '{intl l="Failed to load delivery modes." d="myflyingbox.bo"|escape:"javascript"}';
+            var msg = '{intl l="Failed to load delivery modes." d="myflyingbox.bo.default"|escape:"javascript"}';
             if (xhr.responseJSON && xhr.responseJSON.error) {
                 msg = xhr.responseJSON.error;
             }
@@ -689,7 +689,7 @@
         })
         .fail(function(xhr) {
             $relayLoading.hide();
-            var msg = '{intl l="Failed to load relay points." d="myflyingbox.bo"|escape:"javascript"}';
+            var msg = '{intl l="Failed to load relay points." d="myflyingbox.bo.default"|escape:"javascript"}';
             if (xhr.responseJSON && xhr.responseJSON.error) {
                 msg = xhr.responseJSON.error;
             }
@@ -734,7 +734,7 @@
 
         var offerId = parseInt($offerSelect.val(), 10);
         if (!offerId) {
-            showMessage('warning', '{intl l="Select a delivery mode" d="myflyingbox.bo"|escape:"javascript"}');
+            showMessage('warning', '{intl l="Select a delivery mode" d="myflyingbox.bo.default"|escape:"javascript"}');
             return;
         }
 
@@ -746,7 +746,7 @@
         if (opt && opt.relay_delivery) {
             var relayCode = $('#mfb-picker-relay-code').val();
             if (!relayCode) {
-                showMessage('warning', '{intl l="A relay point must be selected for this delivery mode." d="myflyingbox.bo"|escape:"javascript"}');
+                showMessage('warning', '{intl l="A relay point must be selected for this delivery mode." d="myflyingbox.bo.default"|escape:"javascript"}');
                 return;
             }
             payload.relay_code        = relayCode;
@@ -768,16 +768,16 @@
         })
         .done(function(response) {
             if (response && response.success) {
-                showMessage('success', '{intl l="Delivery mode updated successfully." d="myflyingbox.bo"|escape:"javascript"}');
+                showMessage('success', '{intl l="Delivery mode updated successfully." d="myflyingbox.bo.default"|escape:"javascript"}');
                 setTimeout(function() { location.reload(); }, 800);
             } else {
-                showMessage('danger', (response && response.error) || '{intl l="Failed to save delivery mode." d="myflyingbox.bo"|escape:"javascript"}');
+                showMessage('danger', (response && response.error) || '{intl l="Failed to save delivery mode." d="myflyingbox.bo.default"|escape:"javascript"}');
             }
         })
         .fail(function(xhr) {
-            var msg = '{intl l="Failed to save delivery mode." d="myflyingbox.bo"|escape:"javascript"}';
+            var msg = '{intl l="Failed to save delivery mode." d="myflyingbox.bo.default"|escape:"javascript"}';
             if (xhr.status === 409) {
-                msg = (xhr.responseJSON && xhr.responseJSON.error) || '{intl l="Shipment is already booked or shipped — delivery mode cannot be modified." d="myflyingbox.bo"|escape:"javascript"}';
+                msg = (xhr.responseJSON && xhr.responseJSON.error) || '{intl l="Shipment is already booked or shipped — delivery mode cannot be modified." d="myflyingbox.bo.default"|escape:"javascript"}';
                 pickerSetLocked(true);
             } else if (xhr.responseJSON && xhr.responseJSON.error) {
                 msg = xhr.responseJSON.error;
